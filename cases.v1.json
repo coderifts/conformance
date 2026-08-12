@@ -1,0 +1,384 @@
+{
+  "version": 1,
+  "title": "CodeRifts adapter acceptance cases",
+  "description": "Language-agnostic cases for every consumer of a governance decision. Derived from shipped surfaces only \u2014 not from free-form product claims. See CONTRACT.md.",
+  "outcomes": [
+    "proceed",
+    "proceed_with_monitoring",
+    "request_approval",
+    "halt"
+  ],
+  "tools": [
+    "preflight_change_set",
+    "verify_receipt",
+    "get_decision_details"
+  ],
+  "cases": [
+    {
+      "id": "AA-BRANCH-CONTINUE",
+      "kind": "decide",
+      "profiles": [
+        "normative",
+        "enforcement_consistent"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.branch_on + recommended_usage.execution_action[0]",
+        "assert": {
+          "branch_on": "execution_action",
+          "execution_action_includes": "CONTINUE"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "ALLOW",
+          "safe_for_agent": true,
+          "execution_action": "CONTINUE"
+        },
+        "host": {
+          "monitoringSinkWired": false
+        }
+      },
+      "expect": {
+        "outcome": "proceed"
+      },
+      "class": "liveness"
+    },
+    {
+      "id": "AA-BRANCH-NOT-DECISION",
+      "kind": "decide",
+      "profiles": [
+        "normative"
+      ],
+      "note": "decision=ALLOW would proceed if branching on decision; execution_action=STOP must halt. Proves branch_on is execution_action.",
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.branch_on",
+        "assert": {
+          "branch_on": "execution_action"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "ALLOW",
+          "safe_for_agent": true,
+          "execution_action": "STOP"
+        },
+        "host": {
+          "monitoringSinkWired": true
+        }
+      },
+      "expect": {
+        "outcome": "halt"
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-BRANCH-NOT-SAFE-FOR-AGENT",
+      "kind": "decide",
+      "profiles": [
+        "normative"
+      ],
+      "note": "safe_for_agent=false is dashboard-only per well-known; execution_action=CONTINUE still proceeds under pure branch_on. Liveness: adapters MAY halt if they DECLARE conjunct safe_for_agent_false and demonstrate it (see strictness_allowed).",
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.safe_for_agent",
+        "assert": {
+          "safe_for_agent": "not_for_control_flow_use_execution_action"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "ALLOW",
+          "safe_for_agent": false,
+          "execution_action": "CONTINUE"
+        },
+        "host": {
+          "monitoringSinkWired": false
+        }
+      },
+      "expect": {
+        "outcome": "proceed"
+      },
+      "class": "liveness",
+      "strictness_allowed": [
+        {
+          "conjunct": "safe_for_agent_false",
+          "present_when": {
+            "response.safe_for_agent": false
+          },
+          "absence_case_id": "AA-BRANCH-CONTINUE"
+        }
+      ]
+    },
+    {
+      "id": "AA-BRANCH-REQUEST-APPROVAL",
+      "kind": "decide",
+      "profiles": [
+        "normative",
+        "enforcement_consistent"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.execution_action",
+        "assert": {
+          "execution_action_includes": "REQUEST_APPROVAL"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "REQUIRE_APPROVAL",
+          "safe_for_agent": false,
+          "execution_action": "REQUEST_APPROVAL"
+        },
+        "host": {
+          "monitoringSinkWired": false
+        }
+      },
+      "expect": {
+        "outcome": "request_approval"
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-BRANCH-STOP",
+      "kind": "decide",
+      "profiles": [
+        "normative",
+        "enforcement_consistent"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.execution_action",
+        "assert": {
+          "execution_action_includes": "STOP"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "BLOCK",
+          "safe_for_agent": false,
+          "execution_action": "STOP"
+        },
+        "host": {
+          "monitoringSinkWired": false
+        }
+      },
+      "expect": {
+        "outcome": "halt"
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-UNRECOGNISED-ACTION",
+      "kind": "decide",
+      "profiles": [
+        "normative"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.unrecognised_execution_action",
+        "assert": {
+          "unrecognised_execution_action": "not_permission_fail_closed"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "ALLOW",
+          "safe_for_agent": true,
+          "execution_action": "PROCEED_ANYWAY"
+        },
+        "host": {
+          "monitoringSinkWired": true
+        }
+      },
+      "expect": {
+        "outcome": "halt"
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-MONITOR-SINK-WIRED",
+      "kind": "decide",
+      "profiles": [
+        "normative",
+        "enforcement_consistent"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.continue_with_monitoring_requires",
+        "assert": {
+          "continue_with_monitoring_requires": "monitoringSinkWired",
+          "execution_action_includes": "CONTINUE_WITH_MONITORING"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "WARN",
+          "safe_for_agent": true,
+          "execution_action": "CONTINUE_WITH_MONITORING"
+        },
+        "host": {
+          "monitoringSinkWired": true
+        }
+      },
+      "expect": {
+        "outcome": "proceed_with_monitoring"
+      },
+      "class": "liveness"
+    },
+    {
+      "id": "AA-MONITOR-SINK-UNWIRED",
+      "kind": "decide",
+      "profiles": [
+        "normative",
+        "enforcement_consistent"
+      ],
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.continue_with_monitoring_requires",
+        "assert": {
+          "continue_with_monitoring_requires": "monitoringSinkWired"
+        }
+      },
+      "input": {
+        "response": {
+          "decision": "WARN",
+          "safe_for_agent": true,
+          "execution_action": "CONTINUE_WITH_MONITORING"
+        },
+        "host": {
+          "monitoringSinkWired": false
+        }
+      },
+      "expect": {
+        "outcome": "halt"
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-DOCS-ONLY-SKIP",
+      "kind": "tool_selection",
+      "profiles": [
+        "normative"
+      ],
+      "source": {
+        "surface": "mcp-tool-description",
+        "path": "DESC_PREFLIGHT_CHANGE_SET Do not use when",
+        "marker": "documentation-only"
+      },
+      "input": {
+        "situation": "documentation_only_change",
+        "change": {
+          "kind": "documentation-only",
+          "contract_artifacts_changed": false,
+          "files": [
+            "README.md",
+            "docs/guide.md"
+          ]
+        },
+        "held_receipt": null,
+        "intended": null
+      },
+      "expect": {
+        "tool": null
+      },
+      "class": "safety"
+    },
+    {
+      "id": "AA-CONTRACT-CHANGE-PREFLIGHT",
+      "kind": "tool_selection",
+      "profiles": [
+        "normative"
+      ],
+      "source": {
+        "surface": "mcp-tool-description",
+        "path": "DESC_PREFLIGHT_CHANGE_SET Use this when",
+        "marker": "contract artifact"
+      },
+      "input": {
+        "situation": "pending_contract_change",
+        "change": {
+          "kind": "contract",
+          "contract_artifacts_changed": true,
+          "files": [
+            "openapi.yaml"
+          ]
+        },
+        "held_receipt": null,
+        "intended": {
+          "operation": "merge",
+          "target_id": "repo/main"
+        }
+      },
+      "expect": {
+        "tool": "preflight_change_set"
+      },
+      "class": "liveness"
+    },
+    {
+      "id": "AA-RECEIPT-CARRY-VERIFY",
+      "kind": "tool_selection",
+      "profiles": [
+        "normative"
+      ],
+      "source": {
+        "surface": "mcp-tool-description",
+        "path": "DESC_VERIFY_RECEIPT Use this when",
+        "marker": "already obtained a chain_receipt"
+      },
+      "input": {
+        "situation": "about_to_act_under_held_receipt",
+        "change": {
+          "kind": "none",
+          "contract_artifacts_changed": false
+        },
+        "held_receipt": {
+          "token": "test.receipt.token",
+          "operation": "merge",
+          "target_id": "repo/main"
+        },
+        "intended": {
+          "operation": "merge",
+          "target_id": "repo/main"
+        }
+      },
+      "expect": {
+        "tool": "verify_receipt"
+      },
+      "class": "liveness"
+    },
+    {
+      "id": "AA-RECEIPT-WRONG-SCOPE-REPREFLIGHT",
+      "kind": "tool_selection",
+      "profiles": [
+        "normative"
+      ],
+      "source": {
+        "surface": "mcp-tool-description",
+        "path": "DESC_PREFLIGHT_CHANGE_SET Use this when / DESC_VERIFY_RECEIPT Do not use when",
+        "marker": "different operation or target"
+      },
+      "input": {
+        "situation": "held_receipt_wrong_operation",
+        "change": {
+          "kind": "contract",
+          "contract_artifacts_changed": true
+        },
+        "held_receipt": {
+          "token": "test.receipt.token",
+          "operation": "merge",
+          "target_id": "repo/main"
+        },
+        "intended": {
+          "operation": "deploy",
+          "target_id": "repo/main"
+        }
+      },
+      "expect": {
+        "tool": "preflight_change_set"
+      },
+      "class": "liveness"
+    }
+  ]
+}
