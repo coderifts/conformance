@@ -7,7 +7,7 @@
     "node": ">=20.0.0"
   },
   "bin": {
-    "coderifts-conformance": "./bin/coderifts-conformance.js"
+    "coderifts-conformance": "bin/coderifts-conformance.js"
   },
   "main": "./bin/coderifts-conformance.js",
   "files": [
@@ -36,7 +36,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/coderifts/conformance.git"
+    "url": "git+https://github.com/coderifts/conformance.git"
   },
   "publishConfig": {
     "access": "public"
