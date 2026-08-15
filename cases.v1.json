@@ -225,7 +225,16 @@
       "expect": {
         "outcome": "proceed_with_monitoring"
       },
-      "class": "liveness"
+      "class": "liveness",
+      "strictness_allowed": [
+        {
+          "conjunct": "snippet_no_monitoring_sink",
+          "present_when": {
+            "response.execution_action": "CONTINUE_WITH_MONITORING"
+          },
+          "absence_case_id": "AA-BRANCH-CONTINUE"
+        }
+      ]
     },
     {
       "id": "AA-MONITOR-SINK-UNWIRED",
@@ -379,6 +388,37 @@
         "tool": "preflight_change_set"
       },
       "class": "liveness"
+    },
+    {
+      "id": "AA-AUTHORIZE-NEEDS-OPERATION",
+      "kind": "tool_selection",
+      "profiles": [
+        "normative"
+      ],
+      "note": "Discriminating cue: authorize path requires context.operation (MCP DESC_PREFLIGHT: authorize requires context.operation). Without a non-empty intended.operation, do not call preflight_change_set — operation is not optional for the authorize act. Distinct from AA-CONTRACT-CHANGE-PREFLIGHT (which has operation=merge).",
+      "source": {
+        "surface": "mcp-tool-description",
+        "path": "DESC_PREFLIGHT_CHANGE_SET Mode authorize",
+        "marker": "requires context.operation"
+      },
+      "input": {
+        "situation": "contract_change_authorize_missing_operation",
+        "change": {
+          "kind": "contract",
+          "contract_artifacts_changed": true,
+          "files": [
+            "openapi.yaml"
+          ]
+        },
+        "held_receipt": null,
+        "intended": {
+          "target_id": "repo/main"
+        }
+      },
+      "expect": {
+        "tool": null
+      },
+      "class": "safety"
     }
   ]
 }

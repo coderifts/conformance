@@ -33,6 +33,8 @@ function toolSelection(input) {
   const change = (input && input.change) || {};
   const held = input && input.held_receipt;
   const intended = input && input.intended;
+  const hasOperation = !!(intended && typeof intended.operation === 'string'
+    && intended.operation.trim().length > 0);
 
   // Docs-only: call no tool (DESC_PREFLIGHT Do not use when).
   if (change.kind === 'documentation-only' || change.contract_artifacts_changed === false) {
@@ -47,21 +49,23 @@ function toolSelection(input) {
   }
 
   // Wrong-scope receipt → preflight again (cannot re-scope via verify).
-  if (held && intended
+  if (held && intended && hasOperation
       && (held.operation !== intended.operation || held.target_id !== intended.target_id)) {
     return { tool: 'preflight_change_set' };
   }
 
   // About to act under held receipt, same scope → verify.
-  if (held && held.token && intended
+  if (held && held.token && intended && hasOperation
       && held.operation === intended.operation
       && held.target_id === intended.target_id
       && !change.contract_artifacts_changed) {
     return { tool: 'verify_receipt' };
   }
 
-  // Pending contract change → preflight.
+  // Pending contract change → preflight only when an operation is known.
+  // Authorize path requires context.operation (MCP DESC); without it, do not call.
   if (change.contract_artifacts_changed === true || change.kind === 'contract') {
+    if (!hasOperation) return { tool: null };
     return { tool: 'preflight_change_set' };
   }
 
