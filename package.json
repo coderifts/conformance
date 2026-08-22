@@ -1,7 +1,7 @@
 {
   "name": "@coderifts/conformance",
-  "version": "0.1.3",
-  "description": "Offline CodeRifts adapter-acceptance suite — same cases the SDKs are tested against. No network, no API key.",
+  "version": "0.2.0",
+  "description": "Offline CodeRifts adapter-acceptance + model-acceptance suite. No network, no API key.",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
@@ -14,16 +14,18 @@
     "bin/",
     "lib/",
     "subjects/",
+    "fixtures/",
     "cases.v1.json",
     "CONTRACT.md",
     "README.md"
   ],
   "scripts": {
-    "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard",
-    "conformance": "node bin/coderifts-conformance.js"
+    "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node --test test/*.test.js",
+    "conformance": "node bin/coderifts-conformance.js",
+    "model-acceptance": "node bin/coderifts-conformance.js --subject model-acceptance"
   },
   "dependencies": {
-    "@coderifts/agent-guard": ">=3.0.0",
+    "@coderifts/agent-guard": ">=8.1.1",
     "@coderifts/sdk": ">=1.1.1"
   },
   "keywords": [

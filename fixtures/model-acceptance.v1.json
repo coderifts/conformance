@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "id": "model-acceptance.v1",
+  "honesty": "This suite proves that canned provider tool-use payloads, when the HOST wires execute*ToolCall / bind*GuardOutcome, produce proof-bound results with the same Change-IR (change_fp) and the same verdict across OpenAI, Anthropic, Gemini, and LangGraph. It does NOT prove that a model spontaneously calls preflight_change_set, nor that raw tools outside the returned table are inescapable.",
+  "tool_name": "apply_openapi",
+  "operation": "tool_call",
+  "artifacts": [
+    {
+      "id": "api/openapi.yaml",
+      "type": "openapi",
+      "before": "openapi: 3.0.0\ninfo:\n  title: Demo\n  version: 1.0.0\npaths:\n  /pets:\n    get:\n      responses:\n        '200':\n          description: ok\n",
+      "after": "openapi: 3.0.0\ninfo:\n  title: Demo\n  version: 1.0.1\npaths:\n  /pets:\n    get:\n      responses:\n        '200':\n          description: ok\n"
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "allow",
+      "preflight": {
+        "decision": "ALLOW",
+        "execution_action": "CONTINUE"
+      },
+      "expect": {
+        "verdict_kind": "ALLOW",
+        "executed": true
+      }
+    },
+    {
+      "id": "block",
+      "preflight": {
+        "decision": "BLOCK",
+        "execution_action": "STOP"
+      },
+      "expect": {
+        "verdict_kind": "BLOCK",
+        "executed": false
+      }
+    }
+  ],
+  "providers": {
+    "openai": {
+      "id_field": "tool_call_id",
+      "allow_id": "call_ma_allow",
+      "block_id": "call_ma_block",
+      "tool_use_shape": "chat.completions tool_call (type=function)"
+    },
+    "anthropic": {
+      "id_field": "tool_use_id",
+      "allow_id": "toolu_ma_allow",
+      "block_id": "toolu_ma_block",
+      "tool_use_shape": "messages tool_use block"
+    },
+    "gemini": {
+      "id_field": "name",
+      "allow_id": "apply_openapi",
+      "block_id": "apply_openapi",
+      "tool_use_shape": "functionCall part"
+    },
+    "langgraph": {
+      "id_field": "tool_call_id",
+      "allow_id": "lg_ma_allow",
+      "block_id": "lg_ma_block",
+      "tool_use_shape": "LangChain ToolMessage / tool call"
+    }
+  }
+}
