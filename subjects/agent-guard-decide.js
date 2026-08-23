@@ -65,8 +65,8 @@ function agentGuardDecideSubject(c) {
   const rd = readDecision(response);
   const ea = rd.executionAction;
 
-  // Package-side reason (when agent-guard readDecision is fixed) or non-closed result.
-  if (rd.reason === 'EXECUTION_ACTION_UNRECOGNISED') {
+  // Native package reasons (guard 8.2.1+): unrecognised present action, or missing EA on v2.
+  if (rd.reason === 'EXECUTION_ACTION_UNRECOGNISED' || rd.reason === 'UNREADABLE_DECISION') {
     return { outcome: 'halt' };
   }
   if (ea !== 'CONTINUE' && ea !== 'CONTINUE_WITH_MONITORING'

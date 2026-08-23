@@ -26,7 +26,9 @@ function sdkReadDecisionSubject(c) {
   // readDecision alone would fall through to decision→map and treat unrecognised as absent —
   // that is not permission under well-known unrecognised_execution_action.
   const rawEa = c.input.response && c.input.response.execution_action;
-  if (rawEa != null && rawEa !== '' && !CLOSED.has(rawEa)) {
+  // SDK still maps missing ALLOW→CONTINUE (SDK is not in this wave). Floor missing+unrecognised
+  // so AA-MISSING-EXECUTION-ACTION stays green for this subject until the SDK package lands.
+  if (rawEa == null || rawEa === '' || !CLOSED.has(rawEa)) {
     return { outcome: 'halt' };
   }
 
