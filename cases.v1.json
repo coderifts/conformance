@@ -529,6 +529,76 @@
       },
       "expect": { "valid": false, "status": "GRANT_UNBOUND" },
       "class": "safety"
+    },
+    {
+      "id": "EG-A-VALID",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "Valid cr.exec.attest.v1 verifies ATTEST_VALID. Format: docs/cr-exec-attest-v1.md.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "valid" },
+      "expect": { "valid": true, "status": "ATTEST_VALID" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-BAD-SIG",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "Flipped signature byte → ATTEST_INVALID_SIGNATURE.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "bad_sig" },
+      "expect": { "valid": false, "status": "ATTEST_INVALID_SIGNATURE" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-UNKNOWN-KID",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "Registry does not contain executor_kid → ATTEST_UNKNOWN_KEY.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "unknown_kid" },
+      "expect": { "valid": false, "status": "ATTEST_UNKNOWN_KEY" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-RETIRED-KEY-VALID-AT-ISSUE",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "Retired executor kid + committed_at inside [valid_from, retired_at) PASSES as historical (receipt class, NOT the grant UNKNOWN_KEY rule).",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "retired_key_valid_at_issue" },
+      "expect": { "valid": true, "status": "ATTEST_RETIRED_KEY_VALID_AT_ISSUE" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-MALFORMED",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "Not a four-segment tagged envelope → ATTEST_MALFORMED.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "malformed" },
+      "expect": { "valid": false, "status": "ATTEST_MALFORMED" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-UNBOUND-JTI",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "intended.grant_fields.jti differs from signed grant_jti → ATTEST_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "unbound_jti" },
+      "expect": { "valid": false, "status": "ATTEST_UNBOUND" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-A-STATE-NONCE-MISMATCH",
+      "kind": "execution_attestation",
+      "profiles": ["execution_attestation"],
+      "note": "ATOMIC grant state_nonce differs from attestation state_nonce → ATTEST_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-attest-v1.md" },
+      "input": { "scenario": "state_nonce_mismatch" },
+      "expect": { "valid": false, "status": "ATTEST_UNBOUND" },
+      "class": "safety"
     }
   ]
 }
