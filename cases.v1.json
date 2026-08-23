@@ -449,6 +449,86 @@
         "tool": null
       },
       "class": "safety"
+    },
+    {
+      "id": "EG-VALID",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "Valid cr.exec.v1 grant verifies GRANT_CURRENT. Format: docs/cr-exec-v1.md.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-v1.md" },
+      "input": {
+        "scenario": "valid",
+        "operation": "merge",
+        "target_id": "sha256:tgt",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": true, "status": "GRANT_CURRENT" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-EXPIRED",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "exp in the past beyond leeway → GRANT_EXPIRED.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-v1.md" },
+      "input": {
+        "scenario": "expired",
+        "operation": "merge",
+        "target_id": "sha256:tgt",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": false, "status": "GRANT_EXPIRED" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-WRONG-AUDIENCE",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "intended.audience differs from signed audience → GRANT_WRONG_AUDIENCE.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-v1.md" },
+      "input": {
+        "scenario": "wrong_audience",
+        "operation": "merge",
+        "target_id": "sha256:tgt",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": false, "status": "GRANT_WRONG_AUDIENCE" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-SCOPE-MISMATCH",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "1-byte after-payload change recomputes a different scope_hash → GRANT_SCOPE_MISMATCH.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-v1.md" },
+      "input": {
+        "scenario": "scope_mismatch",
+        "operation": "merge",
+        "target_id": "sha256:tgt",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": false, "status": "GRANT_SCOPE_MISMATCH" },
+      "class": "safety"
+    },
+    {
+      "id": "EG-UNBOUND-DIGEST",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "intended.receipt_token whose digest is not the signed receipt_digest → GRANT_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/cr-exec-v1.md" },
+      "input": {
+        "scenario": "unbound_digest",
+        "operation": "merge",
+        "target_id": "sha256:tgt",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": false, "status": "GRANT_UNBOUND" },
+      "class": "safety"
     }
   ]
 }
