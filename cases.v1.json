@@ -198,6 +198,36 @@
       "class": "safety"
     },
     {
+      "id": "AA-MISSING-EXECUTION-ACTION",
+      "kind": "decide",
+      "profiles": [
+        "normative"
+      ],
+      "note": "v2 body with execution_action omitted and decision=ALLOW must halt (UNREADABLE / not permission). Missing action is not ALLOW. Must not map from decision.",
+      "source": {
+        "surface": "well-known",
+        "path": "recommended_usage.unrecognised_execution_action",
+        "assert": {
+          "unrecognised_execution_action": "not_permission_fail_closed"
+        }
+      },
+      "input": {
+        "response": {
+          "preflight_mode": "authorize",
+          "decision_spec_version": "2.0",
+          "decision": "ALLOW",
+          "safe_for_agent": true
+        },
+        "host": {
+          "monitoringSinkWired": true
+        }
+      },
+      "expect": {
+        "outcome": "halt"
+      },
+      "class": "safety"
+    },
+    {
       "id": "AA-MONITOR-SINK-WIRED",
       "kind": "decide",
       "profiles": [
