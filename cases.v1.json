@@ -599,6 +599,76 @@
       "input": { "scenario": "state_nonce_mismatch" },
       "expect": { "valid": false, "status": "ATTEST_UNBOUND" },
       "class": "safety"
+    },
+    {
+      "id": "MON-A-VALID",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "Valid cr.monitor.attest.v1 verifies MON_ATTEST_VALID. Format: docs/cr-monitor-attest-v1.md.",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "valid" },
+      "expect": { "valid": true, "status": "MON_ATTEST_VALID" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-BAD-SIG",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "Flipped signature byte → MON_ATTEST_INVALID_SIGNATURE.",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "bad_sig" },
+      "expect": { "valid": false, "status": "MON_ATTEST_INVALID_SIGNATURE" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-UNKNOWN-KID",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "Registry does not contain kid → MON_ATTEST_UNKNOWN_KEY.",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "unknown_kid" },
+      "expect": { "valid": false, "status": "MON_ATTEST_UNKNOWN_KEY" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-RETIRED-KEY-VALID-AT-ISSUE",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "Retired monitoring kid + observed_at inside [valid_from, retired_at) PASSES as historical (receipt class).",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "retired_key_valid_at_issue" },
+      "expect": { "valid": true, "status": "MON_ATTEST_RETIRED_KEY_VALID_AT_ISSUE" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-MALFORMED",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "Not a four-segment tagged envelope → MON_ATTEST_MALFORMED.",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "malformed" },
+      "expect": { "valid": false, "status": "MON_ATTEST_MALFORMED" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-UNBOUND",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "intended.decision_id differs from signed decision_id → MON_ATTEST_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "unbound" },
+      "expect": { "valid": false, "status": "MON_ATTEST_UNBOUND" },
+      "class": "safety"
+    },
+    {
+      "id": "MON-A-NOT-DELIVERED",
+      "kind": "monitoring_attestation",
+      "profiles": ["monitoring_attestation"],
+      "note": "not_delivered is a valid measured status and attests honestly (MON_ATTEST_VALID).",
+      "source": { "surface": "docs", "path": "docs/cr-monitor-attest-v1.md" },
+      "input": { "scenario": "not_delivered" },
+      "expect": { "valid": true, "status": "MON_ATTEST_VALID" },
+      "class": "safety"
     }
   ]
 }
