@@ -379,3 +379,42 @@ describe('COVERAGE BOUNDARY — the four vectors this suite does NOT carry', () 
       + 'honesty note is the failure mode this suite exists to make impossible');
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+describe('RE-VERIFICATION RECORD — the vectors pin a FIX, not a snapshot of one', () => {
+  const RV = FIX.reverified;
+
+  it('records the exact published versions every vector was re-verified against', () => {
+    assert.ok(RV, 'a suite that cannot say WHEN it was last checked is a snapshot');
+    assert.equal(RV.against.coderifts, '4.12.0');
+    assert.equal(RV.against['@coderifts/agent-guard'], '10.0.0');
+    assert.match(RV.date, /^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('the issuer mirror records its parity against the SHIPPED evaluator', () => {
+    assert.match(RV.issuer_mirror_parity, /11\/11/);
+    assert.match(RV.issuer_mirror_parity, /multi-entry priority|multi-entry/);
+    assert.match(RV.issuer_mirror_parity, /string/);
+  });
+
+  it('DRIFT IS RECORDED, not quietly fixed', () => {
+    assert.ok(Array.isArray(RV.drift_found) && RV.drift_found.length > 0,
+      'a re-verification that found nothing should say so explicitly, not omit the field');
+    assert.match(RV.drift_found.join(' '), /concurrent_grants/);
+  });
+
+  it('the corrected exclusion admits the ORIGINAL measurement was wrong', () => {
+    const e = FIX.excluded.find((x) => x.vector === 'concurrent_grants');
+    assert.match(e.reason, /CORRECTED/);
+    assert.match(e.reason, /never 10\.0\.0/);
+    assert.match(e.reason, /conclusion survived the correction/);
+    // The conclusion itself must still stand on a measured fact.
+    assert.match(e.reason, /no issueExecutionGrant/);
+  });
+
+  it('a narrowed exclusion says narrowed, not closed', () => {
+    const e = FIX.excluded.find((x) => x.vector === 'stale_nonce');
+    assert.match(e.reason, /RE-MEASURED/);
+    assert.match(e.reason, /narrowed, not as closed/);
+  });
+});

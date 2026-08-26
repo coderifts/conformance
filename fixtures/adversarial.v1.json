@@ -38,13 +38,13 @@
     },
     {
       "vector": "concurrent_grants",
-      "reason": "Requires grant ISSUANCE under concurrency. @coderifts/agent-guard 10.0.0 exports no issuance API (measured: 36 exports, none matching grant/nonce/issue/consume), so the 8-overlapping-call measurement cannot be reproduced from published code. It lives in the guard's private suite.",
-      "covered_by": "guard private suite (not third-party reproducible)"
+      "reason": "Requires ISSUING overlapping execution grants, which is a SERVER capability: @coderifts/agent-guard 10.0.0 exports 199 symbols and can READ and verify a grant (readExecutionGrantToken, isExecutionGrantEnabled, buildExecutionProof, executeIfUnchanged) but exports no issueExecutionGrant — the tryIssue* exports are ATTESTATIONS, not grants. So the 8-overlapping-call measurement still cannot be reproduced offline. CORRECTED 2026-08-26: this entry previously said 10.0.0 exported 36 symbols with none grant-related. That measurement read the APP'S node_modules copy, which is pinned at ^3.0.0 — it was never 10.0.0. The conclusion survived the correction; the stated reason did not, and a wrong reason in an honesty fixture is the failure this file exists to avoid.",
+      "covered_by": "guard private suite (issuance is server-side; not third-party reproducible offline)"
     },
     {
       "vector": "stale_nonce",
-      "reason": "Single-use consumption happens at an executor we do not run, and the public verifier is STATELESS — it cannot detect a replayed jti by construction. A vector asserting 'replay is rejected' would be asserting a control the public code does not implement. What IS true is recorded as a boundary, not as a passing test.",
-      "covered_by": "the executor; unverifiable from a stateless offline verifier"
+      "reason": "Single-use consumption happens at an executor we do not run, and the public receipt verifier is STATELESS — verify-grant.js cannot detect a replayed jti by construction, so a vector asserting 'replay is rejected' would assert a control the public code does not implement. RE-MEASURED 2026-08-26 against guard 10.0.0: the guard now ships executeIfUnchanged / checkExecutionTimeFingerprint, which are a DIFFERENT control (local execution-state change detection), not nonce consumption. That surface is partly expressible and is a candidate for a future vector; the nonce vector itself remains out of reach. Recorded as narrowed, not as closed.",
+      "covered_by": "the executor; guard 10.0.0 executeIfUnchanged covers an adjacent control, not this one"
     },
     {
       "vector": "ruleset_bypass",
@@ -86,5 +86,21 @@
       "note": "the SHA the strict template emits was found in the PUBLISHED bundle, not read from a private source — a third party can confirm it by unpacking coderifts@4.12.0 from npm."
     },
     "why_both_exist": "The NON-strict template stays on @v0 deliberately: easy updates are the point there. The strict template pins the SHA. A consumer choosing between them is choosing between \"follows our fixes\" and \"runs exactly these bytes\"."
+  },
+  "reverified": {
+    "date": "2026-08-26",
+    "against": {
+      "coderifts": "4.12.0",
+      "@coderifts/agent-guard": "10.0.0",
+      "@coderifts/sdk": "3.9.1",
+      "@coderifts/bypass-probe": "0.1.0"
+    },
+    "issuer_mirror_parity": "11/11 against evaluateRequiredCheck at CLI 4.12.0, including the two cases that previously diverged (multi-entry priority, app_id supplied as a string).",
+    "mcp_route_rejections": "All three shapes re-measured against the LIVE route: HTTP 400 each. The schema still accepts them; the route still rejects them.",
+    "action_pin": "The strict template pins a 40-hex SHA (generated gate-pin.json, resolved from tag v0.5.0); the default template still uses the moving @v0 tag. The vector asserts the SHAPE distinction, which holds at this version.",
+    "drift_found": [
+      "concurrent_grants exclusion reason was factually wrong (see its entry) — corrected",
+      "stale_nonce exclusion narrowed by guard 10.0.0's executeIfUnchanged — reworded"
+    ]
   }
 }
