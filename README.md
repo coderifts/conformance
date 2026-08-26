@@ -87,3 +87,21 @@ App-private anchor checks (that cases still match live app source text) stay **o
 ## License
 
 MIT
+
+## Adversarial vectors
+
+A passing adversarial vector proves that ONE NAMED ATTACK SHAPE fails against the behaviour this suite can reach. It never proves the class is closed, and it is not a security guarantee.
+
+WHAT A PASS ASSERTS: the specific shape named in the vector — that payload, that ordering, that ref form — does not produce the outcome the attacker wanted, at the version recorded in the fixture.
+
+WHAT A PASS DOES NOT ASSERT: that a variant of the same shape fails; that the class the shape belongs to is covered; that the product still behaves this way at a version other than the one recorded; or, where a vector mirrors published logic rather than importing it, that the mirror and the product still agree. That last one is not hypothetical — re-verifying against coderifts@4.12.0 found two divergences in the issuer mirror while every test stayed green, and both would have reported a WRONG verdict to an auditor.
+
+WHY SOME VECTORS ARE ABSENT: four of the auditor's seven are not expressible in an offline, credential-free suite. They are listed in fixtures/adversarial.v1.json under `excluded`, each with its reason and where it IS covered, if anywhere. An absent vector is recorded, never silently dropped — a suite that hides what it cannot test is worse than a smaller honest one.
+
+Run them with the rest of the suite (`npm test`), or alone:
+
+```
+node --test test/adversarial.test.js
+```
+
+No CodeRifts credential, no network, no account. Three families are carried — issuer collision, MCP negative schema, action tag mutation — and the coverage boundary is a test of its own, so the suite fails if it stops stating what it does not cover.

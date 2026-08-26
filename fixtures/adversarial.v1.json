@@ -1,0 +1,90 @@
+{
+  "version": "adversarial.v1",
+  "title": "Adversarial vectors — the shapes an external auditor named",
+  "honesty": "A passing adversarial vector proves that ONE NAMED ATTACK SHAPE fails against the behaviour this suite can reach. It never proves the class is closed, and it is not a security guarantee.\n\nWHAT A PASS ASSERTS: the specific shape named in the vector — that payload, that ordering, that ref form — does not produce the outcome the attacker wanted, at the version recorded in the fixture.\n\nWHAT A PASS DOES NOT ASSERT: that a variant of the same shape fails; that the class the shape belongs to is covered; that the product still behaves this way at a version other than the one recorded; or, where a vector mirrors published logic rather than importing it, that the mirror and the product still agree. That last one is not hypothetical — re-verifying against coderifts@4.12.0 found two divergences in the issuer mirror while every test stayed green, and both would have reported a WRONG verdict to an auditor.\n\nWHY SOME VECTORS ARE ABSENT: four of the auditor's seven are not expressible in an offline, credential-free suite. They are listed in fixtures/adversarial.v1.json under `excluded`, each with its reason and where it IS covered, if anywhere. An absent vector is recorded, never silently dropped — a suite that hides what it cannot test is worse than a smaller honest one.",
+  "issuer_binding": {
+    "note": "Measured from the public GitHub API 2026-08-25/26. A required status check is only enforcing when the check RUN is posted by the app the branch protection names. app_id 15368 is GitHub Actions; 2860592 is the CodeRifts App, which posts a check that CANNOT block.",
+    "enforcing_issuer_app_id": 15368,
+    "coderifts_app_id": 2860592,
+    "check_name": "CodeRifts / contract-gate",
+    "statuses": [
+      "VERIFIED",
+      "NOT_VERIFIED",
+      "UNVERIFIABLE"
+    ],
+    "verified_against": {
+      "package": "coderifts",
+      "version": "4.12.0",
+      "symbol": "evaluateRequiredCheck (dist/cli.js)",
+      "note": "The published evaluator is NOT importable — dist/cli.js is a bin bundle and requiring it runs the CLI — so ADV-1 mirrors it. Re-read that function when this version moves: two divergences (multi-entry priority, app_id string coercion) were found this way, and both produced a WRONG verdict in the mirror while every test stayed green.",
+      "reason_codes": [
+        "issuer_bound",
+        "no_issuer_binding",
+        "legacy_contexts_no_issuer_binding",
+        "issuer_app_id_mismatch",
+        "issuer_advisory_app_conclusion_unobservable",
+        "required_check_absent"
+      ],
+      "not_mirrored": {
+        "issuer_app_id_unresolvable": "The product fails CLOSED to UNVERIFIABLE when the CodeRifts App id cannot be resolved. Unreachable in 4.12.0 (the id is a literal), so it is recorded as a modelling gap rather than mirrored as a branch no input can reach."
+      }
+    }
+  },
+  "excluded": [
+    {
+      "vector": "raw_tool_beside_guarded_table",
+      "reason": "Property of a RUNNING host's tool table, not of a decision response. The subject interface is a pure function of case input with no host, so any vector here would score a fake host — and a passing fake would imply conformance covers raw-host bypass when it does not, weakening @coderifts/bypass-probe's claim rather than adding to it.",
+      "covered_by": "@coderifts/bypass-probe, run against the adopter's own installation"
+    },
+    {
+      "vector": "concurrent_grants",
+      "reason": "Requires grant ISSUANCE under concurrency. @coderifts/agent-guard 10.0.0 exports no issuance API (measured: 36 exports, none matching grant/nonce/issue/consume), so the 8-overlapping-call measurement cannot be reproduced from published code. It lives in the guard's private suite.",
+      "covered_by": "guard private suite (not third-party reproducible)"
+    },
+    {
+      "vector": "stale_nonce",
+      "reason": "Single-use consumption happens at an executor we do not run, and the public verifier is STATELESS — it cannot detect a replayed jti by construction. A vector asserting 'replay is rejected' would be asserting a control the public code does not implement. What IS true is recorded as a boundary, not as a passing test.",
+      "covered_by": "the executor; unverifiable from a stateless offline verifier"
+    },
+    {
+      "vector": "ruleset_bypass",
+      "reason": "The ruleset evaluator exists in CLI source but the transport is not wired, and the published bundle (coderifts@4.12.0) does not carry evaluateRuleset/evaluateRequiredCheckAcrossSurfaces. Nothing a third party installs can exercise it yet.",
+      "covered_by": "nothing public today; re-measure when the transport lands"
+    }
+  ],
+  "tool_description_scoping": {
+    "tool": "get_decision_details",
+    "source": "https://app.coderifts.com/.well-known/mcp/server-card.json (tools[].description)",
+    "why_vendored": "The compensating control for ADV-5 is that the schema/route divergence and the fingerprint scoping are stated in the tool description a model actually reads. A vector cannot reach the route offline, so it holds the DOCUMENTATION instead. This copy is a vendored snapshot: there is no automatic app->conformance gate for this fixture today (cases.v1.json has one, this does not), so a divergence is caught by re-vendoring, not by CI. Naming that is the point.",
+    "required_facts": [
+      {
+        "id": "own-decisions-only",
+        "must_contain": "fingerprint lookup returns only YOUR OWN decisions",
+        "why": "a fingerprint is content-derived, so without scoping two callers with identical specs collide — this is the P0 that was fixed"
+      },
+      {
+        "id": "indistinguishable-not-found",
+        "must_contain": "SAME not_found",
+        "why": "a distinguishable \"exists but forbidden\" confirms a content hash was decided on by someone, which is the fact the scoping withholds"
+      },
+      {
+        "id": "unattributable-rows-current-limit",
+        "must_contain": "not retrievable by fingerprint at all",
+        "why": "rows without context.repository cannot be attributed; the description must say to use decision_id and must not imply the gap is permanent"
+      }
+    ],
+    "description": "Retrieve a PAST CodeRifts decision by decision_id (or fingerprint): full\nreport payload, breaking changes list, scores, and linked receipt metadata\nif stored.\n\nUse this when:\n- You have a decision_id (or fingerprint) from a previous preflight, PR\n  comment, or CI log and need to inspect or explain that past decision.\n- You are auditing why a prior ALLOW/WARN/BLOCK was issued.\n- You are NOT requesting a new analysis of current before/after specs.\n\nDo not use when:\n- You need a decision for the CURRENT uncommitted or PR head change set —\n  call coderifts.preflight_change_set with the current artifacts.\n- You hold a receipt token and only need cryptographic/lifecycle verification —\n  use coderifts.verify_receipt.\n- You have no decision_id/fingerprint — run preflight first to create one.\n\nInputs: at least one of decision_id (preferred) or fingerprint is required\n(empty {} is rejected by the server as INVALID_INPUT). Returns the stored\ndecision document or not_found.\n\nScoping — fingerprint lookup returns only YOUR OWN decisions. A fingerprint is\nderived from content, not from an account, so two callers who preflight\nbyte-identical specs derive the same one; the lookup is therefore constrained\nto the decisions your credential can prove it owns.\n\nA decision that exists but is not yours returns the SAME not_found as one that\nwas never issued. This is deliberate: a distinguishable \"exists but forbidden\"\nwould confirm to any caller that a given content hash had been decided on by\nsomeone, which is the fact the scoping exists to withhold. Do not read\nnot_found as proof that no such decision exists anywhere.\n\nDecisions persisted without context.repository cannot currently be attributed\nto an account, and are not retrievable by fingerprint at all — not by their\nowner either. Retrieve those by decision_id, which is unchanged and unscoped.\nThis is a limitation of what older stored rows carry, not a property of the\nlookup: rows written from now on record the account directly, so the gap\nnarrows as older rows age out. If a fingerprint you expect returns not_found,\nuse the decision_id before concluding the decision is missing.\n\nWhen the stored envelope carries control fields, control_envelope.next_agent_step\nis structured remediation guidance the agent MAY follow for non-CONTINUE\nexecution_action values (null on CONTINUE*). Still branch on execution_action;\nnext_agent_step is a suggestion, not permission."
+  },
+  "gate_action_pin": {
+    "repo": "coderifts/contract-gate",
+    "mutable_ref": "v0",
+    "pinned_sha": "e5b6315e38c66a2274583ddf4d7be11515180326",
+    "pinned_tag_at_resolution": "v0.5.0",
+    "verified_against": {
+      "package": "coderifts",
+      "version": "4.12.0",
+      "note": "the SHA the strict template emits was found in the PUBLISHED bundle, not read from a private source — a third party can confirm it by unpacking coderifts@4.12.0 from npm."
+    },
+    "why_both_exist": "The NON-strict template stays on @v0 deliberately: easy updates are the point there. The strict template pins the SHA. A consumer choosing between them is choosing between \"follows our fixes\" and \"runs exactly these bytes\"."
+  }
+}
