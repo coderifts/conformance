@@ -22,7 +22,8 @@
   "scripts": {
     "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node --test test/*.test.js",
     "conformance": "node bin/coderifts-conformance.js",
-    "model-acceptance": "node bin/coderifts-conformance.js --subject model-acceptance"
+    "model-acceptance": "node bin/coderifts-conformance.js --subject model-acceptance",
+    "profiles": "node bin/coderifts-conformance.js --profiles"
   },
   "dependencies": {
     "@coderifts/agent-guard": ">=8.1.1",

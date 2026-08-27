@@ -78,6 +78,79 @@ Exit 0 iff all 4 providers × allow/block rows pass and `change_fp` + verdict ar
 
 Local guard newer than the published npm copy: set `CODERIFTS_AGENT_GUARD_DIR` (or keep a sibling `../coderifts-agent-guard` checkout with `dist/`).
 
+## Assurance profiles — what a run actually proves
+
+This suite used to report a single conformance number. One number collapses seven claims of very
+different strength: "an adapter branches on `execution_action`" and "a merge was refused at the
+provider" are not the same evidence, and a total cannot tell you which of them is held. It is also
+silent about what was never attempted.
+
+So a run is reported as seven profiles, in chain order. **Every profile is listed, including the
+empty ones** — a reader who sees only the profiles that pass has learned nothing new.
+
+| Profile | Status | Evidence here | What a COVERED verdict would mean |
+|---------|--------|---------------|-----------------------------------|
+| `DECISION_LOGIC` | **COVERED** | 11 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `RECEIPT_CRYPTO` | **NOT RUN** | 19 vectors present, **none executable here** | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
+| `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
+| `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
+| `ATOMIC_COMMIT` | **NOT COVERED** | no vector exists | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
+| `PROVIDER_ENFORCED` | **NOT COVERED** | no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
+| `END_TO_END` | **NOT COVERED** | no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
+
+**Two covered, one not run, four not covered — of seven.** There is deliberately no `x/7` here:
+the profiles are claims of different strength, and a ratio over them re-creates the single number
+this split replaced.
+
+### Why the empty ones are empty
+
+- **`RECEIPT_CRYPTO` — NOT RUN, which is not the same as covered or absent.** The 19 vectors are
+  vendored from the CodeRifts app and are right there in `cases.v1.json`, but every shipped subject
+  implements only the `decide` and `tool_selection` kinds and throws `unknown case kind` on the
+  rest. They are also outside the default profile, so they were never selected and never showed up
+  as failures. This profile is data, not evidence.
+- **`CREDENTIAL_BOUNDARY`** — a property of a *running* host's tool table. Every subject here is a
+  pure function of case input with no host, so a vector would score a fake host, and a passing fake
+  would imply coverage that does not exist. Covered by `@coderifts/bypass-probe` against your own
+  installation. Recorded as the excluded vector `raw_tool_beside_guarded_table`.
+- **`ATOMIC_COMMIT`** — single-use consumption happens at an executor this suite does not run, and
+  the public verifier is stateless. Recorded as `stale_nonce` and `concurrent_grants`.
+  **`EG-A-STATE-NONCE-MISMATCH` is not evidence here** despite naming a nonce: it checks that an
+  attestation document is unbound, which is a binding fact, and it counts under `RECEIPT_CRYPTO`.
+- **`PROVIDER_ENFORCED`** — needs a live provider and a credential. `ADV-1` looks like coverage and
+  is not: it *mirrors* the published required-check evaluator, and a mirror agreeing with itself is
+  not a provider refusing anything. It counts under `DECISION_LOGIC`. Recorded as `ruleset_bypass`.
+- **`END_TO_END`** — no vector was ever written, and it depends on four profiles that are
+  themselves not covered here. It has no `excluded` entry because nothing was attempted.
+
+### Empty profiles never render green
+
+`0/0` is rejected as a rendering, in every format. It is not merely unclear — it is the *same
+shape* as a pass: `14/14` and `0/0` both read as "everything selected succeeded", and a dashboard
+averaging ratios scores `0/0` as 100%. `NOT COVERED` cannot be misread that way because it is not a
+number. A count is printed only where a count means something.
+
+```bash
+node bin/coderifts-conformance.js --profiles          # the table above
+node bin/coderifts-conformance.js --profiles --json   # machine shape, explicit `green` per profile
+node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT   # exit 3 — gate CI on one claim
+```
+
+`--assurance <ID>` exits **0** only when that profile is COVERED, **3** when it is NOT RUN or NOT
+COVERED, and **2** for an unknown id. Exit 3 is distinct from exit 1 on purpose: "nothing proved
+this" is not "this was disproved". A CI job pointed at an empty profile fails instead of going
+green forever.
+
+One vector fits none of the seven and is recorded rather than forced: **`ADV-6`** (SHA pin vs the
+moving `@v0` tag) asserts supply-chain integrity of the enforcing component, which is a
+*precondition* for provider enforcement rather than enforcement, and is not a verdict, a token or a
+tool. Forcing it into the nearest profile would make that profile's name overclaim. See
+`UNPLACED` in `lib/assurance-profiles.js`.
+
+The ten `COVERAGE BOUNDARY` / `RE-VERIFICATION RECORD` tests count toward **no** profile: they
+assert properties of the fixture, and letting the suite score itself for describing itself is
+exactly the inflation this split prevents.
+
 ## Case source of truth
 
 `cases.v1.json` is **vendored** from the private CodeRifts app (`test/adapter-acceptance/cases.v1.json`). The app CI asserts byte-identity so this public copy cannot silently drift from what the product tests against.
