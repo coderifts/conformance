@@ -102,5 +102,74 @@
       "concurrent_grants exclusion reason was factually wrong (see its entry) — corrected",
       "stale_nonce exclusion narrowed by guard 10.0.0's executeIfUnchanged — reworded"
     ]
+  },
+  "same_issuer_workflow_spoof": {
+    "note": "ADV-7. The issuer binding proves the check came from GitHub Actions. It CANNOT prove the check came from OUR workflow, because app_id 15368 is shared by every workflow in the repository. This is the shape behind the claim an external review says we overstate.",
+    "schema_justification": {
+      "source": "GitHub OpenAPI description, components.schemas.status-check-policy (measured 2026-08-27)",
+      "quoted_shape": "required_status_checks.checks[] items = { context: string, app_id: integer }",
+      "why_it_settles_it": "The checks[] entry carries NO workflow-identifying field of any kind — not a path, not a ref, not a sha. So two check runs posted by two DIFFERENT workflows under the same app_id are indistinguishable to anything reading branch protection. The gap is structural in the schema, not a gap in our reading of it.",
+      "where_the_producer_IS_identifiable": "components.schemas.check-run carries `app`, `head_sha` and `conclusion`. Branch protection does not consult them, and this suite does not read them — see evidence_checklist."
+    },
+    "evidence_checklist": {
+      "mirrors_published_logic": true,
+      "imports_the_product": false,
+      "observes_a_real_check_run": false,
+      "observes_a_provider_refusal": false,
+      "proves_a_non_coderifts_workflow_CAN_post_it": false,
+      "honest_note": "The last entry is FALSE and that is the point. This vector shows the binding CANNOT DISTINGUISH, which is a property of the schema we can read offline. It does NOT demonstrate a spoof being performed: doing that needs a repository, a second workflow and a credential. A tick there would be a claim nobody earned."
+    },
+    "verified_against": {
+      "package": "coderifts",
+      "version": "6.0.1",
+      "symbol": "evaluateRequiredCheck (mirrored, see ADV-1)",
+      "note": "Same mirror as ADV-1; re-read that function when this version moves."
+    }
+  },
+  "create_path_readback": {
+    "note": "ADV-8. `setup-required-check --apply` on a repository with NO branch protection took a 404 branch that wrote its own payload — the legacy `contexts` array with no `checks[]` and therefore no app_id — and the read-back still reported APPLIED with exit 0. It survived a version bump because the coupling test covered only the branch where protection ALREADY EXISTS. Fixed in CLI 6.0.0 by using one payload builder for both branches and grading the read-back with the enforcement verifier.",
+    "schema_justification": {
+      "source": "GitHub REST, Update branch protection — required_status_checks",
+      "quoted_shape": "`contexts` is DEPRECATED: \"Use checks instead of contexts for more fine-grained control.\" checks[] items take { context (required), app_id (optional) }",
+      "why_it_settles_it": "A payload carrying `contexts` alone cannot express an issuer at all, so it is not a weaker binding — it is NO binding. Our own verifier grades exactly that shape legacy_contexts_no_issuer_binding, which is why an installer emitting it was configuring what the product rejects."
+    },
+    "payloads": {
+      "defective_create_5_x": {
+        "required_status_checks": {
+          "strict": false,
+          "contexts": [
+            "CodeRifts / contract-gate"
+          ]
+        }
+      },
+      "corrected_create_6_0_0": {
+        "required_status_checks": {
+          "strict": false,
+          "contexts": [
+            "CodeRifts / contract-gate"
+          ],
+          "checks": [
+            {
+              "context": "CodeRifts / contract-gate",
+              "app_id": 15368
+            }
+          ]
+        }
+      }
+    },
+    "evidence_checklist": {
+      "mirrors_published_logic": true,
+      "imports_the_product": false,
+      "runs_the_installer": false,
+      "observes_what_the_CLI_writes_today": false,
+      "pins_the_payload_SHAPE_the_verifier_accepts": true,
+      "honest_note": "This suite has no CLI and no GitHub, so it cannot watch `setup-required-check` write anything. What it pins is the SHAPE: the defective payload grades unbound and the corrected one grades bound. If a future CLI regressed to emitting the defective shape, THIS VECTOR WOULD STILL PASS — it would be graded, correctly, as unbound, and nobody here would notice the CLI had changed. Catching that needs the CLI's own test, which is where the fix is actually pinned."
+    },
+    "verified_against": {
+      "package": "coderifts",
+      "version": "6.0.1",
+      "fixed_in": "6.0.0",
+      "note": "The fix lives in packages/cli; this records the shape it must never emit again."
+    }
   }
 }

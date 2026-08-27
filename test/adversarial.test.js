@@ -338,6 +338,113 @@ describe('ADV-6 action tag mutation — a moved tag must not silently change wha
 });
 
 // ───────────────────────────────────────────────────────────────────────────
+const SPOOF = FIX.same_issuer_workflow_spoof;
+
+describe('ADV-7 same-issuer workflow spoof — an issuer binding does not name a workflow', () => {
+  it('the SHIPPED schema carries no workflow-identifying field, so it CANNOT distinguish', () => {
+    // The gate rule this suite adopted after four defective vectors: confirm the shape is wrong
+    // against the shipped schema before believing an outcome. Measured from the GitHub OpenAPI
+    // description: status-check-policy.checks[] items are { context, app_id } and nothing else.
+    assert.match(SPOOF.schema_justification.quoted_shape, /context: string, app_id: integer/);
+    assert.equal(/workflow|path|ref|sha/i.test(SPOOF.schema_justification.quoted_shape), false,
+      'if the schema ever names a workflow, this vector is obsolete and must be re-measured');
+  });
+
+  it('TWO DIFFERENT WORKFLOWS ARE THE SAME PROTECTION DOCUMENT — byte-identical', () => {
+    // The spoof, expressed as the only thing an offline suite can honestly express: a check posted
+    // by our workflow and a check posted by a hostile one produce protection documents that are
+    // indistinguishable, because the producer is not recorded here at all.
+    const ours = { checks: [{ context: IB.check_name, app_id: IB.enforcing_issuer_app_id }] };
+    const theirs = { checks: [{ context: IB.check_name, app_id: IB.enforcing_issuer_app_id }] };
+    assert.deepEqual(ours, theirs);
+    assert.equal(evaluateIssuerBinding(ours).status, 'VERIFIED');
+    assert.equal(evaluateIssuerBinding(theirs).status, 'VERIFIED');
+  });
+
+  it('PINS THE OVERSTATEMENT: issuer-bound VERIFIED is reached with NO proof of which workflow ran', () => {
+    const v = evaluateIssuerBinding({
+      checks: [{ context: IB.check_name, app_id: IB.enforcing_issuer_app_id }],
+    });
+    assert.equal(v.status, 'VERIFIED');
+    assert.equal(v.reason_code, 'issuer_bound');
+    // VERIFIED here means "bound to an issuer that CAN block". It does not mean "our gate ran".
+    assert.equal(SPOOF.evidence_checklist.proves_a_non_coderifts_workflow_CAN_post_it, false);
+  });
+
+  it('HONESTY: the checklist records FALSE where nobody earned a tick', () => {
+    const c = SPOOF.evidence_checklist;
+    assert.equal(c.observes_a_real_check_run, false);
+    assert.equal(c.observes_a_provider_refusal, false);
+    assert.equal(c.imports_the_product, false);
+    assert.ok(c.honest_note.length > 120, 'a FALSE without its reason is just a gap');
+    assert.match(c.honest_note, /needs a repository, a second workflow and a credential/);
+  });
+
+  it('the producer IS identifiable elsewhere, and the fixture says where', () => {
+    // Naming where the fact DOES live stops a reader concluding the fact is unobtainable.
+    assert.match(SPOOF.schema_justification.where_the_producer_IS_identifiable, /check-run/);
+    assert.match(SPOOF.schema_justification.where_the_producer_IS_identifiable, /head_sha/);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+const CREATE = FIX.create_path_readback;
+
+describe('ADV-8 create-path read-back — the shape an installer must never emit', () => {
+  it('the DEFECTIVE create payload grades unbound against our own evaluator', () => {
+    const rsc = CREATE.payloads.defective_create_5_x.required_status_checks;
+    // It carries contexts and NO checks[] — exactly the shape the 404 branch used to write.
+    assert.equal(Array.isArray(rsc.checks), false, 'the defect is the ABSENCE of checks[]');
+    const v = evaluateIssuerBinding({ contexts: rsc.contexts });
+    assert.equal(v.status, 'NOT_VERIFIED');
+    assert.equal(v.reason_code, 'legacy_contexts_no_issuer_binding');
+  });
+
+  it('the CORRECTED create payload grades issuer-bound', () => {
+    const rsc = CREATE.payloads.corrected_create_6_0_0.required_status_checks;
+    const v = evaluateIssuerBinding({ contexts: rsc.contexts, checks: rsc.checks });
+    assert.equal(v.status, 'VERIFIED');
+    assert.equal(v.reason_code, 'issuer_bound');
+    assert.equal(rsc.checks[0].app_id, IB.enforcing_issuer_app_id);
+  });
+
+  it('the two payloads DIFFER, so the fix is a real change and not a relabelling', () => {
+    const bad = CREATE.payloads.defective_create_5_x;
+    const good = CREATE.payloads.corrected_create_6_0_0;
+    assert.notDeepEqual(bad, good);
+    // The contexts array is byte-identical between them: the ONLY difference is checks[]. That is
+    // why a name-only read-back could not tell them apart, which is how APPLIED was reported.
+    assert.deepEqual(
+      bad.required_status_checks.contexts,
+      good.required_status_checks.contexts,
+    );
+  });
+
+  it('the schema justification quotes the DEPRECATION, not our preference', () => {
+    assert.match(CREATE.schema_justification.quoted_shape, /DEPRECATED/);
+    assert.match(CREATE.schema_justification.quoted_shape, /Use checks instead of contexts/);
+    assert.match(CREATE.schema_justification.why_it_settles_it, /not a weaker binding — it is NO binding/);
+  });
+
+  it('HONESTY: this vector would NOT catch a CLI regression, and says so', () => {
+    // The most important line in the file. This suite has no CLI: it pins a SHAPE, so a future
+    // installer emitting the defective payload again would still be graded unbound here and
+    // nobody would notice the CLI had changed.
+    const c = CREATE.evidence_checklist;
+    assert.equal(c.runs_the_installer, false);
+    assert.equal(c.observes_what_the_CLI_writes_today, false);
+    assert.equal(c.pins_the_payload_SHAPE_the_verifier_accepts, true);
+    assert.match(c.honest_note, /THIS VECTOR WOULD STILL PASS/);
+    assert.match(c.honest_note, /needs the CLI's own test/);
+  });
+
+  it('records the version it was verified against, so drift is detectable', () => {
+    assert.equal(CREATE.verified_against.fixed_in, '6.0.0');
+    assert.match(String(CREATE.verified_against.version), /^\d+\.\d+\.\d+$/);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
 describe('COVERAGE BOUNDARY — the four vectors this suite does NOT carry', () => {
   it('each exclusion names a reason and where it IS covered, if anywhere', () => {
     const ids = FIX.excluded.map((e) => e.vector).sort();

@@ -90,7 +90,7 @@ empty ones** — a reader who sees only the profiles that pass has learned nothi
 
 | Profile | Status | Evidence here | What a COVERED verdict would mean |
 |---------|--------|---------------|-----------------------------------|
-| `DECISION_LOGIC` | **COVERED** | 11 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `DECISION_LOGIC` | **COVERED** | 13 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
 | `RECEIPT_CRYPTO` | **NOT RUN** | 19 vectors present, **none executable here** | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
 | `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
@@ -109,6 +109,16 @@ this split replaced.
   implements only the `decide` and `tool_selection` kinds and throws `unknown case kind` on the
   rest. They are also outside the default profile, so they were never selected and never showed up
   as failures. This profile is data, not evidence.
+
+  **Measured 2026-08-27 — the recommendation is REMOVAL, not a runner.** The case inputs carry a
+  scenario *name*, not a token: 14 of the 19 are `{ "scenario": "..." }` and nothing else. Running
+  them would mean minting the signed token from that name, so a runner here would be a generator
+  and a verifier in one repository agreeing with itself. `receipt-verifier` runs the equivalent
+  vectors as **signed token bytes** — cross-checked by two independent implementations, JS and
+  Python — and **12 of the 19 already run there under byte-identical IDs** (`EG-*` 5/5, `EG-A-*`
+  7/7). The 7 `MON-A-*` have no home there yet and belong there rather than here. The removal
+  cannot start in this repository: `cases.v1.json` is vendored and gated byte-identical from the
+  app, so it begins at the app-canonical copy.
 - **`CREDENTIAL_BOUNDARY`** — a property of a *running* host's tool table. Every subject here is a
   pure function of case input with no host, so a vector would score a fake host, and a passing fake
   would imply coverage that does not exist. Covered by `@coderifts/bypass-probe` against your own
@@ -117,7 +127,10 @@ this split replaced.
   the public verifier is stateless. Recorded as `stale_nonce` and `concurrent_grants`.
   **`EG-A-STATE-NONCE-MISMATCH` is not evidence here** despite naming a nonce: it checks that an
   attestation document is unbound, which is a binding fact, and it counts under `RECEIPT_CRYPTO`.
-- **`PROVIDER_ENFORCED`** — needs a live provider and a credential. `ADV-1` looks like coverage and
+- **`PROVIDER_ENFORCED`** — needs a live provider and a credential. The only thing that would move
+  it is a *negative canary* (a deliberate refusal, observed); its cost and its limits are measured
+  in [docs/1105-negative-canary-design.md](./docs/1105-negative-canary-design.md), which is a
+  design and **not** an implementation. `ADV-1` looks like coverage and
   is not: it *mirrors* the published required-check evaluator, and a mirror agreeing with itself is
   not a provider refusing anything. It counts under `DECISION_LOGIC`. Recorded as `ruleset_bypass`.
 - **`END_TO_END`** — no vector was ever written, and it depends on four profiles that are

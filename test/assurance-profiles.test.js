@@ -112,8 +112,18 @@ describe('an empty profile can never render as a pass', () => {
   });
 
   it('TERMINAL: there is no suite-wide x/7 that re-creates the single number', () => {
+    // CHECK THE SUMMARY LINE, NOT THE PROSE. The first version of this test scanned the whole
+    // render for /\d\/7/ and started failing when an explanation legitimately wrote "EG-A-* 7/7"
+    // about VECTOR counts in another repository. That is the same trap the ADV-1 bypass caveat
+    // documents: a naive negative regex fires on the honesty text it was meant to protect. The
+    // claim being defended is that the SUMMARY does not average seven unequal profiles, so the
+    // assertion is scoped to the summary line.
     const out = AP.renderProfileTable();
-    assert.equal(/\b\d\s*\/\s*7\b/.test(out), false, 'a ratio over seven unequal claims is the number we removed');
+    const summary = out.split('\n').find((l) => /covered ·/.test(l));
+    assert.ok(summary, 'the summary line must exist to be checked');
+    assert.equal(/\d\s*\/\s*\d/.test(summary), false,
+      'a ratio over seven unequal claims is the number we removed');
+    assert.match(summary, /of 7 profiles/, 'the count is stated as words, not as a ratio');
   });
 
   it('TERMINAL: every non-covered profile prints WHY, not just that it is empty', () => {
