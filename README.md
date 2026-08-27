@@ -94,7 +94,7 @@ empty ones** — a reader who sees only the profiles that pass has learned nothi
 | `RECEIPT_CRYPTO` | **NOT RUN** | 19 vectors present, **none executable here** | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
 | `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
-| `ATOMIC_COMMIT` | **NOT COVERED** | no vector exists | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
+| `ATOMIC_COMMIT` | **NOT COVERED** | no vector here — executable in `@coderifts/agent-guard` `test/atomic-profile.test.js` | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
 | `PROVIDER_ENFORCED` | **NOT COVERED** | no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
 | `END_TO_END` | **NOT COVERED** | no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 

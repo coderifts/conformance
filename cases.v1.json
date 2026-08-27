@@ -669,6 +669,54 @@
       "input": { "scenario": "not_delivered" },
       "expect": { "valid": true, "status": "MON_ATTEST_VALID" },
       "class": "safety"
+    },
+    {
+      "id": "EG2-VALID",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "Valid cr.exec.v2 grant verifies GRANT_CURRENT with exact executor/adapter/target/audience.",
+      "source": { "surface": "docs", "path": "docs/breaking-wave-v2.md" },
+      "input": {
+        "scenario": "valid_v2",
+        "operation": "merge",
+        "executor_id": "exec-a",
+        "adapter_id": "fs-local",
+        "target_uri": "fs://repo/openapi.yaml",
+        "audience": "v:deadbeefdead",
+        "after_payload": "{\"ok\":true}"
+      },
+      "expect": { "valid": true, "status": "GRANT_CURRENT" },
+      "class": "safety"
+    },
+    {
+      "id": "EG2-TRANSFERRED-EXECUTOR",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "Same v2 token presented to another executor \u2192 GRANT_UNBOUND (executor_mismatch).",
+      "source": { "surface": "docs", "path": "docs/breaking-wave-v2.md" },
+      "input": { "scenario": "transferred_executor" },
+      "expect": { "valid": false, "status": "GRANT_UNBOUND" },
+      "class": "safety"
+    },
+    {
+      "id": "EG2-TARGET-MISMATCH",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "intended target_uri differs \u2192 GRANT_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/breaking-wave-v2.md" },
+      "input": { "scenario": "target_mismatch" },
+      "expect": { "valid": false, "status": "GRANT_UNBOUND" },
+      "class": "safety"
+    },
+    {
+      "id": "EG2-AUDIENCE-MISMATCH",
+      "kind": "execution_grant",
+      "profiles": ["execution_grant"],
+      "note": "intended audience hashes differently \u2192 GRANT_UNBOUND.",
+      "source": { "surface": "docs", "path": "docs/breaking-wave-v2.md" },
+      "input": { "scenario": "audience_mismatch" },
+      "expect": { "valid": false, "status": "GRANT_UNBOUND" },
+      "class": "safety"
     }
   ]
 }
