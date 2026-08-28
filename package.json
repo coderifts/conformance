@@ -17,7 +17,8 @@
     "fixtures/",
     "cases.v1.json",
     "CONTRACT.md",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node --test test/*.test.js",
