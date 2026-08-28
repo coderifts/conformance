@@ -1,0 +1,54 @@
+{
+  "version": "vulnerable-bearer-executor.v1",
+  "title": "Vulnerable BEARER executor — pending expected-fail marker, not a runnable subject",
+  "status": "pending",
+  "expected_fail": true,
+  "honesty": "This file is a MARKER, not a vector and not a subject. It records a deliberately-weak executor shape — a BEARER grant with NO state_nonce and NO executor attestation — that CREDENTIAL_BOUNDARY and ATOMIC_COMMIT WOULD have to fail against, once those profiles can assert anything. Today they cannot: both are why_empty in lib/assurance-profiles.js, VECTOR_MAP carries no vectors for either id, and every shipped subject is a pure function of case input with no host and no executor. A runnable fake host or fake executor scored green here would imply this suite covers raw-host bypass and atomic commit when it does not. That is the green-on-vulnerable suite this marker exists to refuse. Until the missing surfaces land, a pass against this fixture would be vacuous, and a fail would be invented. Recorded, not executed.",
+  "intended_subject": {
+    "id": "vulnerable-bearer-executor",
+    "registered": false,
+    "grant_profile": "BEARER",
+    "state_nonce": null,
+    "resolveStateNonce": null,
+    "executor_attestation": null,
+    "cas_evidence_class": "absent",
+    "measured_residual": "execution_grant_bearer_no_state_nonce",
+    "measured_from": "node_modules/@coderifts/agent-guard/dist/cjs/with-coderifts.js (RESIDUAL_GRANT_BEARER_NO_STATE_NONCE; ENFORCING_STRICT permits BEARER and names it; executorAttestation is not required at construction)"
+  },
+  "intended_bite": {
+    "cannot_fire": true,
+    "why": "CREDENTIAL_BOUNDARY and ATOMIC_COMMIT are NOT_COVERED (no vectors). --assurance on either id exits 3 for every subject, including reference. There is no vulnerable subject to FAIL, and reference does not PASS those profiles — both are unproved. Exit 3 is 'nothing proved this', not 'this was disproved' (bin/coderifts-conformance.js:86-107).",
+    "reference_would_need_to": "PASS CREDENTIAL_BOUNDARY and ATOMIC_COMMIT",
+    "vulnerable_would_need_to": "FAIL CREDENTIAL_BOUNDARY and ATOMIC_COMMIT",
+    "what_actually_happens": {
+      "reference --assurance CREDENTIAL_BOUNDARY": "exit 3, NOT COVERED",
+      "reference --assurance ATOMIC_COMMIT": "exit 3, NOT COVERED",
+      "--subject vulnerable-bearer-executor": "exit 2, unknown subject (deliberately unregistered)"
+    }
+  },
+  "profiles": {
+    "CREDENTIAL_BOUNDARY": {
+      "status_here": "NOT_COVERED",
+      "why_empty_quoted_from": "lib/assurance-profiles.js:110-115",
+      "what_is_missing_to_assert": [
+        "A RUNNING host with a tool table (every subject here is a pure function of case input with no host).",
+        "A vector that attempts a raw tool beside the guarded table — recorded today as excluded vector raw_tool_beside_guarded_table in fixtures/adversarial.v1.json, covered_by @coderifts/bypass-probe against the adopter's own installation.",
+        "Wiring a fake host would score a fake host: a passing fake would imply this suite covers raw-host bypass when it does not, weakening bypass-probe rather than adding to it."
+      ]
+    },
+    "ATOMIC_COMMIT": {
+      "status_here": "NOT_COVERED",
+      "why_empty_quoted_from": "lib/assurance-profiles.js:124-131",
+      "what_is_missing_to_assert": [
+        "An executor this suite does not run, that consumes a nonce once as part of the same transaction as the mutation.",
+        "A stateful public verifier — receipt-verifier is STATELESS and cannot detect a replayed jti by construction, so a vector asserting 'replay is rejected' would assert a control the public code does not implement.",
+        "Issuance of overlapping grants (concurrent_grants) — @coderifts/agent-guard still exports no issueExecutionGrant (re-measured; tryIssue* are attestations, not grants).",
+        "Executor attestation as cas_evidence.class === 'executor_attested' (cas-attestation.js:276-280, ENFORCING_ATOMIC). Absent attestation is host_claimed or absent, which ATOMIC refuses as authorized_and_committed.",
+        "The executable home today is @coderifts/agent-guard test/atomic-profile.test.js, not this repository."
+      ]
+    }
+  },
+  "trap": {
+    "note": "A BEARER grant document with no state_nonce is a GRANT SHAPE. EG-A-STATE-NONCE-MISMATCH already names a nonce and is counted under RECEIPT_CRYPTO (runner: none), not ATOMIC_COMMIT. Adding a grant-shaped fixture here would populate the wrong profile and still would not run: shipped subjects implement only decide and tool_selection."
+  }
+}
