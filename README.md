@@ -191,3 +191,9 @@ node --test test/adversarial.test.js
 ```
 
 No CodeRifts credential, no network, no account. Three families are carried — issuer collision, MCP negative schema, action tag mutation — and the coverage boundary is a test of its own, so the suite fails if it stops stating what it does not cover.
+
+## Attack-matrix contract (not a running executor)
+
+`fixtures/attack-matrix.v1.json` records CONTRACT expectations for a future credential-owning executor (EP-1/EP-2). It is not proof this suite runs the attacks, not a verifier, and not a green check that a nonce was consumed. There is no executor here. `ATOMIC_COMMIT` stays **NOT COVERED**. Guard 14 exports no `issueExecutionGrant`. This file does **not** enlarge `adversarial.v1.json` `excluded[]` (still exactly four).
+
+Stated-contract (expected outcome + error + target-unchanged, recorded): replay (`NONCE_ALREADY_CONSUMED`), expired-nonce (`NONCE_EXPIRED`), payload-swap (`PAYLOAD_HASH_MISMATCH`), missing-attestation (`authorized_and_committed` false). Pending-contract (need a data plane): raw-tool, concurrent, stale-state.

@@ -1,0 +1,101 @@
+{
+  "version": "attack-matrix.v1",
+  "title": "Attack-matrix CONTRACT vectors — expected outcomes for a future executor, not a running suite",
+  "spec": "cr.nonce.consume-and-commit.v1 (receipt-verifier/test/consume-and-commit-vectors.json) + capability-demo/demo/src/atomic.js + guard 14 cas-attestation",
+  "status": "contract",
+  "runner": "none",
+  "honesty": "These are CONTRACT expectations for a future credential-owning executor (EP-1/EP-2). They are not proof this suite runs the attacks, not a verifier, and not a green check that a nonce was consumed. There is no executor here. A JSON shape that matches does not prove the class is closed. Do not invent a verifier from this file. Guard 14 exports no issueExecutionGrant (re-measured: 213 exports; tryIssue* are attestations). The public receipt-verifier is STATELESS and cannot detect a replayed jti. ATOMIC_COMMIT stays NOT_COVERED.\n\nWHAT A STATED-CONTRACT ROW ASSERTS: the named attack, if presented to a production consumeAndCommit, MUST produce the recorded outcome, error code, and target-unchanged invariant. The names are measured from shipped contracts (EP-2 consume-and-commit-vectors.json and capability-demo atomic.js), not invented.\n\nWHAT A PENDING-CONTRACT ROW ASSERTS: the outcome cannot be stated without a data plane (running host, overlapping grant issuance, or live CAS). Recorded with why, not executed.\n\nSIBLING, NOT excluded[]: fixtures/adversarial.v1.json excluded[] remains exactly four (raw_tool_beside_guarded_table, concurrent_grants, stale_nonce, ruleset_bypass). This file does not enlarge that list. Attacks that map onto those four stay pending here and excluded there.",
+  "error_code_sources": {
+    "NONCE_ALREADY_CONSUMED": "receipt-verifier/test/consume-and-commit-vectors.json CAC-REPLAY (EP-2 contract). Guard 14 does not define this symbol. capability-demo today emits GRANT_CONSUMED (demo/src/atomic.js:82, PG 23505 on consumed_grants.jti).",
+    "NONCE_EXPIRED": "receipt-verifier CAC-EXPIRED. Demo today emits STATE_CHALLENGE_EXPIRED (atomic.js:56).",
+    "PAYLOAD_HASH_MISMATCH": "receipt-verifier CAC-PAYLOAD-SWAP.",
+    "TARGET_STATE_CONFLICT": "receipt-verifier CAC-TARGET-STATE-CONFLICT. Demo today emits STATE_DRIFT (atomic.js:68).",
+    "authorized_and_committed": "NOT an error code. Guard 14 cas-attestation.ts:431-435: under ENFORCING_ATOMIC, authorized_and_committed is true only when cas_evidence.class === 'executor_attested'."
+  },
+  "attacks": [
+    {
+      "id": "AM-RAW-TOOL",
+      "attack": "raw-tool",
+      "kind": "pending-contract",
+      "why_pending": "Property of a RUNNING host's tool table. Same reason as adversarial.v1.json excluded raw_tool_beside_guarded_table. Every subject here is a pure function of case input with no host. A fake host would weaken @coderifts/bypass-probe.",
+      "maps_to_excluded": "raw_tool_beside_guarded_table",
+      "expected": null,
+      "target_unchanged": null
+    },
+    {
+      "id": "AM-REPLAY",
+      "attack": "replay",
+      "kind": "stated-contract",
+      "why_stated": "EP-2 consume-and-commit-vectors.json CAC-REPLAY already names the outcome. Demo atomic.js:73-82 implements the one-use as consumed_grants.jti PRIMARY KEY (23505 → GRANT_CONSUMED). No executor runs here; the contract is recorded.",
+      "expected": {
+        "outcome": "refused",
+        "error": "NONCE_ALREADY_CONSUMED",
+        "demo_today_emits": "GRANT_CONSUMED"
+      },
+      "target_unchanged": true,
+      "target_unchanged_invariant": "A replayed nonce MUST NOT apply a second mutation. The whole transaction rolls back (demo atomic.js:8, 80-82)."
+    },
+    {
+      "id": "AM-CONCURRENT",
+      "attack": "concurrent",
+      "kind": "pending-contract",
+      "why_pending": "Requires ISSUING overlapping execution grants. Guard 14.0.0 exports 213 symbols, executeIfUnchanged is a function, issueExecutionGrant is undefined. tryIssue* are attestations, not grants. Same reason as excluded concurrent_grants. Cannot reproduce 8 overlapping issuances offline.",
+      "maps_to_excluded": "concurrent_grants",
+      "expected": null,
+      "target_unchanged": null
+    },
+    {
+      "id": "AM-STALE-STATE",
+      "attack": "stale-state",
+      "kind": "pending-contract",
+      "why_pending": "Verifying the target stayed unchanged needs a live executor CAS against challenged digest. Demo implements it (atomic.js:62-70 STATE_DRIFT); EP-2 names TARGET_STATE_CONFLICT. This suite does not run either. Outcome names are recorded below so they are not invented later; the row stays pending until a data plane exists.",
+      "maps_to_excluded": "stale_nonce (adjacent: nonce consumption is the executor; CAS drift is STATE_DRIFT / TARGET_STATE_CONFLICT)",
+      "measured_future_expected": {
+        "outcome": "refused",
+        "error": "TARGET_STATE_CONFLICT",
+        "demo_today_emits": "STATE_DRIFT"
+      },
+      "expected": null,
+      "target_unchanged": null
+    },
+    {
+      "id": "AM-EXPIRED-NONCE",
+      "attack": "expired-nonce",
+      "kind": "stated-contract",
+      "why_stated": "EP-2 CAC-EXPIRED names NONCE_EXPIRED. Demo atomic.js:54-56 refuses expired challenges as STATE_CHALLENGE_EXPIRED before the ledger insert, so the mutation never runs.",
+      "expected": {
+        "outcome": "refused",
+        "error": "NONCE_EXPIRED",
+        "demo_today_emits": "STATE_CHALLENGE_EXPIRED"
+      },
+      "target_unchanged": true,
+      "target_unchanged_invariant": "An expired nonce MUST NOT mutate. Demo rolls back before INSERT consumed_grants and before mutate()."
+    },
+    {
+      "id": "AM-PAYLOAD-SWAP",
+      "attack": "payload-swap",
+      "kind": "stated-contract",
+      "why_stated": "EP-2 CAC-PAYLOAD-SWAP: mutation after_payload_hash disagrees with the grant binding → PAYLOAD_HASH_MISMATCH. Guard 14 does not define this symbol (no nonce ledger). The contract is the EP-2 name.",
+      "expected": {
+        "outcome": "refused",
+        "error": "PAYLOAD_HASH_MISMATCH"
+      },
+      "target_unchanged": true,
+      "target_unchanged_invariant": "A swapped after-payload MUST NOT commit. The grant is bound to after-payload (scope_hash); a different body is a different grant."
+    },
+    {
+      "id": "AM-MISSING-ATTESTATION",
+      "attack": "missing-attestation",
+      "kind": "stated-contract",
+      "why_stated": "Guard 14 cas-attestation.ts:431-435 (ENFORCING_ATOMIC): authorized_and_committed is true only when cas_evidence.class === 'executor_attested'. Host-claimed commit becomes authorized_and_host_reported_committed, never authorized_and_committed. This is a document-label invariant of the shipped guard, not a running executor. Conformance does not call buildCasAttestation; the contract is recorded.",
+      "expected": {
+        "outcome": "refused_label",
+        "error": null,
+        "authorized_and_committed": false,
+        "atomic_host_claimed_label": "authorized_and_host_reported_committed"
+      },
+      "target_unchanged": false,
+      "target_unchanged_note": "Missing attestation does NOT imply the mutation was refused. Host-claimed means the host reported a commit without executor attestation. The invariant is the LABEL, not the bytes on disk."
+    }
+  ]
+}
