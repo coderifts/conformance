@@ -192,8 +192,8 @@ node --test test/adversarial.test.js
 
 No CodeRifts credential, no network, no account. Three families are carried — issuer collision, MCP negative schema, action tag mutation — and the coverage boundary is a test of its own, so the suite fails if it stops stating what it does not cover.
 
-## Attack-matrix contract (not a running executor)
+## Attack-matrix runner (five-point execution; contract rows stay NOT_RUN)
 
-`fixtures/attack-matrix.v1.json` records CONTRACT expectations for a future credential-owning executor (EP-1/EP-2). It is not proof this suite runs the attacks, not a verifier, and not a green check that a nonce was consumed. There is no executor here. `ATOMIC_COMMIT` stays **NOT COVERED**. Guard 14 exports no `issueExecutionGrant`. This file does **not** enlarge `adversarial.v1.json` `excluded[]` (still exactly four).
+`lib/attack-matrix-runner.js` executes a vector only when the row names an `execute` id that maps to a shipped adapter. **COVERED** means all five points (target, nonce, executor, attestation, gate) were checked by that run — not that the JSON declared an expected outcome. Rows with no `execute` id stay **NOT_RUN**, named. The runner does not invent a verifier and does not call `issueExecutionGrant`. `ATOMIC_COMMIT` stays **NOT COVERED**.
 
-Stated-contract (expected outcome + error + target-unchanged, recorded): replay (`NONCE_ALREADY_CONSUMED`), expired-nonce (`NONCE_EXPIRED`), payload-swap (`PAYLOAD_HASH_MISMATCH`), missing-attestation (`authorized_and_committed` false). Pending-contract (need a data plane): raw-tool, concurrent, stale-state.
+Executed regressions (fail-closed): git missing `expected_old_sha` (`4742476`), HTTP missing/weak ETag (`0988a20`), reconciler forged attestation (`eeae7e7`). Stated-contract consumeAndCommit rows (replay, expired-nonce, payload-swap, missing-attestation) remain recorded, not executed. Pending-contract: raw-tool, concurrent, stale-state. This file does **not** enlarge `adversarial.v1.json` `excluded[]` (still exactly four).

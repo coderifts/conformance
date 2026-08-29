@@ -1,11 +1,9 @@
 'use strict';
 
 /**
- * Attack-matrix CONTRACT fixture — recorded expectations, not a running executor.
- *
- * Must not populate ATOMIC_COMMIT, must not enlarge adversarial.v1.json excluded[],
- * must not register a subject. A green check here is a JSON-shape check, not a
- * consumed nonce.
+ * Attack-matrix fixture — contract rows stay contract; executable rows are
+ * run by lib/attack-matrix-runner.js. Must not populate ATOMIC_COMMIT, must
+ * not enlarge adversarial.v1.json excluded[].
  */
 
 const { describe, it } = require('node:test');
@@ -19,27 +17,30 @@ const ADV = require('../fixtures/adversarial.v1.json');
 
 const STATED = ['AM-REPLAY', 'AM-EXPIRED-NONCE', 'AM-PAYLOAD-SWAP', 'AM-MISSING-ATTESTATION'];
 const PENDING = ['AM-RAW-TOOL', 'AM-CONCURRENT', 'AM-STALE-STATE'];
+const EXECUTABLE = ['AM-GIT-MISSING-PIN', 'AM-HTTP-MISSING-ETAG', 'AM-RECONCILE-FORGED-ATTEST'];
 
-describe('attack-matrix.v1.json is a CONTRACT fixture, not a runner', () => {
+describe('attack-matrix.v1.json schema — runner honors it, does not invent a verifier', () => {
   it('lives at the measured fixture path convention (fixtures/*.v1.json)', () => {
     const p = path.join(__dirname, '..', 'fixtures', 'attack-matrix.v1.json');
     assert.equal(fs.existsSync(p), true);
     assert.equal(FIX.version, 'attack-matrix.v1');
-    assert.equal(FIX.runner, 'none');
-    assert.equal(FIX.status, 'contract');
+    assert.equal(FIX.runner, 'lib/attack-matrix-runner.js');
+    assert.equal(FIX.status, 'running');
+    assert.deepEqual(FIX.five_points, ['target', 'nonce', 'executor', 'attestation', 'gate']);
   });
 
-  it('honesty: contract for a future executor, not proof the suite runs the attacks', () => {
-    assert.match(FIX.honesty, /CONTRACT expectations for a future credential-owning executor/);
-    assert.match(FIX.honesty, /not proof this suite runs the attacks/);
-    assert.match(FIX.honesty, /Do not invent a verifier/);
-    assert.match(FIX.honesty, /no issueExecutionGrant/);
+  it('honesty: execute is not inventing a verifier; ATOMIC_COMMIT stays NOT_COVERED', () => {
+    assert.match(FIX.honesty, /does not invent a verifier/);
+    assert.match(FIX.honesty, /issueExecutionGrant/);
     assert.match(FIX.honesty, /ATOMIC_COMMIT stays NOT_COVERED/);
+    assert.match(FIX.honesty, /five points/);
+    assert.match(FIX.honesty, /never silently COVERED/);
   });
 
-  it('does not appear in VECTOR_MAP — it must not populate a profile', () => {
-    assert.equal(AP.VECTOR_MAP.some((v) => /attack-matrix|AM-REPLAY|AM-RAW-TOOL/i.test(v.vector)), false);
+  it('stated/pending contract rows do not appear in VECTOR_MAP — they must not populate a profile', () => {
+    assert.equal(AP.VECTOR_MAP.some((v) => /AM-REPLAY|AM-RAW-TOOL/i.test(v.vector)), false);
     assert.equal(AP.VECTOR_MAP.some((v) => v.source && v.source.includes('attack-matrix')), false);
+    assert.equal(AP.ATTACK_MATRIX.populates_profile, null);
   });
 
   it('ATOMIC_COMMIT stays NOT_COVERED', () => {
@@ -56,17 +57,23 @@ describe('attack-matrix.v1.json is a CONTRACT fixture, not a runner', () => {
 });
 
 describe('stated-contract vs pending-contract — measured codes, no invented executor', () => {
-  it('seven attacks: four stated, three pending', () => {
+  it('ten attacks: four stated, three pending, three executable', () => {
     const ids = FIX.attacks.map((a) => a.id);
-    assert.deepEqual(ids.sort(), [...STATED, ...PENDING].sort());
+    assert.deepEqual(ids.sort(), [...STATED, ...PENDING, ...EXECUTABLE].sort());
     for (const a of FIX.attacks) {
       if (STATED.includes(a.id)) {
         assert.equal(a.kind, 'stated-contract', a.id);
+        assert.equal(a.execute, null, a.id);
         assert.ok(a.expected && typeof a.expected === 'object', a.id);
-      } else {
+      } else if (PENDING.includes(a.id)) {
         assert.equal(a.kind, 'pending-contract', a.id);
+        assert.equal(a.execute, null, a.id);
         assert.equal(a.expected, null, a.id);
         assert.ok(a.why_pending && a.why_pending.length > 60, a.id);
+      } else {
+        assert.equal(a.kind, 'executable', a.id);
+        assert.equal(typeof a.execute, 'string', a.id);
+        assert.ok(AP.ATTACK_MATRIX.execute_ids.includes(a.id), a.id);
       }
     }
   });
