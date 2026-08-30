@@ -197,3 +197,30 @@ No CodeRifts credential, no network, no account. Three families are carried — 
 `lib/attack-matrix-runner.js` executes a vector only when the row names an `execute` id that maps to a shipped adapter. **COVERED** means all five points (target, nonce, executor, attestation, gate) were checked by that run — not that the JSON declared an expected outcome. Rows with no `execute` id stay **NOT_RUN**, named. The runner does not invent a verifier and does not call `issueExecutionGrant`. `ATOMIC_COMMIT` stays **NOT COVERED**.
 
 Executed regressions (fail-closed): git missing `expected_old_sha` (`4742476`), HTTP missing/weak ETag (`0988a20`), reconciler forged attestation (`eeae7e7`). Stated-contract consumeAndCommit rows (replay, expired-nonce, payload-swap, missing-attestation) remain recorded, not executed. Pending-contract: raw-tool, concurrent, stale-state. This file does **not** enlarge `adversarial.v1.json` `excluded[]` (still exactly four).
+
+### capability-demo (declared, commit-pinned — required for the three executed regressions)
+
+Those three regressions load the **shipped adapters** from [capability-demo](https://github.com/coderifts/capability-demo) (`git-atomic.js`, `http-atomic.js`, `reconcile.js`). capability-demo is a **demo repo** (`private: true` in its package.json) — it is **not** on npm. The pin lives in this package's `package.json` (`coderifts.capability_demo` and `optionalDependencies`).
+
+**Pinned commit** (the checkout COVERED expectations were measured against):
+
+`14c82bb6697565c4b0918a19b53250a37a3d6a64`
+
+**Sibling checkout** (path the runner looks for by default):
+
+```
+<parent>/
+  capability-demo/          # git clone + checkout the pin
+  coderifts-conformance/    # this repo
+```
+
+```bash
+cd <parent>
+git clone https://github.com/coderifts/capability-demo.git
+cd capability-demo
+git checkout 14c82bb6697565c4b0918a19b53250a37a3d6a64
+```
+
+Adapters are loaded from `../capability-demo/demo/src` relative to this repo. Override with `CODERIFTS_CAPABILITY_DEMO` (repo root or `demo/src`). `npm install` may also place the same commit under `node_modules/capability-demo` via the optional git dependency.
+
+**When the checkout is absent** (or at a different commit): the three regressions are **NOT_RUN** / `capability_demo_absent` (or `capability_demo_commit_mismatch`), named, with the expected path and commit. They are **never silently COVERED**. The rest of this suite still runs. An external user who follows the clone+checkout above can reproduce the COVERED run.

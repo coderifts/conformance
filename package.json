@@ -30,6 +30,18 @@
     "@coderifts/agent-guard": ">=8.1.1",
     "@coderifts/sdk": ">=1.1.1"
   },
+  "optionalDependencies": {
+    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#14c82bb6697565c4b0918a19b53250a37a3d6a64"
+  },
+  "coderifts": {
+    "capability_demo": {
+      "package": "capability-demo",
+      "git": "https://github.com/coderifts/capability-demo.git",
+      "commit": "14c82bb6697565c4b0918a19b53250a37a3d6a64",
+      "src": "demo/src",
+      "sibling": "../capability-demo"
+    }
+  },
   "keywords": [
     "coderifts",
     "conformance",
