@@ -172,11 +172,15 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.match(r.stderr, /NOT COVERED — this suite does not prove this claim/);
   });
 
-  it('--assurance on a NOT RUN profile exits 3 and says the vectors exist', () => {
+  it('--assurance on the RETIRED profile exits 3 and says where the proof lives', () => {
+    // 0.4.0: RECEIPT_CRYPTO went from NOT RUN (23 vectors, no runner) to NOT COVERED
+    // (0 vectors — they were retired from the vendored case file). The exit code is
+    // unchanged and deliberately still 3: this suite proves nothing about it either way,
+    // and "unproved here" is not "disproved".
     const r = run(['--assurance', 'RECEIPT_CRYPTO']);
     assert.equal(r.status, 3);
-    assert.match(r.stderr, /NOT RUN/);
-    assert.match(r.stderr, /CANNOT RUN HERE/);
+    assert.match(r.stderr, /NOT COVERED/);
+    assert.match(r.stderr, /RETIRED FROM THIS SUITE/);
   });
 
   it('exit 3 is distinct from exit 1 — unproved is not disproved', () => {

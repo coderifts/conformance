@@ -1,16 +1,19 @@
 'use strict';
 
 /**
- * 1115 — nineteen vectors with no runner, and the measurement that decided what to do with them.
+ * 1115 → 0.4.0 — nineteen vectors with no runner, and what was finally done with them.
  *
- * THE FINDING: the 19 EG-*, EG-A-* and MON-A-* cases cannot execute, and building a runner is the
- * WRONG fix. Their inputs carry a scenario NAME, not a token — 14 of the 19 are `{ scenario }` and
- * nothing else — so a runner here would mint the token it then verifies, in one repository, and
- * agree with itself. receipt-verifier runs the equivalent vectors as signed token BYTES,
- * cross-checked by two independent implementations.
+ * THE MEASUREMENT (kept, because it is the reason): the EG-* / EG-A- * / MON-A-* cases could
+ * not execute here, and building a runner was the WRONG fix. Their inputs carry a scenario
+ * NAME, not a token, so a runner here would have minted the token it then verified — one
+ * repository agreeing with itself. receipt-verifier runs the equivalent vectors as signed
+ * token BYTES through two independent implementations, and the app runs them against the
+ * real verify functions.
  *
- * These tests pin the MEASUREMENT, not the eventual removal. Removal cannot start here:
- * cases.v1.json is vendored and gated byte-identical from the app.
+ * THE ACTION (0.4.0): they are gone from the vendored case file. Removal could not start
+ * here — cases.v1.json is vendored from the app and gated byte-identical — so it began at
+ * the app-canonical copy and this repo followed. These tests now pin that the retirement
+ * HAPPENED and STAYS done, and that the profile row was kept rather than deleted.
  */
 
 const { describe, it } = require('node:test');
@@ -23,33 +26,32 @@ const AP = require('../lib/assurance-profiles');
 
 const CRYPTO = cases.cases.filter((c) => /^(EG-|MON-)/.test(c.id));
 
-describe('why these vectors cannot run HERE', () => {
-  it('there are exactly 19, and none of them is a decide or tool_selection case', () => {
-    assert.equal(CRYPTO.length, 19);
-    for (const c of CRYPTO) {
-      assert.equal(['decide', 'tool_selection'].includes(c.kind), false,
+describe('the retirement happened, and it stays done', () => {
+  it('NO receipt-crypto case remains in the vendored case file', () => {
+    assert.deepEqual(CRYPTO.map((c) => c.id), [],
+      'a receipt-crypto vector is back in cases.v1.json — it belongs in the app-canonical '
+      + 'receipt-crypto-vectors.v1.json, not here');
+  });
+
+  it('every remaining case is a kind a shipped subject can actually execute', () => {
+    // The failure this file was opened for: a third of the case file was data with no runner.
+    // The invariant that prevents its return is simply that there are no other kinds.
+    for (const c of cases.cases) {
+      assert.ok(['decide', 'tool_selection'].includes(c.kind),
         `${c.id} is kind=${c.kind}, which no shipped subject implements`);
     }
   });
 
-  it('THE REASON REMOVAL BEATS A RUNNER: the input is a scenario NAME, not a token', () => {
-    // This is the whole measurement. A subject given `{ scenario: "valid" }` cannot verify
-    // anything — it must first MINT a signed token matching that name.
-    for (const c of CRYPTO) {
-      assert.ok(c.input && typeof c.input.scenario === 'string',
-        `${c.id} must carry a scenario name`);
-      const s = JSON.stringify(c.input);
-      assert.equal(/"token"|"jwt"|"attestation":\s*"[A-Za-z0-9_-]{40,}/.test(s), false,
-        `${c.id} must NOT carry a signed token — if it ever does, re-measure this decision`);
+  it('every case is mapped, so a new one cannot arrive unaccounted for', () => {
+    const mapped = new Set(
+      AP.VECTOR_MAP.filter((v) => v.source === 'cases.v1.json').map((v) => v.vector),
+    );
+    for (const c of cases.cases) {
+      assert.ok(mapped.has(c.id), `${c.id} is in the case file but in no profile`);
     }
   });
 
-  it('14 of the 19 carry ONLY a scenario name — there is nothing else to work from', () => {
-    const bare = CRYPTO.filter((c) => Object.keys(c.input || {}).join(',') === 'scenario');
-    assert.equal(bare.length, 14);
-  });
-
-  it('every shipped subject refuses these kinds — the profile status is earned, not asserted', () => {
+  it('every shipped subject still refuses those kinds — no runner slipped in', () => {
     const subjectsDir = path.join(__dirname, '..', 'subjects');
     const files = fs.readdirSync(subjectsDir).filter((f) => f.endsWith('.js'));
     assert.ok(files.length >= 4);
@@ -63,34 +65,45 @@ describe('why these vectors cannot run HERE', () => {
   });
 });
 
-describe('the recommendation is recorded where the status is', () => {
-  it('RECEIPT_CRYPTO stays NOT_RUN and says removal is the recommendation', () => {
+describe('the row was KEPT, and it says where the proof lives', () => {
+  it('RECEIPT_CRYPTO is NOT_COVERED with zero vectors — and is still one of the seven', () => {
+    const report = AP.buildProfileReport();
+    assert.equal(report.length, 7, 'the retirement removes vectors, never a claim');
+    const row = report.find((r) => r.id === 'RECEIPT_CRYPTO');
+    assert.equal(row.status, AP.STATUS.NOT_COVERED);
+    assert.equal(row.vectors, 0);
+    assert.equal(row.runnable, 0);
+    assert.equal(row.green, false, 'an empty profile is never green');
+  });
+
+  it('DELETING the row is refused by this test, not by convention', () => {
+    // Omission would remove the evidence the claim was ever contemplated — the same
+    // reasoning that made "0/0" unacceptable as a rendering.
+    assert.ok(AP.PROFILE_IDS.includes('RECEIPT_CRYPTO'));
+  });
+
+  it('why_empty names the retirement, the blocker, and BOTH homes the vectors moved to', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.equal(row.status, AP.STATUS.NOT_RUN);
-    assert.match(row.why_empty, /THE RECOMMENDATION IS REMOVAL, NOT A RUNNER/);
+    assert.match(row.why_empty, /RETIRED FROM THIS SUITE/);
+    // The blocker, because "remove them" without saying where is an instruction that fails.
+    assert.match(row.why_empty, /THE REMOVAL COULD NOT START HERE/);
+    assert.match(row.why_empty, /vendored from the app and gated/);
+    // Both homes, named.
+    assert.match(row.why_empty, /receipt-crypto-vectors\.v1\.json/);
+    assert.match(row.why_empty, /receipt-verifier as SIGNED TOKEN BYTES/);
+    // And the reason a runner here was refused.
     assert.match(row.why_empty, /agreeing with itself/);
   });
 
-  it('it names the byte-identical ID overlap that makes this a duplication', () => {
+  it('NOT COVERED is scoped to this suite, never stated as "unproven"', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.match(row.why_empty, /12 of the 19/);
-    assert.match(row.why_empty, /EG-\* 5\/5, EG-A-\* 7\/7/);
-    // The 7 MON-A-* are the honest exception: no home in receipt-verifier yet.
-    assert.match(row.why_empty, /MON-A-\* have no home there yet/);
+    assert.match(row.why_empty, /not a claim that the property is unproven/i);
   });
 
-  it('THE BLOCKER IS NAMED: removal cannot start in this repository', () => {
-    // cases.v1.json is vendored from the app and gated byte-identical, so deleting rows here
-    // breaks the app CI. Saying "remove them" without saying where is an instruction that fails.
-    const row = AP.buildProfileReport().find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.match(row.why_empty, /REMOVAL CANNOT START IN THIS REPOSITORY/);
-    assert.match(row.why_empty, /vendored from the app and gated/);
-  });
-
-  it('the README carries the same recommendation as the code, not a friendlier one', () => {
+  it('the README carries the same account as the code, not a friendlier one', () => {
     const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
-    assert.match(readme, /the recommendation is REMOVAL, not a runner/);
-    assert.match(readme, /12 of the 19 already run there under byte-identical IDs/);
+    assert.match(readme, /RETIRED/);
+    assert.match(readme, /receipt-verifier/);
   });
 });
 

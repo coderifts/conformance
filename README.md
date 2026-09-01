@@ -90,43 +90,53 @@ empty ones** — a reader who sees only the profiles that pass has learned nothi
 
 | Profile | Status | Evidence here | What a COVERED verdict would mean |
 |---------|--------|---------------|-----------------------------------|
-| `DECISION_LOGIC` | **COVERED** | 13 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
-| `RECEIPT_CRYPTO` | **NOT RUN** | 19 vectors present, **none executable here** | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
+| `DECISION_LOGIC` | **COVERED** | 15 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `RECEIPT_CRYPTO` | **NOT COVERED** | **RETIRED** in 0.4.0 — 0 vectors here; they run in the app and in `receipt-verifier` | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
 | `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
 | `ATOMIC_COMMIT` | **NOT COVERED** | no vector here — executable in `@coderifts/agent-guard` `test/atomic-profile.test.js` | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
 | `PROVIDER_ENFORCED` | **NOT COVERED** | no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
 | `END_TO_END` | **NOT COVERED** | no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 
-**Two covered, one not run, four not covered — of seven.** There is deliberately no `x/7` here:
+**Two covered, five not covered — of seven.** There is deliberately no `x/7` here:
 the profiles are claims of different strength, and a ratio over them re-creates the single number
 this split replaced.
 
 ### Why the empty ones are empty
 
-- **`RECEIPT_CRYPTO` — NOT RUN, which is not the same as covered or absent.** The 19 vectors are
-  vendored from the CodeRifts app and are right there in `cases.v1.json`, but every shipped subject
-  implements only the `decide` and `tool_selection` kinds and throws `unknown case kind` on the
-  rest. They are also outside the default profile, so they were never selected and never showed up
-  as failures. This profile is data, not evidence.
+- **`RECEIPT_CRYPTO` — RETIRED in 0.4.0. The row is kept; the vectors are gone.** The 23 `EG-*` /
+  `EG2-*` / `EG-A-*` / `MON-A-*` cases were vendored from the CodeRifts app into `cases.v1.json`,
+  and every shipped subject implements only the `decide` and `tool_selection` kinds — they threw
+  `unknown case kind` on the rest. Being outside the default profile, they were never selected and
+  never showed up as failures: a third of the case file was data with no runner.
 
-  **Measured 2026-08-27 — the recommendation is REMOVAL, not a runner.** The case inputs carry a
-  scenario *name*, not a token: 14 of the 19 are `{ "scenario": "..." }` and nothing else. Running
-  them would mean minting the signed token from that name, so a runner here would be a generator
-  and a verifier in one repository agreeing with itself. `receipt-verifier` runs the equivalent
-  vectors as **signed token bytes** — cross-checked by two independent implementations, JS and
-  Python — and **12 of the 19 already run there under byte-identical IDs** (`EG-*` 5/5, `EG-A-*`
-  7/7). The 7 `MON-A-*` have no home there yet and belong there rather than here. The removal
-  cannot start in this repository: `cases.v1.json` is vendored and gated byte-identical from the
-  app, so it begins at the app-canonical copy.
+  **A runner here was the wrong fix, and that is why they left rather than gained one.** The case
+  inputs carried a scenario *name*, not a token (14 of the 19 were `{ "scenario": "..." }` and
+  nothing else), so running them would have meant minting the signed token from that name — a
+  generator and a verifier in one repository agreeing with itself.
+
+  **Where they run now, both stronger than a runner here would have been.** In the **app**, against
+  the real verify functions (`test/execution-grant.test.js`, `test/execution-attestation.test.js`,
+  `test/monitoring-attestation.test.js`, reading the app-only
+  `test/adapter-acceptance/receipt-crypto-vectors.v1.json`); and in **`receipt-verifier`** as signed
+  token **bytes**, cross-checked by two independent implementations, JS and Python, with 12 of the
+  19 under byte-identical IDs (`EG-*` 5/5, `EG-A-*` 7/7). The 7 `MON-A-*` belong in
+  `receipt-verifier` and are staged separately.
+
+  **The removal could not start here.** `cases.v1.json` is vendored from the app and gated
+  byte-identical by its `test/conformance-cases-vendored-sync.test.js`, so deleting rows here would
+  have broken the app's CI. It began at the app-canonical copy and this repo followed.
+  `NOT COVERED` is scoped to this suite — it is not a claim that the property is unproven.
 - **`CREDENTIAL_BOUNDARY`** — a property of a *running* host's tool table. Every subject here is a
   pure function of case input with no host, so a vector would score a fake host, and a passing fake
   would imply coverage that does not exist. Covered by `@coderifts/bypass-probe` against your own
   installation. Recorded as the excluded vector `raw_tool_beside_guarded_table`.
 - **`ATOMIC_COMMIT`** — single-use consumption happens at an executor this suite does not run, and
   the public verifier is stateless. Recorded as `stale_nonce` and `concurrent_grants`.
-  **`EG-A-STATE-NONCE-MISMATCH` is not evidence here** despite naming a nonce: it checks that an
-  attestation document is unbound, which is a binding fact, and it counts under `RECEIPT_CRYPTO`.
+  **`EG-A-STATE-NONCE-MISMATCH` was never evidence here** despite naming a nonce: it checks that an
+  attestation document is unbound, which is a binding fact rather than an atomicity one. It left
+  with the rest of `RECEIPT_CRYPTO` in 0.4.0; this profile is unaffected, because it never counted
+  here.
 - **`PROVIDER_ENFORCED`** — needs a live provider and a credential. The only thing that would move
   it is a *negative canary* (a deliberate refusal, observed); its cost and its limits are measured
   in [docs/1105-negative-canary-design.md](./docs/1105-negative-canary-design.md), which is a
