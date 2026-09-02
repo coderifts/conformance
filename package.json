@@ -34,13 +34,13 @@
     "@coderifts/sdk": ">=1.1.1"
   },
   "optionalDependencies": {
-    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#d26d11d8fc833877798c78f414345f89054be88c"
+    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#b52def10defe59fb4204649ef67cd6a2ce070a68"
   },
   "coderifts": {
     "capability_demo": {
       "package": "capability-demo",
       "git": "https://github.com/coderifts/capability-demo.git",
-      "commit": "d26d11d8fc833877798c78f414345f89054be88c",
+      "commit": "b52def10defe59fb4204649ef67cd6a2ce070a68",
       "src": "demo/src",
       "sibling": "../capability-demo"
     }

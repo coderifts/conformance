@@ -128,7 +128,7 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
     const pkg = require('../package.json');
     const pin = pkg.coderifts.capability_demo;
     assert.equal(pin.git, 'https://github.com/coderifts/capability-demo.git');
-    assert.equal(pin.commit, 'd26d11d8fc833877798c78f414345f89054be88c');
+    assert.equal(pin.commit, 'b52def10defe59fb4204649ef67cd6a2ce070a68');
     assert.equal(pin.sibling, '../capability-demo');
     assert.equal(pin.src, 'demo/src');
     assert.equal(
@@ -142,9 +142,9 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
   it('README documents the sibling checkout at that commit', () => {
     const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
     assert.match(readme, /capability-demo/);
-    assert.match(readme, /d26d11d8fc833877798c78f414345f89054be88c/);
+    assert.match(readme, /b52def10defe59fb4204649ef67cd6a2ce070a68/);
     assert.match(readme, /git clone https:\/\/github\.com\/coderifts\/capability-demo\.git/);
-    assert.match(readme, /git checkout d26d11d8fc833877798c78f414345f89054be88c/);
+    assert.match(readme, /git checkout b52def10defe59fb4204649ef67cd6a2ce070a68/);
     assert.match(readme, /capability_demo_absent/);
     assert.match(readme, /never silently COVERED/);
   });

@@ -268,7 +268,7 @@ Those three regressions load the **shipped adapters** from [capability-demo](htt
 
 **Pinned commit** (the checkout COVERED expectations were measured against):
 
-`d26d11d8fc833877798c78f414345f89054be88c`
+`b52def10defe59fb4204649ef67cd6a2ce070a68`
 
 **Sibling checkout** (path the runner looks for by default):
 
@@ -282,7 +282,7 @@ Those three regressions load the **shipped adapters** from [capability-demo](htt
 cd <parent>
 git clone https://github.com/coderifts/capability-demo.git
 cd capability-demo
-git checkout d26d11d8fc833877798c78f414345f89054be88c
+git checkout b52def10defe59fb4204649ef67cd6a2ce070a68
 ```
 
 Adapters are loaded from `../capability-demo/demo/src` relative to this repo. Override with `CODERIFTS_CAPABILITY_DEMO` (repo root or `demo/src`). `npm install` may also place the same commit under `node_modules/capability-demo` via the optional git dependency.
