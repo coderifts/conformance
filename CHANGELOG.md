@@ -1,10 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 Warrants a MINOR bump when released: a new `--subject` value and a moved dependency pin, no
-breaking change to an existing flag, exit code, subject interface or output shape. The version is
-left unbumped deliberately — releasing is a separate decision from landing the work.
+breaking change to an existing flag, exit code, subject interface or output shape. Released 2026-09-02.
 
 ### Added — the `data-plane` subject
 
