@@ -27,6 +27,7 @@ Exit code **0** iff every selected case passes.
 | `sdk` | Wires `@coderifts/sdk` `readDecision` then normative decide | `@coderifts/sdk` |
 | `agent-guard` | Wires `@coderifts/agent-guard` decide helpers (decide cases only) | `@coderifts/agent-guard` |
 | `model-acceptance` | Canned OpenAI/Anthropic/Gemini/LangGraph tool-use → `bind*` / `execute*ToolCall`. Scorecard of helper-through consistency. **Not** `cases.v1.json`. | `@coderifts/agent-guard` >=8.1.1 |
+| `data-plane` | **Runs** the capability-demo atomic chain (`examples/atomic-v2`) and reports what each hop is evidence *for*. **Not** `cases.v1.json`. Keyless; the two database rows need `CODERIFTS_DATAPLANE_PG`. | capability-demo checkout (pinned) |
 
 ```bash
 node bin/coderifts-conformance.js --subject reference
@@ -34,6 +35,7 @@ node bin/coderifts-conformance.js --subject sdk
 node bin/coderifts-conformance.js --subject agent-guard
 node bin/coderifts-conformance.js --subject agent-guard --profile enforcement_consistent
 node bin/coderifts-conformance.js --subject model-acceptance
+node bin/coderifts-conformance.js --subject data-plane
 ```
 
 ### Profiles
@@ -174,6 +176,58 @@ The ten `COVERAGE BOUNDARY` / `RE-VERIFICATION RECORD` tests count toward **no**
 assert properties of the fixture, and letting the suite score itself for describing itself is
 exactly the inflation this split prevents.
 
+### The `data-plane` subject
+
+Every other subject here is a pure function of case input. This one executes real code — the
+four hops of `examples/atomic-v2/run.js` in the pinned capability-demo checkout — because
+`CREDENTIAL_BOUNDARY` and `ATOMIC_COMMIT` are properties of a running system and no pure function
+can reach them.
+
+**Measured result, and it is not the flattering one: the keyless run fills zero profiles.** All
+four hops pass and none of them is admissible as evidence *here*:
+
+| Row | Hop | Profile it looks like | Why it does not count |
+|-----|-----|----------------------|------------------------|
+| `DP-1-REQUEST-SHAPE` | 1 | — | A request shape is not one of the seven claims. It is pinned as a type in the SDKs. |
+| `DP-2-GRANT-OFFLINE-VERIFY` | 2 | `RECEIPT_CRYPTO` | capability-demo mints the grant and capability-demo verifies it. That is the reason `RECEIPT_CRYPTO` was retired in 0.4.0 — one repository agreeing with itself. It runs for real in the app and in `receipt-verifier`, across two languages. |
+| `DP-3-CONSUME-ONCE-KEYLESS` | 3 | `ATOMIC_COMMIT` | `consumeOnce` without a `query` performs no lookup and returns `consumed: true`. `ATOMIC_TRANSACTION` there is a *declaration* about the postgres path, not an observation of it. |
+| `DP-4-ATTESTATION-VERIFY` | 4 | `RECEIPT_CRYPTO` | Same retirement as `DP-2`. |
+
+**With `CODERIFTS_DATAPLANE_PG` pointing at a migrated capability-demo database, two rows become
+real** — and they are the only two the chain can honestly fill:
+
+| Row | Profile | What it observes | Ceiling |
+|-----|---------|------------------|---------|
+| `DP-PG-SINGLE-USE` | `ATOMIC_COMMIT` | The same `jti` INSERTed twice into `consumed_grants`; the second raises `23505`. | Proves a replayed `jti` cannot be claimed twice. Does **not** prove the claim and the mutation share one transaction end to end. |
+| `DP-PG-SEAL-REQUIRED` | `ATOMIC_COMMIT` | `COMMIT` of a consumed grant with no sealed attestation raises `23514 consumed_unsigned` — the deferred constraint trigger. | Observes the commit-time constraint. Does **not** observe the mutation; `cr_execute_grant` does that, and driving it needs a state challenge. |
+| `DP-PG-HOST-CANNOT-WRITE` | `CREDENTIAL_BOUNDARY` (**PARTIAL**) | `cr_host` attempting `UPDATE` on `articles` raises `42501`. | The **database** half only. The tool-table half — a raw tool beside the guarded one — is untouched here and stays with `@coderifts/bypass-probe`. This row can never take the profile past `PARTIAL`. |
+| `DP-PG-HOST-CAN-READ` | `CREDENTIAL_BOUNDARY` (**PARTIAL**) | The control: `cr_host` `SELECT` on `articles` succeeds. | Without it, the row above passes just as well when the connection is broken or the table is missing. "The write failed" is not "the write was refused". |
+
+```bash
+# keyless — reports skips with reasons, exits 0, and says in words that nothing was proved
+node bin/coderifts-conformance.js --subject data-plane
+
+# with a live database
+CODERIFTS_DATAPLANE_PG="postgres://demo:demo@localhost:5432/demo" \
+  node bin/coderifts-conformance.js --subject data-plane
+```
+
+No API key on any path. `pg` is **not** a dependency of this package; it is borrowed from the
+capability-demo checkout, and its absence is a named skip. An absent or off-pin checkout is
+`capability_demo_absent` / `capability_demo_commit_mismatch` — never silently COVERED.
+
+Every database row runs inside a transaction that is **rolled back**, so a caller's database is
+left exactly as it was found.
+
+**These rows do not feed `--profiles` or `--assurance`, on purpose.** Those drive CI gates, and a
+gate whose colour depends on whether a database happened to be reachable is worse than one that is
+honestly red. The seven-profile report keeps saying `NOT COVERED`, which remains true *of the
+suite*; this subject reports separately what a run *with* a database observed.
+
+`DP-PG-SEAL-REQUIRED` was not designed — it was found. The first version of `DP-PG-SINGLE-USE`
+INSERTed and committed, and the deferred trigger refused it. That refusal turned out to be the
+closest thing this suite can observe to `ATOMIC_COMMIT`'s actual sentence, so it became a row.
+
 ## Case source of truth
 
 `cases.v1.json` is **vendored** from the private CodeRifts app (`test/adapter-acceptance/cases.v1.json`). The app CI asserts byte-identity so this public copy cannot silently drift from what the product tests against.
@@ -214,7 +268,7 @@ Those three regressions load the **shipped adapters** from [capability-demo](htt
 
 **Pinned commit** (the checkout COVERED expectations were measured against):
 
-`14c82bb6697565c4b0918a19b53250a37a3d6a64`
+`d26d11d8fc833877798c78f414345f89054be88c`
 
 **Sibling checkout** (path the runner looks for by default):
 
@@ -228,7 +282,7 @@ Those three regressions load the **shipped adapters** from [capability-demo](htt
 cd <parent>
 git clone https://github.com/coderifts/capability-demo.git
 cd capability-demo
-git checkout 14c82bb6697565c4b0918a19b53250a37a3d6a64
+git checkout d26d11d8fc833877798c78f414345f89054be88c
 ```
 
 Adapters are loaded from `../capability-demo/demo/src` relative to this repo. Override with `CODERIFTS_CAPABILITY_DEMO` (repo root or `demo/src`). `npm install` may also place the same commit under `node_modules/capability-demo` via the optional git dependency.

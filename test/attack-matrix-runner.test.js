@@ -117,11 +117,18 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
 });
 
 describe('capability-demo is a declared, commit-pinned dependency', () => {
+  // The pin MOVED from 14c82bb to d26d11d when the data-plane subject landed. Not routine
+  // freshening: examples/atomic-v2/run.js — the chain that subject executes — was added AT
+  // d26d11d and does not exist at 14c82bb, so the subject could never have run against the old
+  // pin. Measured side effect of the move, recorded because it is a coverage change and not a
+  // no-op: `npm test` went from 116 tests / 2 skipped to 119 / 0. The three attack-matrix
+  // regressions were NOT_RUN under the old pin (capability_demo_commit_mismatch against the
+  // local sibling) and now execute. The pin is on origin/main.
   it('package.json pins git+commit and names the sibling path', () => {
     const pkg = require('../package.json');
     const pin = pkg.coderifts.capability_demo;
     assert.equal(pin.git, 'https://github.com/coderifts/capability-demo.git');
-    assert.equal(pin.commit, '14c82bb6697565c4b0918a19b53250a37a3d6a64');
+    assert.equal(pin.commit, 'd26d11d8fc833877798c78f414345f89054be88c');
     assert.equal(pin.sibling, '../capability-demo');
     assert.equal(pin.src, 'demo/src');
     assert.equal(
@@ -135,9 +142,9 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
   it('README documents the sibling checkout at that commit', () => {
     const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
     assert.match(readme, /capability-demo/);
-    assert.match(readme, /14c82bb6697565c4b0918a19b53250a37a3d6a64/);
+    assert.match(readme, /d26d11d8fc833877798c78f414345f89054be88c/);
     assert.match(readme, /git clone https:\/\/github\.com\/coderifts\/capability-demo\.git/);
-    assert.match(readme, /git checkout 14c82bb6697565c4b0918a19b53250a37a3d6a64/);
+    assert.match(readme, /git checkout d26d11d8fc833877798c78f414345f89054be88c/);
     assert.match(readme, /capability_demo_absent/);
     assert.match(readme, /never silently COVERED/);
   });

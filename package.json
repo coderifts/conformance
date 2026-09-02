@@ -22,7 +22,7 @@
     "CHANGELOG.md"
   ],
   "scripts": {
-    "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node --test test/*.test.js",
+    "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node bin/coderifts-conformance.js --subject data-plane && node --test test/*.test.js",
     "conformance": "node bin/coderifts-conformance.js",
     "model-acceptance": "node bin/coderifts-conformance.js --subject model-acceptance",
     "profiles": "node bin/coderifts-conformance.js --profiles",
@@ -34,13 +34,13 @@
     "@coderifts/sdk": ">=1.1.1"
   },
   "optionalDependencies": {
-    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#14c82bb6697565c4b0918a19b53250a37a3d6a64"
+    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#d26d11d8fc833877798c78f414345f89054be88c"
   },
   "coderifts": {
     "capability_demo": {
       "package": "capability-demo",
       "git": "https://github.com/coderifts/capability-demo.git",
-      "commit": "14c82bb6697565c4b0918a19b53250a37a3d6a64",
+      "commit": "d26d11d8fc833877798c78f414345f89054be88c",
       "src": "demo/src",
       "sibling": "../capability-demo"
     }

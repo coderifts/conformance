@@ -1,5 +1,49 @@
 # Changelog
 
+## Unreleased
+
+Warrants a MINOR bump when released: a new `--subject` value and a moved dependency pin, no
+breaking change to an existing flag, exit code, subject interface or output shape. The version is
+left unbumped deliberately — releasing is a separate decision from landing the work.
+
+### Added — the `data-plane` subject
+
+The first subject that RUNS something instead of computing it: `--subject data-plane` executes the
+four hops of `examples/atomic-v2/run.js` in the pinned capability-demo checkout and reports what
+each hop is evidence *for*. `CREDENTIAL_BOUNDARY` and `ATOMIC_COMMIT` are properties of a running
+system, and `lib/assurance-profiles.js` already said no pure subject could reach them.
+
+**The keyless run fills zero profiles, and says so in words.** All four hops pass; none is
+admissible here. Two are `RECEIPT_CRYPTO`, retired in 0.4.0 precisely because capability-demo both
+mints and verifies those tokens — one repository agreeing with itself. One is `consumeOnce` called
+with no `query`, which performs no lookup at all and returns `consumed: true`; its
+`ATOMIC_TRANSACTION` strength is a declaration about the postgres path, not an observation of it.
+One is a request shape, which is not one of the seven claims.
+
+With `CODERIFTS_DATAPLANE_PG` set, four rows become real observations:
+
+- `DP-PG-SINGLE-USE` — the same `(deployment_id, jti)` INSERTed twice raises `23505`, with a
+  tenancy control (same `jti`, different `deployment_id`) that must succeed.
+- `DP-PG-SEAL-REQUIRED` — committing a consumed grant with no sealed attestation raises
+  `23514 consumed_unsigned`. Not designed; found, when the first version of the row above tried to
+  commit and the deferred constraint trigger refused it.
+- `DP-PG-HOST-CANNOT-WRITE` / `DP-PG-HOST-CAN-READ` — `cr_host` is denied `UPDATE` on `articles`
+  (`42501`) while `SELECT` succeeds. `CREDENTIAL_BOUNDARY` is capped at `PARTIAL` by construction:
+  this is the database half, and the tool-table half stays with `@coderifts/bypass-probe`.
+
+Every database row runs inside a transaction that is rolled back. `pg` is not a dependency of this
+package; it is borrowed from the capability-demo checkout, and its absence is a named skip. These
+rows do not feed `--profiles` or `--assurance` — those drive CI gates, and a gate whose colour
+depends on whether a database was reachable is worse than one that is honestly red.
+
+### Changed — the capability-demo pin moved to `d26d11d`
+
+From `14c82bb`. Not routine freshening: `examples/atomic-v2/run.js` was added AT `d26d11d` and does
+not exist at `14c82bb`, so the new subject could never have run against the old pin. Measured side
+effect, recorded because it is a coverage change: `npm test` went from 116 tests with 2 skipped to
+119 with 0. The three attack-matrix regressions were `NOT_RUN` under the old pin
+(`capability_demo_commit_mismatch` against the local sibling) and now execute.
+
 ## 0.4.0
 
 The canonical case file is vendored byte-identical from the CodeRifts app, so this release

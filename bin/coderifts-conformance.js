@@ -8,6 +8,7 @@
  *   npx @coderifts/conformance --subject sdk
  *   npx @coderifts/conformance --subject agent-guard --profile enforcement_consistent
  *   npx @coderifts/conformance --subject model-acceptance
+ *   npx @coderifts/conformance --subject data-plane        # runs the capability-demo atomic chain
  *   node bin/coderifts-conformance.js --subject reference
  *
  * Exit 0 iff all selected cases pass. No network. No API key.
@@ -25,6 +26,7 @@ const { branchOnDecisionSubject } = require('../subjects/branch-on-decision');
 const { sdkReadDecisionSubject } = require('../subjects/sdk-read-decision');
 const { agentGuardDecideSubject } = require('../subjects/agent-guard-decide');
 const { runAndPrint } = require('../lib/model-acceptance');
+const { runDataPlane, ROW } = require('../subjects/data-plane');
 const {
   STATUS, PROFILE_IDS, buildProfileReport, renderProfileTable, renderProfileJson,
 } = require('../lib/assurance-profiles');
@@ -35,7 +37,57 @@ const SUBJECTS = {
   sdk: sdkReadDecisionSubject,
   'agent-guard': agentGuardDecideSubject,
   'model-acceptance': Symbol.for('coderifts.conformance.model-acceptance'),
+  // Not a `(case) => outcome` function: it EXECUTES the capability-demo atomic chain. Dispatched
+  // separately below, like model-acceptance, because cases.v1.json is vendored byte-identical from
+  // the app (gated there by conformance-cases-vendored-sync.test.js) — rows for a new kind cannot
+  // be added here, and a subject that answered `decide` cases from a data-plane run would be
+  // answering questions it did not ask.
+  'data-plane': Symbol.for('coderifts.conformance.data-plane'),
 };
+
+/**
+ * Report the data-plane rows. Exit 0 when nothing FAILED — including when everything skipped,
+ * because a skip that is printed with its reason is a truthful report, and exiting non-zero would
+ * make the keyless npx path look broken. What must never happen is a skip reading as a pass, so
+ * the summary states the covered count and, when it is zero, says so in those words.
+ */
+function printDataPlane(out, json) {
+  if (json) {
+    process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
+  } else {
+    for (const r of out.rows) {
+      const profile = r.profile || '(no profile)';
+      process.stdout.write(`${r.status.padEnd(15)} ${r.id}  → ${profile}${r.partial ? ' (PARTIAL at best)' : ''}\n`);
+      for (const e of r.evidence) process.stdout.write(`                  evidence: ${e}\n`);
+      if (r.status === ROW.NOT_ADMISSIBLE) process.stdout.write(`                  not admissible: ${r.why}\n`);
+      if (r.ceiling) process.stdout.write(`                  does not prove: ${r.ceiling}\n`);
+    }
+    if (out.chain) {
+      const sum = out.chain.summary;
+      process.stdout.write(`\nchain: exit ${out.chain.exit}${sum ? `, ${sum.asserted}/${sum.total} hops — ${sum.note}` : ''}\n`);
+    } else {
+      process.stdout.write('\nchain: NOT RUN\n');
+    }
+    if (out.postgres.skip) process.stdout.write(`postgres: SKIPPED — ${out.postgres.skip}\n`);
+    const covered = out.rows.filter((r) => r.status === ROW.COVERED).length;
+    const failed = out.rows.filter((r) => r.status === ROW.FAILED).length;
+    const entries = Object.entries(out.profiles);
+    process.stdout.write(
+      `\ndata-plane: ${covered} row(s) COVERED, ${failed} FAILED, `
+      + `${out.rows.length - covered - failed} not counted\n`,
+    );
+    for (const [id, p] of entries) process.stdout.write(`  ${id}: ${p.status} (${p.rows.join(', ')})\n`);
+    if (covered === 0) {
+      process.stdout.write(
+        '\nNOTHING WAS PROVED BY THIS RUN. The chain\'s hops are integration checks whose evidence\n'
+        + 'belongs to other repositories; the rows that would prove ATOMIC_COMMIT and the database\n'
+        + 'half of CREDENTIAL_BOUNDARY need a live Postgres (CODERIFTS_DATAPLANE_PG). This is a\n'
+        + 'report of skips, not a pass.\n',
+      );
+    }
+  }
+  return out.rows.some((r) => r.status === ROW.FAILED) ? 1 : 0;
+}
 
 function parseArgs(argv) {
   let subject = 'reference';
@@ -57,6 +109,9 @@ function parseArgs(argv) {
         + '--profiles            report the seven ASSURANCE profiles and what each one proves\n'
         + '--assurance <ID>      exit non-zero unless that assurance profile is COVERED\n'
         + `                      (${PROFILE_IDS.join(', ')})\n`
+        + 'data-plane: EXECUTES the capability-demo atomic chain (examples/atomic-v2) and reports\n'
+        + '  per-row evidence. Keyless and offline; ATOMIC_COMMIT and the database half of\n'
+        + '  CREDENTIAL_BOUNDARY need CODERIFTS_DATAPLANE_PG, and are skipped-with-reason without it.\n'
         + 'model-acceptance: canned 4-provider tool-use through bind/execute helpers (offline).\n'
         + '  Proves host-wired helpers are consistent; not that models spontaneously preflight.\n'
         + 'Exit 0 iff all selected cases pass. Offline; no API key.\n',
@@ -115,6 +170,10 @@ async function main() {
   if (subjectName === 'model-acceptance') {
     const code = await runAndPrint({ json });
     process.exit(code);
+  }
+
+  if (subjectName === 'data-plane') {
+    process.exit(printDataPlane(await runDataPlane(), json));
   }
 
   const doc = loadCaseFile();
