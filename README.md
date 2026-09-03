@@ -92,9 +92,9 @@ empty ones** — a reader who sees only the profiles that pass has learned nothi
 
 | Profile | Status | Evidence here | What a COVERED verdict would mean |
 |---------|--------|---------------|-----------------------------------|
-| `DECISION_LOGIC` | **COVERED** | 15 vectors run | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `DECISION_LOGIC` | **COVERED** | 15 vectors run (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
 | `RECEIPT_CRYPTO` | **NOT COVERED** | **RETIRED** in 0.4.0 — 0 vectors here; they run in the app and in `receipt-verifier` | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
-| `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
+| `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
 | `ATOMIC_COMMIT` | **NOT COVERED** | no vector here — executable in `@coderifts/agent-guard` `test/atomic-profile.test.js` | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
 | `PROVIDER_ENFORCED` | **NOT COVERED** | no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
@@ -102,7 +102,16 @@ empty ones** — a reader who sees only the profiles that pass has learned nothi
 
 **Two covered, five not covered — of seven.** There is deliberately no `x/7` here:
 the profiles are claims of different strength, and a ratio over them re-creates the single number
-this split replaced.
+this split replaced. **COVERED requires both polarities** — at least one positive vector (the
+capability works) and one negative vector (a real mismatch is refused). A profile with only
+one half is not covered.
+
+The five empty profiles are **structurally blocked in this offline suite**, not unfinished
+homework: `RECEIPT_CRYPTO` retired because a mint-then-verify runner here would agree with
+itself; `CREDENTIAL_BOUNDARY` needs a running host (bypass-probe); `ATOMIC_COMMIT` needs an
+executor / live Postgres (`--subject data-plane` with `CODERIFTS_DATAPLANE_PG`);
+`PROVIDER_ENFORCED` needs a live provider (the 1105 canary is opt-in, not this package);
+`END_TO_END` depends on the four above. Faking any of them to 7/7 would weaken COVERED.
 
 ### Why the empty ones are empty
 

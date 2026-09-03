@@ -78,10 +78,44 @@ describe('the mapping is total, exclusive, and honest about how each vector runs
 describe('an empty profile can never render as a pass', () => {
   it('status is derived from the vectors, never asserted by hand', () => {
     for (const r of AP.buildProfileReport()) {
-      if (r.vectors === 0) assert.equal(r.status, AP.STATUS.NOT_COVERED);
-      else if (r.runnable === 0) assert.equal(r.status, AP.STATUS.NOT_RUN);
-      else assert.equal(r.status, AP.STATUS.COVERED);
+      const mapped = AP.VECTOR_MAP.filter((v) => v.profile === r.id);
+      assert.equal(r.status, AP.coverageStatus(mapped), r.id);
       assert.equal(r.green, r.status === AP.STATUS.COVERED);
+    }
+  });
+
+  it('every mapped vector names a polarity so COVERED cannot be claimed without a pair', () => {
+    for (const v of AP.VECTOR_MAP) {
+      assert.ok(['positive', 'negative', 'pair'].includes(v.polarity),
+        `${v.vector} missing polarity`);
+    }
+  });
+
+  it('COVERED BITES: positives alone are not coverage — mutate the pair, status falls', () => {
+    assert.equal(AP.coverageStatus([]), AP.STATUS.NOT_COVERED);
+    assert.equal(AP.coverageStatus([
+      { vector: 'only-pos', runner: 'test', polarity: 'positive' },
+    ]), AP.STATUS.NOT_COVERED);
+    assert.equal(AP.coverageStatus([
+      { vector: 'only-neg', runner: 'test', polarity: 'negative' },
+    ]), AP.STATUS.NOT_COVERED);
+    assert.equal(AP.coverageStatus([
+      { vector: 'data', runner: 'none', polarity: 'negative' },
+    ]), AP.STATUS.NOT_RUN);
+    assert.equal(AP.coverageStatus([
+      { vector: 'pos', runner: 'test', polarity: 'positive' },
+      { vector: 'neg', runner: 'test', polarity: 'negative' },
+    ]), AP.STATUS.COVERED);
+    assert.equal(AP.coverageStatus([
+      { vector: 'both', runner: 'test', polarity: 'pair' },
+    ]), AP.STATUS.COVERED);
+  });
+
+  it('the live COVERED profiles actually have both polarities', () => {
+    for (const r of AP.buildProfileReport()) {
+      if (r.status !== AP.STATUS.COVERED) continue;
+      assert.ok(r.positive > 0, `${r.id} COVERED with no positive`);
+      assert.ok(r.negative > 0, `${r.id} COVERED with no negative`);
     }
   });
 
@@ -95,8 +129,12 @@ describe('an empty profile can never render as a pass', () => {
   });
 
   it('a status inconsistent with its runnable count is refused too', () => {
+    // NOT_RUN cannot have runnable vectors. NOT_COVERED with runnable>0 is the
+    // incomplete-pair case and is allowed (positives-alone are not coverage).
     const forged = AP.buildProfileReport().map((r) => (
-      r.status === AP.STATUS.NOT_COVERED ? { ...r, runnable: 3 } : r));
+      r.id === 'RECEIPT_CRYPTO'
+        ? { ...r, status: AP.STATUS.NOT_RUN, vectors: 3, runnable: 3 }
+        : r));
     assert.throws(() => AP.assertNoGreenEmpty(forged), /inconsistent/);
   });
 

@@ -22,6 +22,18 @@ const {
 const DEMO = resolveCapabilityDemo();
 const EXECUTE_IDS = AP.ATTACK_MATRIX.execute_ids;
 
+function pgResolvableFromDemo() {
+  if (!DEMO.present || !DEMO.path) return false;
+  const root = path.resolve(DEMO.path, '..', '..');
+  try {
+    require.resolve('pg', { paths: [root] });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+const PG = pgResolvableFromDemo();
+
 let report;
 
 before(async () => {
@@ -55,7 +67,9 @@ describe('the runner executes the three regression vectors and they fail closed'
     assert.equal(r.weak_etag.reason, 'missing_strong_etag');
   });
 
-  it('AM-RECONCILE-FORGED-ATTEST is COVERED and stays INDETERMINATE', () => {
+  it('AM-RECONCILE-FORGED-ATTEST is COVERED and stays INDETERMINATE', {
+    skip: !PG,
+  }, () => {
     const r = report.results.find((x) => x.id === 'AM-RECONCILE-FORGED-ATTEST');
     assert.ok(r);
     assert.equal(r.coverage, COVERAGE.COVERED, JSON.stringify(r));
@@ -71,12 +85,22 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
   it('a vector with a real executable check is COVERED (five points checked)', {
     skip: !DEMO.present,
   }, () => {
+    const needPg = new Set(['AM-RECONCILE-FORGED-ATTEST']);
     for (const id of AP.ATTACK_MATRIX.execute_ids) {
+      if (needPg.has(id) && !PG) continue;
       const r = report.results.find((x) => x.id === id);
       assert.equal(r.coverage, COVERAGE.COVERED, id);
       assert.equal(fivePointComplete(r), true, id);
       assert.ok(report.covered.includes(id), id);
     }
+  });
+
+  it('AM-RECONCILE-FORGED-ATTEST is NOT_RUN named when pg is not resolvable — never silent COVERED', {
+    skip: PG,
+  }, () => {
+    const r = report.results.find((x) => x.id === 'AM-RECONCILE-FORGED-ATTEST');
+    assert.equal(r.coverage, COVERAGE.NOT_RUN);
+    assert.match(r.why_not_run || '', /pg/i);
   });
 
   it('a vector with no executable check stays NOT_RUN, named — never silently COVERED', () => {
@@ -113,6 +137,16 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
     assert.equal(row.status, AP.STATUS.NOT_COVERED);
     assert.equal(row.green, false);
     assert.equal(AP.ATTACK_MATRIX.populates_profile, null);
+  });
+
+  it('a node_modules install is not a commit mismatch against THIS repo HEAD', () => {
+    // npm git-deps have no .git; walking up used to observe the conformance HEAD and
+    // refuse the pin (capability_demo_commit_mismatch). The lockfile is the pin.
+    const demo = resolveCapabilityDemo();
+    if (demo.path && String(demo.path).includes(`${path.sep}node_modules${path.sep}`)) {
+      assert.notEqual(demo.reason, 'capability_demo_commit_mismatch', JSON.stringify(demo));
+      assert.equal(demo.present, true, JSON.stringify(demo));
+    }
   });
 });
 
