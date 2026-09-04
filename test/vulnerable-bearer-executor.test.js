@@ -56,31 +56,27 @@ describe('vulnerable-bearer-executor is a pending expected-fail MARKER, not a su
   });
 });
 
-describe('THE BITE CANNOT FIRE: both profiles stay short of COVERED (PARTIAL / RECORDED)', () => {
-  it('CREDENTIAL_BOUNDARY is PARTIAL / RECORDED — 42501 present, unchanged-state read-back missing', () => {
+describe('THE BITE CANNOT FIRE: the marker is not a subject; COVERED is from the recorded transcript', () => {
+  it('CREDENTIAL_BOUNDARY is COVERED / RECORDED from the prove-transcript, not from this marker', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'CREDENTIAL_BOUNDARY');
-    assert.equal(row.coverage, AP.COVERAGE.PARTIAL);
+    assert.equal(row.coverage, AP.COVERAGE.COVERED);
     assert.equal(row.evidence_tier, AP.EVIDENCE_TIER.RECORDED);
-    assert.equal(row.green, false);
-    assert.match(row.why_empty, /42501|unchanged-state|catalog/);
+    assert.equal(row.green, true);
+    assert.equal(AP.VECTOR_MAP.some((v) => v.source && v.source.includes('vulnerable-bearer')), false);
   });
 
-  it('ATOMIC_COMMIT is PARTIAL / RECORDED — replay+concurrency present, CAS gaps named', () => {
+  it('ATOMIC_COMMIT is COVERED / RECORDED from the prove-transcript, not from this marker', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'ATOMIC_COMMIT');
-    assert.equal(row.coverage, AP.COVERAGE.PARTIAL);
+    assert.equal(row.coverage, AP.COVERAGE.COVERED);
     assert.equal(row.evidence_tier, AP.EVIDENCE_TIER.RECORDED);
-    assert.equal(row.green, false);
-    assert.match(row.why_empty, /stale state_token/);
-    assert.match(row.why_empty, /GRANT_CONSUMED/);
+    assert.equal(row.green, true);
+    assert.equal(AP.VECTOR_MAP.filter((v) => v.profile === 'ATOMIC_COMMIT').length, 0);
   });
 
-  it('reference does NOT pass those profiles — --assurance exits 3, not 0', () => {
-    const cred = run(['--subject', 'reference', '--assurance', 'CREDENTIAL_BOUNDARY']);
-    const atom = run(['--subject', 'reference', '--assurance', 'ATOMIC_COMMIT']);
-    assert.equal(cred.status, 3, cred.stdout + cred.stderr);
-    assert.equal(atom.status, 3, atom.stdout + atom.stderr);
-    assert.match(cred.stderr, /PARTIAL/);
-    assert.match(atom.stderr, /PARTIAL/);
+  it('a vulnerable-bearer subject is still unknown — COVERED is not a green fake host', () => {
+    const r = run(['--subject', 'vulnerable-bearer-executor']);
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /unknown subject vulnerable-bearer-executor/);
   });
 
   it('the intended bite is recorded as cannot_fire, with what is missing named', () => {

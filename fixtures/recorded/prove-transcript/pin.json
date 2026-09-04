@@ -4,20 +4,20 @@
   "producer": {
     "name": "@coderifts/prove",
     "repo": "https://github.com/coderifts/capability-demo",
-    "version": "0.1.1",
-    "digest": "git:188479a15ecb2f4ef57f437d0cec67d94e3598fd",
+    "version": "0.1.2",
+    "digest": "git:3a34079c25ec32de2ba1c146ba134dd00e6cdd0f",
     "generator": "demo/prove.js"
   },
   "subject": {
     "name": "capability-demo/examples/sample-transcript",
-    "version": "0.1.1",
-    "digest": "sha256:a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3"
+    "version": "0.1.2",
+    "digest": "sha256:a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096"
   },
   "artifacts": [
     {
       "path": "transcript.json",
       "role": "bundle",
-      "sha256": "a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3"
+      "sha256": "a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096"
     },
     {
       "path": "executor-keys.json",
@@ -25,12 +25,12 @@
       "sha256": "82d7d877abf56d2a996bc69a8754866ebfac6a8f674c9182670b7f32b73b6421"
     }
   ],
-  "inputs_sha256": "sha256:a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3",
+  "inputs_sha256": "sha256:a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096",
   "provenance_from_artifact": {
-    "run_id": "prove-dea87c5c-c14f-4343-a030-93ba30969d4f",
-    "source_commit": "ea1da3f377ddf31709fd1a0cdeee5a35fd3a1683",
+    "run_id": "prove-fb70d9ad-eee1-4f68-a2e6-1f60e7499905",
+    "source_commit": "3a34079c25ec32de2ba1c146ba134dd00e6cdd0f",
     "working_tree_dirty": true,
-    "observed_at": "2026-09-03T20:20:15.129Z"
+    "observed_at": "2026-09-04T19:17:54.622Z"
   },
-  "note": "Signed cr.prove.transcript.v1 from the capability-demo sample transcript. Conformance does not mint this. The artifact records working_tree_dirty:true at source_commit ea1da3f; that is a ceiling, not a waiver."
+  "note": "Signed cr.prove.transcript.v1 from the capability-demo sample transcript (Phase 2a: CAS-stale, no-consume-only, no-mutation-only, deny read-backs). Conformance does not mint this. The artifact records working_tree_dirty:true at source_commit 3a34079 (the transcript was generated from a dirty tree; the bytes are byte-identical to the committed transcript, but the run recorded dirty — a ceiling, not a waiver)."
 }

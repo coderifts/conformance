@@ -100,12 +100,12 @@ So a run is reported as seven profiles, in chain order, on **two axes that are n
 | `DECISION_LOGIC` | **COVERED** | **LIVE** — 15 vectors run now (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
 | `RECEIPT_CRYPTO` | **COVERED** | **RECORDED** — receipt-verifier committed signed token bytes (not minted here) | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
 | `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
-| `CREDENTIAL_BOUNDARY` | **PARTIAL** | **RECORDED** — prove-transcript DENY `42501`; unchanged-state read-back missing; POINT 3 is catalog | A host holding a provider credential cannot reach the target except through the guarded path. |
-| `ATOMIC_COMMIT` | **PARTIAL** | **RECORDED** — replay + concurrency present; stale-token CAS / consume-only / mutation-only / read-backs missing | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
+| `CREDENTIAL_BOUNDARY` | **COVERED** | **RECORDED** — DENY `42501` + unchanged-state read-back; POINT 3 is that denial, not catalog posture | A host holding a provider credential cannot reach the target except through the guarded path. |
+| `ATOMIC_COMMIT` | **COVERED** | **RECORDED** — replay, concurrency, CAS-stale `STATE_DRIFT`, no-consume-only rollback, no-mutation-only 42501, before/after read-backs | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
 | `PROVIDER_ENFORCED` | **NOT COVERED** | **NOT RUN** — no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
 | `END_TO_END` | **NOT COVERED** | **NOT RUN** — no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 
-**PROFILE COVERAGE 3/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
+**PROFILE COVERAGE 5/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
 That is a count of COVERED rows plus an evidence breakdown, not a pass-rate over unequal claims.
 `MODELLED` cannot become `COVERED`. Every `RECORDED` operational profile carries a non-empty
 `does_not_prove`. Conformance never mints evidence (`self_minted:false`).
@@ -136,18 +136,18 @@ missing — the gap is named, never filled in.
   mints this today; the production signing key is current; the key-discovery endpoint is fresh;
   the grant is currently executable. `--evidence live` without a kernel is `NOT_RUN` and does
   not fall back.
-- **`CREDENTIAL_BOUNDARY` — PARTIAL / RECORDED.** The signed prove-transcript DENY panel carries
+- **`CREDENTIAL_BOUNDARY` — COVERED / RECORDED.** The signed prove-transcript DENY panel carries
   a real target-side denial: `cr_host` INSERT → Postgres `SQLSTATE 42501` (not Node 403, not
-  exit-78). POINT 3 is a catalog posture receipt (`cr.posture.receipt.v1`), not that denial.
-  **Gap named, not fabricated:** the deny evidence has no unchanged-state read-back (no
-  row-count after the attempt). `does_not_prove` is non-empty (another credential, another
-  target, raw shell, current config). db.js comments are MODELLED source and are not counted.
-- **`ATOMIC_COMMIT` — PARTIAL / RECORDED.** The same correlated transcript shows single-use
-  (replay 201 then 409 `GRANT_CONSUMED`) and concurrency (exactly one winner, `ok=1 grew=1`).
-  **Gaps named, not fabricated:** stale `state_token` CAS, consume-only (`--skip-seal` /
-  `consumed_unsigned`), mutation-only, and before/after read-backs are not in the signed
-  bundle. `EG-A-STATE-NONCE-MISMATCH` was never evidence here (a binding fact). server.js
-  git `update-ref` comments are MODELLED source and are not counted. The artifact records
+  exit-78), with articles count BEFORE and AFTER the attempt (unchanged). POINT 3 is that
+  denial, not the catalog posture receipt. `does_not_prove` is non-empty (another credential,
+  another target, raw shell, current config, dirty producer tree). db.js comments are MODELLED
+  source and are not counted.
+- **`ATOMIC_COMMIT` — COVERED / RECORDED.** The same correlated transcript shows single-use
+  (replay 201 then 409 `GRANT_CONSUMED`), concurrency (`ok=1 grew=1`), CAS-stale (`STATE_DRIFT`,
+  row unchanged, jti not consumed), no-consume-only (crash-before-seal rolled back article AND
+  ledger), no-mutation-only (executor raw INSERT `42501`), and before/after read-backs on the
+  positive commit and every negative. `EG-A-STATE-NONCE-MISMATCH` was never evidence here.
+  POINT 8 merge stays MODELLED and is not this profile. The artifact records
   `working_tree_dirty:true`.
 - **`PROVIDER_ENFORCED`** — needs a live provider and a credential. The only thing that would move
   it is a *negative canary* (a deliberate refusal, observed); its cost and its limits are measured
@@ -170,7 +170,8 @@ node bin/coderifts-conformance.js --profiles          # the table above (default
 node bin/coderifts-conformance.js --profiles --json   # machine shape, explicit `green` per profile
 node bin/coderifts-conformance.js --evidence live --profiles   # NOT_RUN for recorded profiles; no fallback
 node bin/coderifts-conformance.js --assurance RECEIPT_CRYPTO   # exit 0 in recorded mode (COVERED / RECORDED)
-node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT    # exit 3 — PARTIAL is not COVERED
+node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT    # exit 0 in recorded mode (COVERED / RECORDED)
+node bin/coderifts-conformance.js --assurance END_TO_END       # exit 3 — NOT COVERED / NOT RUN
 ```
 
 `--assurance <ID>` exits **0** only when that profile is COVERED (LIVE or RECORDED), **3** when it
@@ -234,7 +235,7 @@ left exactly as it was found.
 **These rows do not feed `--profiles` or `--assurance`, on purpose.** Those drive CI gates, and a
 gate whose colour depends on whether a database happened to be reachable is worse than one that is
 honestly red. The seven-profile report takes `CREDENTIAL_BOUNDARY` / `ATOMIC_COMMIT` from the
-**recorded** prove-transcript (PARTIAL, gaps named), not from this live subject. Data-plane
+**recorded** prove-transcript (COVERED / RECORDED), not from this live subject. Data-plane
 skips remain true of the live path; this subject reports separately what a run *with* a database
 observed.
 

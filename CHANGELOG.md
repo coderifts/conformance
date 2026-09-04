@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.7.0
+
+Warrants a MINOR bump: `CREDENTIAL_BOUNDARY` and `ATOMIC_COMMIT` move PARTIAL → COVERED /
+RECORDED. `--assurance` on either id exits **0** in default recorded mode (it exited 3 in 0.6.0).
+
+### Changed — prove-transcript re-vendored with the missing negatives
+
+The capability-demo prove run now records, signs, and read-back-checks:
+
+- DENY unchanged-state (`before_count === after_count` after SQLSTATE 42501); POINT 3 is that denial, not catalog posture
+- CAS-stale (`STATE_DRIFT`, row unchanged, jti not consumed)
+- no-consume-only (crash-before-seal rolls back article AND ledger)
+- no-mutation-only (executor raw INSERT 42501, no consume)
+- before/after counts on the positive commit and every negative
+
+`measureCredential` / `measureAtomic` require every panel to verify against the signed bytes.
+COVERED only when the set is complete. `does_not_prove` stays non-empty. POINT 8 merge stays
+MODELLED and is not these profiles. Pin:
+`sha256:a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096`.
+
+Default recorded report: **PROFILE COVERAGE 5/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED ·
+OVERALL RECORDED · FULL LIVE false.**
+
 ## 0.6.0
 
 Warrants a MINOR bump: a new `--evidence` flag, a two-axis profile report (coverage ×

@@ -132,10 +132,10 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
     assert.equal(fivePointComplete(full), true);
   });
 
-  it('this runner still does not populate ATOMIC_COMMIT — PARTIAL is from the recorded transcript', () => {
+  it('this runner still does not populate ATOMIC_COMMIT — COVERED is the recorded transcript, not the matrix', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'ATOMIC_COMMIT');
-    assert.notEqual(row.coverage, AP.COVERAGE.COVERED);
-    assert.equal(row.green, false);
+    assert.equal(row.coverage, AP.COVERAGE.COVERED);
+    assert.equal(row.evidence_tier, AP.EVIDENCE_TIER.RECORDED);
     assert.equal(AP.ATTACK_MATRIX.populates_profile, null);
     assert.equal(AP.VECTOR_MAP.some((v) => v.profile === 'ATOMIC_COMMIT'), false);
   });

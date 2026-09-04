@@ -232,11 +232,19 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on a PARTIAL profile exits 3, not 0', () => {
-    // PARTIAL is not COVERED. A CI job pointed here must fail rather than go green forever.
-    const r = run(['--assurance', 'ATOMIC_COMMIT']);
+  it('--assurance on a NOT COVERED profile exits 3, not 0', () => {
+    const r = run(['--assurance', 'END_TO_END']);
     assert.equal(r.status, 3);
-    assert.match(r.stderr, /PARTIAL \/ RECORDED — this suite does not prove this claim/);
+    assert.match(r.stderr, /NOT RUN \/ NOT_RUN — this suite does not prove this claim/);
+  });
+
+  it('--assurance ATOMIC_COMMIT and CREDENTIAL_BOUNDARY exit 0 in recorded mode', () => {
+    const atom = run(['--assurance', 'ATOMIC_COMMIT']);
+    const cred = run(['--assurance', 'CREDENTIAL_BOUNDARY']);
+    assert.equal(atom.status, 0, atom.stdout + atom.stderr);
+    assert.equal(cred.status, 0, cred.stdout + cred.stderr);
+    assert.match(atom.stdout, /COVERED \/ RECORDED/);
+    assert.match(cred.stdout, /COVERED \/ RECORDED/);
   });
 
   it('--assurance on RECEIPT_CRYPTO exits 0 in recorded mode (COVERED / RECORDED)', () => {

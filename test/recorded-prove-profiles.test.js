@@ -15,7 +15,7 @@ describe('prove-transcript pins and signature', () => {
     const pin = PP.assertPins();
     assert.equal(
       pin.artifacts.find((a) => a.path === 'transcript.json').sha256,
-      'a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3',
+      'a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096',
     );
     assert.equal(
       pin.artifacts.find((a) => a.path === 'executor-keys.json').sha256,
@@ -55,21 +55,23 @@ describe('CREDENTIAL_BOUNDARY — measure, do not invent', () => {
     assert.equal(m.deny_evidence.host_role, 'cr_host');
   });
 
-  it('POINT 3 is catalog posture, not a live denial — named, not counted as COVERED', () => {
+  it('POINT 3 is the recorded denial panel (42501 + unchanged), not catalog posture', () => {
     const out = PP.evaluate();
-    assert.equal(out.measurement.credential.point3_is_catalog, true);
-    assert.match(out.measurement.credential.point3.detail, /catalog|posture/i);
+    assert.equal(out.measurement.credential.point3_is_catalog, false);
+    assert.match(out.measurement.credential.point3.detail, /42501/);
+    assert.match(out.measurement.credential.point3.detail, /unchanged/);
   });
 
-  it('unchanged-state read-back is missing — PARTIAL / RECORDED, gap named, not fabricated', () => {
+  it('unchanged-state read-back + POINT 3 denial → COVERED / RECORDED', () => {
     const row = PP.evaluate().credential_boundary;
-    assert.equal(row.coverage, COVERAGE.PARTIAL);
+    assert.equal(row.coverage, COVERAGE.COVERED);
     assert.equal(row.evidence_tier, EVIDENCE_TIER.RECORDED);
-    assert.equal(row.green, false);
+    assert.equal(row.green, true);
     assert.equal(row.self_minted, false);
-    assert.ok(row.gaps.some((g) => /unchanged-state read-back/.test(g)));
+    assert.deepEqual(row.gaps, []);
     assert.ok(row.does_not_prove.length > 0);
-    assert.equal(row.envelope.coverage, COVERAGE.PARTIAL);
+    assert.equal(row.envelope.coverage, COVERAGE.COVERED);
+    assert.equal(row.envelope.self_minted, false);
   });
 });
 
@@ -89,24 +91,25 @@ describe('ATOMIC_COMMIT — measure the five negatives, do not synthesise', () =
     assert.ok(m.concurrency_evidence.conflict >= 1);
   });
 
-  it('stale state_token CAS, consume-only, mutation-only, read-backs are missing — PARTIAL', () => {
+  it('CAS-stale, no-consume-only, no-mutation-only, read-backs all present → COVERED / RECORDED', () => {
     const row = PP.evaluate().atomic_commit;
-    assert.equal(row.coverage, COVERAGE.PARTIAL);
+    assert.equal(row.coverage, COVERAGE.COVERED);
     assert.equal(row.evidence_tier, EVIDENCE_TIER.RECORDED);
-    assert.equal(row.green, false);
-    const joined = row.gaps.join('\n');
-    assert.match(joined, /stale state_token/);
-    assert.match(joined, /consume-only/);
+    assert.equal(row.green, true);
+    assert.deepEqual(row.gaps, []);
+    const joined = row.present.join('\n');
+    assert.match(joined, /STATE_DRIFT/);
+    assert.match(joined, /crash-before-seal/);
     assert.match(joined, /mutation-only/);
     assert.match(joined, /before\/after read-backs/);
   });
 
-  it('POINT 8 merge is MODELLED and is not promoted to COVERED', () => {
+  it('POINT 8 merge stays MODELLED and is not the reason ATOMIC/CREDENTIAL are COVERED', () => {
     const out = PP.evaluate();
     assert.equal(out.measurement.atomic.modelled_merge, true);
     assert.equal(out.measurement.point8.state, 'MODELLED');
-    assert.notEqual(out.atomic_commit.coverage, COVERAGE.COVERED);
-    assert.notEqual(out.credential_boundary.coverage, COVERAGE.COVERED);
+    assert.equal(out.atomic_commit.coverage, COVERAGE.COVERED);
+    assert.equal(out.credential_boundary.coverage, COVERAGE.COVERED);
   });
 });
 
