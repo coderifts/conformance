@@ -77,7 +77,10 @@ describe('the mapping is total, exclusive, and honest about how each vector runs
 
 describe('an empty profile can never render as a pass', () => {
   it('status is derived from the vectors, never asserted by hand', () => {
-    const overlay = new Set(['RECEIPT_CRYPTO', 'CREDENTIAL_BOUNDARY', 'ATOMIC_COMMIT']);
+    const overlay = new Set([
+      'RECEIPT_CRYPTO', 'CREDENTIAL_BOUNDARY', 'ATOMIC_COMMIT',
+      'PROVIDER_ENFORCED', 'END_TO_END',
+    ]);
     for (const r of AP.buildProfileReport()) {
       const mapped = AP.VECTOR_MAP.filter((v) => v.profile === r.id);
       if (!overlay.has(r.id)) {
@@ -129,7 +132,7 @@ describe('an empty profile can never render as a pass', () => {
 
   it('THE GUARD BITES: a hand-forged green empty profile is refused, not printed', () => {
     const forged = AP.buildProfileReport().map((r) => (
-      r.coverage === AP.COVERAGE.NOT_COVERED ? { ...r, green: true } : r));
+      r.coverage !== AP.COVERAGE.COVERED ? { ...r, green: true } : r));
     assert.throws(() => AP.assertNoGreenEmpty(forged), /marked green — refusing to render/);
     // and the renderers call the guard, so neither format can emit it
     assert.throws(() => AP.renderProfileTable(forged), /refusing to render/);
@@ -232,10 +235,16 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on a NOT COVERED profile exits 3, not 0', () => {
+  it('--assurance on END_TO_END exits 3 — PARTIAL is not COVERED', () => {
     const r = run(['--assurance', 'END_TO_END']);
     assert.equal(r.status, 3);
-    assert.match(r.stderr, /NOT RUN \/ NOT_RUN — this suite does not prove this claim/);
+    assert.match(r.stderr, /PARTIAL \/ RECORDED — this suite does not prove this claim/);
+  });
+
+  it('--assurance PROVIDER_ENFORCED exits 0 in recorded mode (COVERED / RECORDED)', () => {
+    const r = run(['--assurance', 'PROVIDER_ENFORCED']);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /COVERED \/ RECORDED/);
   });
 
   it('--assurance ATOMIC_COMMIT and CREDENTIAL_BOUNDARY exit 0 in recorded mode', () => {
@@ -274,12 +283,12 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.match(r.stderr, /unknown assurance profile/);
   });
 
-  it('--profiles is a REPORT and exits 0 even with empty and partial profiles', () => {
+  it('--profiles is a REPORT and exits 0 even with a PARTIAL profile', () => {
     const r = run(['--profiles']);
     assert.equal(r.status, 0);
-    assert.match(r.stdout, /NOT COVERED/);
     assert.match(r.stdout, /END_TO_END/);
-    assert.match(r.stdout, /PROFILE COVERAGE/);
+    assert.match(r.stdout, /PARTIAL/);
+    assert.match(r.stdout, /PROFILE COVERAGE 6\/7/);
     assert.match(r.stdout, /RECORDED/);
   });
 

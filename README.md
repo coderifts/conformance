@@ -102,10 +102,10 @@ So a run is reported as seven profiles, in chain order, on **two axes that are n
 | `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **COVERED** | **RECORDED** — DENY `42501` + unchanged-state read-back; POINT 3 is that denial, not catalog posture | A host holding a provider credential cannot reach the target except through the guarded path. |
 | `ATOMIC_COMMIT` | **COVERED** | **RECORDED** — replay, concurrency, CAS-stale `STATE_DRIFT`, no-consume-only rollback, no-mutation-only 42501, before/after read-backs | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
-| `PROVIDER_ENFORCED` | **NOT COVERED** | **NOT RUN** — no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
-| `END_TO_END` | **NOT COVERED** | **NOT RUN** — no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
+| `PROVIDER_ENFORCED` | **COVERED** | **RECORDED** — raw GitHub dumps: ruleset 22074842 + PR#10 FAILURE + PR#5 SUCCESS; capture is a local `gh` dump, not OIDC | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
+| `END_TO_END` | **PARTIAL** | **RECORDED** — layers exist separately; prove-transcript POINT 8 is MODELLED and does not share a run_id with the GitHub PRs | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 
-**PROFILE COVERAGE 5/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
+**PROFILE COVERAGE 6/7 · EVIDENCE 2 LIVE + 5 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
 That is a count of COVERED rows plus an evidence breakdown, not a pass-rate over unequal claims.
 `MODELLED` cannot become `COVERED`. Every `RECORDED` operational profile carries a non-empty
 `does_not_prove`. Conformance never mints evidence (`self_minted:false`).
@@ -149,14 +149,21 @@ missing — the gap is named, never filled in.
   positive commit and every negative. `EG-A-STATE-NONCE-MISMATCH` was never evidence here.
   POINT 8 merge stays MODELLED and is not this profile. The artifact records
   `working_tree_dirty:true`.
-- **`PROVIDER_ENFORCED`** — needs a live provider and a credential. The only thing that would move
-  it is a *negative canary* (a deliberate refusal, observed); its cost and its limits are measured
-  in [docs/1105-negative-canary-design.md](./docs/1105-negative-canary-design.md), which is a
-  design and **not** an implementation. `ADV-1` looks like coverage and
-  is not: it *mirrors* the published required-check evaluator, and a mirror agreeing with itself is
-  not a provider refusing anything. It counts under `DECISION_LOGIC`. Recorded as `ruleset_bypass`.
-- **`END_TO_END`** — no vector was ever written, and it depends on four profiles that are
-  themselves not covered here. It has no `excluded` entry because nothing was attempted.
+- **`PROVIDER_ENFORCED` — COVERED / RECORDED.** Raw GitHub API dumps of `coderifts/demo`, not a
+  CodeRifts summary. Ruleset `22074842` (`coderifts-enforcement`, required `CodeRifts / contract-gate`,
+  `integration_id` 2860592, `refs/heads/main`, enforcement active). Negative pole: PR#10 head
+  `146f19c9`, `statusCheckRollup` FAILURE, `CodeRifts — API Contract Check` FAILURE (app 2860592).
+  Positive pole: PR#5 head `df76f7a7`, rollup SUCCESS, `CodeRifts / contract-gate` SUCCESS and
+  `API Contract Check` SUCCESS. Both `mergeStateStatus` BEHIND — the CHECK verdict is the
+  evidence, not the merge button. Capture provenance: local `gh api` by `zsobpeter-code` on
+  2026-09-04, `oidc_attested:false`, no workflow-run bind (GitHub App checks, not Actions).
+  `ADV-1` still does not count here. `does_not_prove` names HISTORICAL freshness, bypass
+  actors, the check-name split on PR#10 vs the required context, and that this is not a 405
+  merge refusal. The 1105 canary design remains the cost model for a *live* 405 observation.
+- **`END_TO_END` — PARTIAL / RECORDED.** The layers are recorded; they are not one run. The
+  prove-transcript is a Postgres executor whose POINT 8 merge is MODELLED. The provider bundle
+  is GitHub PRs with different commits and a different `run_id`. A collage of separate artifacts
+  is layer-coverage, not end-to-end. Not COVERED.
 
 ### Empty profiles never render green
 
@@ -171,7 +178,8 @@ node bin/coderifts-conformance.js --profiles --json   # machine shape, explicit 
 node bin/coderifts-conformance.js --evidence live --profiles   # NOT_RUN for recorded profiles; no fallback
 node bin/coderifts-conformance.js --assurance RECEIPT_CRYPTO   # exit 0 in recorded mode (COVERED / RECORDED)
 node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT    # exit 0 in recorded mode (COVERED / RECORDED)
-node bin/coderifts-conformance.js --assurance END_TO_END       # exit 3 — NOT COVERED / NOT RUN
+node bin/coderifts-conformance.js --assurance PROVIDER_ENFORCED # exit 0 in recorded mode (COVERED / RECORDED)
+node bin/coderifts-conformance.js --assurance END_TO_END        # exit 3 — PARTIAL (no correlated run)
 ```
 
 `--assurance <ID>` exits **0** only when that profile is COVERED (LIVE or RECORDED), **3** when it

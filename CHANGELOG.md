@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.8.0
+
+Warrants a MINOR bump: `PROVIDER_ENFORCED` moves NOT_COVERED → COVERED / RECORDED from raw
+GitHub dumps. `--assurance PROVIDER_ENFORCED` exits **0** in default recorded mode.
+`END_TO_END` moves to PARTIAL / RECORDED (collage of separate artifacts, no shared run_id) —
+`--assurance END_TO_END` still exits **3**.
+
+### Added — PROVIDER_ENFORCED from two-pole GitHub readbacks
+
+Vendored `fixtures/recorded/provider-enforced/`: REST ruleset `22074842` (788 bytes,
+`sha256:363ae6b9…`), GraphQL PR#10 (`statusCheckRollup` FAILURE, head `146f19c9`) and PR#5
+(SUCCESS, head `df76f7a7`). Capture provenance is a local `gh api` dump
+(`oidc_attested:false`, actor `zsobpeter-code`, no Actions workflow-run bind). GitHub
+payloads are not GitHub-signed. Both poles `mergeStateStatus` BEHIND — the CHECK verdict is
+the evidence, not a 405 merge. `does_not_prove` is non-empty (HISTORICAL freshness, bypass
+actors, check-name split on PR#10 vs required `contract-gate`, local gh token).
+
+Sub-tiers: configuration_readback RECORDED, negative_enforcement_observation RECORDED,
+overall RECORDED. Live mode without gh is NOT_RUN and does not fall back.
+
+### Changed — END_TO_END is PARTIAL, not COVERED
+
+Measured: prove-transcript `run_id` `prove-fb70d9ad-…` (Postgres executor, POINT 8 MODELLED)
+does not share a run_id or commit with the GitHub capture. Covering the six layers separately
+is not one correlated change.
+
+Default recorded report: **PROFILE COVERAGE 6/7 · EVIDENCE 2 LIVE + 5 RECORDED + 0 MODELLED ·
+OVERALL RECORDED · FULL LIVE false.**
+
 ## 0.7.0
 
 Warrants a MINOR bump: `CREDENTIAL_BOUNDARY` and `ATOMIC_COMMIT` move PARTIAL → COVERED /

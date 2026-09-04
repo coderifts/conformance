@@ -1,0 +1,21 @@
+{
+  "schema": "cr.conformance.capture-provenance.v1",
+  "method": "gh api",
+  "oidc_attested": false,
+  "runner": "local workstation, not a GitHub Actions OIDC-attested job",
+  "actor": {
+    "login": "zsobpeter-code",
+    "id": 243386091,
+    "type": "User"
+  },
+  "observed_at": "2026-09-04T19:55:24Z",
+  "subject_repo": "coderifts/demo",
+  "commands": [
+    "gh api repos/coderifts/demo/rulesets/22074842",
+    "gh api graphql (pullRequest 10, statusCheckRollup contexts first:20)",
+    "gh api graphql (pullRequest 5, statusCheckRollup contexts first:20)"
+  ],
+  "limit": "captured by a local gh token, not a GitHub OIDC-attested runner. GitHub payloads are not GitHub-signed.",
+  "workflow_run_bound": false,
+  "workflow_run_bound_reason": "CheckRun.checkSuite.workflowRun is null on both poles — these are GitHub App checks (app databaseId 2860592), not Actions workflow runs."
+}

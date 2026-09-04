@@ -1,0 +1,48 @@
+{
+  "schema": "cr.conformance.recorded-pin.v1",
+  "profile": "PROVIDER_ENFORCED",
+  "producer": {
+    "name": "gh-api-local-dump",
+    "repo": "https://github.com/coderifts/demo",
+    "version": "capture:2026-09-04T19:55:24Z",
+    "digest": "local:zsobpeter-code",
+    "generator": "gh api (REST ruleset + GraphQL statusCheckRollup)"
+  },
+  "subject": {
+    "name": "coderifts/demo",
+    "version": "ruleset:22074842",
+    "digest": "sha256:363ae6b995b7cfa9be6c290f63a3699d06a1fec32fc892014ceb0056b39cd8af"
+  },
+  "artifacts": [
+    {
+      "path": "ruleset.json",
+      "role": "configuration",
+      "sha256": "363ae6b995b7cfa9be6c290f63a3699d06a1fec32fc892014ceb0056b39cd8af",
+      "bytes": 788,
+      "source": "GET /repos/coderifts/demo/rulesets/22074842"
+    },
+    {
+      "path": "pr-10.json",
+      "role": "negative",
+      "sha256": "9b02281042340ba44fb6f3949b9e6d34b3b6574a18e27022c62f2a8febdc4194",
+      "bytes": 813,
+      "source": "GraphQL repository.pullRequest(10) statusCheckRollup"
+    },
+    {
+      "path": "pr-5.json",
+      "role": "positive",
+      "sha256": "76de1a65122f4ba0b40446cb4d3488e48084f4bcc1ef94cfc2b96742df0bda53",
+      "bytes": 1110,
+      "source": "GraphQL repository.pullRequest(5) statusCheckRollup"
+    }
+  ],
+  "inputs_sha256": "sha256:96825dcaeea4e9d76c6a16d2018b8b833cca0d2cb52c3fce431f4bc570cd2376",
+  "inputs_sha256_over": "ruleset.json=<sha256>\\npr-10.json=<sha256>\\npr-5.json=<sha256>\\n",
+  "provenance_from_artifact": {
+    "run_id": "gh-capture-2026-09-04T19:55:24Z",
+    "observed_at": "2026-09-04T19:55:24Z",
+    "freshness": "HISTORICAL",
+    "oidc_attested": false
+  },
+  "note": "Raw GitHub API dumps. Not CodeRifts summaries. Not GitHub-signed. Capture is a local gh token dump (zsobpeter-code), not an OIDC-attested workflow. mergeStateStatus is BEHIND on both poles — the CHECK verdict is the evidence, not the merge button."
+}
