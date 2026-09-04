@@ -132,11 +132,12 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
     assert.equal(fivePointComplete(full), true);
   });
 
-  it('ATOMIC_COMMIT is still NOT_COVERED — this runner does not populate it', () => {
+  it('this runner still does not populate ATOMIC_COMMIT — PARTIAL is from the recorded transcript', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'ATOMIC_COMMIT');
-    assert.equal(row.status, AP.STATUS.NOT_COVERED);
+    assert.notEqual(row.coverage, AP.COVERAGE.COVERED);
     assert.equal(row.green, false);
     assert.equal(AP.ATTACK_MATRIX.populates_profile, null);
+    assert.equal(AP.VECTOR_MAP.some((v) => v.profile === 'ATOMIC_COMMIT'), false);
   });
 
   it('a node_modules install is not a commit mismatch against THIS repo HEAD', () => {

@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.6.0
+
+Warrants a MINOR bump: a new `--evidence` flag, a two-axis profile report (coverage ×
+evidence_tier), and `RECEIPT_CRYPTO` moving COVERED / RECORDED. `--assurance RECEIPT_CRYPTO`
+exits **0** in the default recorded mode (it exited 3 while the profile was empty). PARTIAL is
+not COVERED: `--assurance CREDENTIAL_BOUNDARY` and `--assurance ATOMIC_COMMIT` still exit 3.
+
+### Added — two-axis status + evidence envelope
+
+Coverage (`COVERED` / `PARTIAL` / `NOT_COVERED`) is no longer conflated with evidence tier
+(`LIVE` / `RECORDED` / `MODELLED` / `NOT_RUN`). Execution result (`PASS` / `FAIL`) is a third
+field: COVERED + LIVE + FAIL covers the property and found a regression.
+
+`lib/evidence-envelope.js` validates `cr.conformance.v1`: envelope signature, attached byte
+hashes, subject digest, positive+negative semantics, cross-artifact bindings. `self_minted`
+must be `false`. MODELLED cannot be promoted to COVERED on an operational profile.
+`does_not_prove` must be non-empty for every RECORDED operational profile.
+
+`--evidence recorded` (default) verifies vendored pinned external artifacts.
+`--evidence live` produces new proof on available infra; without infra those profiles are
+`NOT_RUN` and do **not** fall back to recorded bytes.
+
+### Added — three recorded profiles from existing external artifacts
+
+- **`RECEIPT_CRYPTO` → COVERED / RECORDED.** receipt-verifier committed signed token vectors
+  (`fixtures/recorded/receipt-crypto/vectors.json`, sha256
+  `b2ac4482763ad3c4d743e0073f418740f08083f37b397d6074fea3a4ccf93532`, generator
+  `test/gen-vectors.js`, producer `4d3cc48d36a2ee7ff256eec8d76f819843bfd429`). Positive VALID
+  passes; byte-level FORGED negative (`tampered_fp`, same signature, broken body) fails;
+  field-level tampers (sig / key / audience / operation / expired / version) are scored. A
+  digest-pin mismatch errors. Conformance does not mint these tokens. `does_not_prove`: the
+  live kernel mints this today; the production signing key is current; the key-discovery
+  endpoint is fresh; the grant is currently executable. The 0.4.0 retirement from
+  `cases.v1.json` stands — a mint-then-verify runner here would still agree with itself.
+
+- **`CREDENTIAL_BOUNDARY` → PARTIAL / RECORDED.** The signed prove-transcript DENY panel
+  carries a real target-side denial (`cr_host` INSERT → SQLSTATE `42501`, not Node 403).
+  POINT 3 is a catalog posture receipt, not that denial. **Gap named:** no unchanged-state
+  read-back in the signed deny evidence. Not COVERED.
+
+- **`ATOMIC_COMMIT` → PARTIAL / RECORDED.** Same correlated run: replay 201 then 409
+  `GRANT_CONSUMED`, concurrency `ok=1 grew=1`. **Gaps named:** stale `state_token` CAS,
+  consume-only (`skip-seal`), mutation-only, before/after read-backs. POINT 8 merge is
+  MODELLED and is not promoted. db.js / server.js comments are MODELLED source, not counted.
+
+Default recorded report: **PROFILE COVERAGE 3/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED ·
+OVERALL RECORDED · FULL LIVE false.**
+
 ## 0.5.0
 
 Warrants a MINOR bump when released: a new `--subject` value and a moved dependency pin, no

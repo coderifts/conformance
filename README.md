@@ -87,67 +87,68 @@ different strength: "an adapter branches on `execution_action`" and "a merge was
 provider" are not the same evidence, and a total cannot tell you which of them is held. It is also
 silent about what was never attempted.
 
-So a run is reported as seven profiles, in chain order. **Every profile is listed, including the
-empty ones** — a reader who sees only the profiles that pass has learned nothing new.
+So a run is reported as seven profiles, in chain order, on **two axes that are never conflated**:
 
-| Profile | Status | Evidence here | What a COVERED verdict would mean |
-|---------|--------|---------------|-----------------------------------|
-| `DECISION_LOGIC` | **COVERED** | 15 vectors run (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
-| `RECEIPT_CRYPTO` | **NOT COVERED** | **RETIRED** in 0.4.0 — 0 vectors here; they run in the app and in `receipt-verifier` | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
-| `GUARDED_TOOL_TABLE` | **COVERED** | 6 vectors run (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
-| `CREDENTIAL_BOUNDARY` | **NOT COVERED** | no vector exists | A host holding a provider credential cannot reach the target except through the guarded path. |
-| `ATOMIC_COMMIT` | **NOT COVERED** | no vector here — executable in `@coderifts/agent-guard` `test/atomic-profile.test.js` | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
-| `PROVIDER_ENFORCED` | **NOT COVERED** | no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
-| `END_TO_END` | **NOT COVERED** | no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
+- **coverage** — `COVERED` / `PARTIAL` / `NOT_COVERED`
+- **evidence_tier** — `LIVE` / `RECORDED` / `MODELLED` / `NOT_RUN`
+- plus an execution **result** `PASS` / `FAIL` (COVERED + LIVE + FAIL means the property is covered AND the run found a regression)
 
-**Two covered, five not covered — of seven.** There is deliberately no `x/7` here:
-the profiles are claims of different strength, and a ratio over them re-creates the single number
-this split replaced. **COVERED requires both polarities** — at least one positive vector (the
-capability works) and one negative vector (a real mismatch is refused). A profile with only
-one half is not covered.
+**Every profile is listed, including the empty ones** — a reader who sees only the profiles that pass has learned nothing new. Default `--evidence recorded` verifies vendored pinned external artifacts. `--evidence live` produces new proof on available infra and is `NOT_RUN` without it — it does **not** fall back to recorded bytes.
 
-The five empty profiles are **structurally blocked in this offline suite**, not unfinished
-homework: `RECEIPT_CRYPTO` retired because a mint-then-verify runner here would agree with
-itself; `CREDENTIAL_BOUNDARY` needs a running host (bypass-probe); `ATOMIC_COMMIT` needs an
-executor / live Postgres (`--subject data-plane` with `CODERIFTS_DATAPLANE_PG`);
-`PROVIDER_ENFORCED` needs a live provider (the 1105 canary is opt-in, not this package);
-`END_TO_END` depends on the four above. Faking any of them to 7/7 would weaken COVERED.
+| Profile | Coverage | Evidence | What a COVERED verdict would mean |
+|---------|----------|----------|-----------------------------------|
+| `DECISION_LOGIC` | **COVERED** | **LIVE** — 15 vectors run now (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `RECEIPT_CRYPTO` | **COVERED** | **RECORDED** — receipt-verifier committed signed token bytes (not minted here) | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
+| `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
+| `CREDENTIAL_BOUNDARY` | **PARTIAL** | **RECORDED** — prove-transcript DENY `42501`; unchanged-state read-back missing; POINT 3 is catalog | A host holding a provider credential cannot reach the target except through the guarded path. |
+| `ATOMIC_COMMIT` | **PARTIAL** | **RECORDED** — replay + concurrency present; stale-token CAS / consume-only / mutation-only / read-backs missing | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
+| `PROVIDER_ENFORCED` | **NOT COVERED** | **NOT RUN** — no vector exists | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
+| `END_TO_END` | **NOT COVERED** | **NOT RUN** — no vector exists | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
+
+**PROFILE COVERAGE 3/7 · EVIDENCE 2 LIVE + 3 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
+That is a count of COVERED rows plus an evidence breakdown, not a pass-rate over unequal claims.
+`MODELLED` cannot become `COVERED`. Every `RECORDED` operational profile carries a non-empty
+`does_not_prove`. Conformance never mints evidence (`self_minted:false`).
+
+**COVERED requires both polarities** — at least one positive vector (the capability works) and
+one negative vector (a real mismatch is refused). A profile with only one half is not covered.
+`PARTIAL` is earned when recorded evidence exists but a required negative or read-back is
+missing — the gap is named, never filled in.
 
 ### Why the empty ones are empty
 
-- **`RECEIPT_CRYPTO` — RETIRED in 0.4.0. The row is kept; the vectors are gone.** The 23 `EG-*` /
-  `EG2-*` / `EG-A-*` / `MON-A-*` cases were vendored from the CodeRifts app into `cases.v1.json`,
-  and every shipped subject implements only the `decide` and `tool_selection` kinds — they threw
-  `unknown case kind` on the rest. Being outside the default profile, they were never selected and
-  never showed up as failures: a third of the case file was data with no runner.
+- **`RECEIPT_CRYPTO` — RETIRED from `cases.v1.json` in 0.4.0; RECORDED from receipt-verifier in
+  this release.** The 23 `EG-*` / `EG2-*` / `EG-A-*` / `MON-A-*` cases were vendored from the
+  CodeRifts app into `cases.v1.json`, and every shipped subject implements only the `decide` and
+  `tool_selection` kinds. A runner here was the wrong fix: the inputs carried a scenario *name*,
+  not a token, so running them would have meant minting the signed token from that name — a
+  generator and a verifier in one repository agreeing with itself. The removal could not start
+  here (`cases.v1.json` is vendored from the app and gated byte-identical).
 
-  **A runner here was the wrong fix, and that is why they left rather than gained one.** The case
-  inputs carried a scenario *name*, not a token (14 of the 19 were `{ "scenario": "..." }` and
-  nothing else), so running them would have meant minting the signed token from that name — a
-  generator and a verifier in one repository agreeing with itself.
-
-  **Where they run now, both stronger than a runner here would have been.** In the **app**, against
-  the real verify functions (`test/execution-grant.test.js`, `test/execution-attestation.test.js`,
-  `test/monitoring-attestation.test.js`, reading the app-only
-  `test/adapter-acceptance/receipt-crypto-vectors.v1.json`); and in **`receipt-verifier`** as signed
-  token **bytes**, cross-checked by two independent implementations, JS and Python, with 12 of the
-  19 under byte-identical IDs (`EG-*` 5/5, `EG-A-*` 7/7). The 7 `MON-A-*` belong in
-  `receipt-verifier` and are staged separately.
-
-  **The removal could not start here.** `cases.v1.json` is vendored from the app and gated
-  byte-identical by its `test/conformance-cases-vendored-sync.test.js`, so deleting rows here would
-  have broken the app's CI. It began at the app-canonical copy and this repo followed.
-  `NOT COVERED` is scoped to this suite — it is not a claim that the property is unproven.
-- **`CREDENTIAL_BOUNDARY`** — a property of a *running* host's tool table. Every subject here is a
-  pure function of case input with no host, so a vector would score a fake host, and a passing fake
-  would imply coverage that does not exist. Covered by `@coderifts/bypass-probe` against your own
-  installation. Recorded as the excluded vector `raw_tool_beside_guarded_table`.
-- **`ATOMIC_COMMIT`** — single-use consumption happens at an executor this suite does not run, and
-  the public verifier is stateless. Recorded as `stale_nonce` and `concurrent_grants`.
-  **`EG-A-STATE-NONCE-MISMATCH` was never evidence here** despite naming a nonce: it checks that an
-  attestation document is unbound, which is a binding fact rather than an atomicity one. It left
-  with the rest of `RECEIPT_CRYPTO` in 0.4.0; this profile is unaffected, because it never counted
-  here.
+  **What changed:** this suite now **verifies** receipt-verifier's committed signed token bytes
+  (`fixtures/recorded/receipt-crypto/vectors.json`, pin
+  `sha256:b2ac4482763ad3c4d743e0073f418740f08083f37b397d6074fea3a4ccf93532`, generator
+  `test/gen-vectors.js`, producer commit `4d3cc48d36a2ee7ff256eec8d76f819843bfd429`). Positive
+  VALID tokens pass; the byte-level FORGED negative (`tampered_fp`) reuses the VALID signature
+  over broken protected content and must fail; field-level tampers (sig / key / audience /
+  operation / expired / version) are scored. Conformance does not mint these tokens
+  (`self_minted:false`). A digest-pin mismatch is an error. `does_not_prove`: the live kernel
+  mints this today; the production signing key is current; the key-discovery endpoint is fresh;
+  the grant is currently executable. `--evidence live` without a kernel is `NOT_RUN` and does
+  not fall back.
+- **`CREDENTIAL_BOUNDARY` — PARTIAL / RECORDED.** The signed prove-transcript DENY panel carries
+  a real target-side denial: `cr_host` INSERT → Postgres `SQLSTATE 42501` (not Node 403, not
+  exit-78). POINT 3 is a catalog posture receipt (`cr.posture.receipt.v1`), not that denial.
+  **Gap named, not fabricated:** the deny evidence has no unchanged-state read-back (no
+  row-count after the attempt). `does_not_prove` is non-empty (another credential, another
+  target, raw shell, current config). db.js comments are MODELLED source and are not counted.
+- **`ATOMIC_COMMIT` — PARTIAL / RECORDED.** The same correlated transcript shows single-use
+  (replay 201 then 409 `GRANT_CONSUMED`) and concurrency (exactly one winner, `ok=1 grew=1`).
+  **Gaps named, not fabricated:** stale `state_token` CAS, consume-only (`--skip-seal` /
+  `consumed_unsigned`), mutation-only, and before/after read-backs are not in the signed
+  bundle. `EG-A-STATE-NONCE-MISMATCH` was never evidence here (a binding fact). server.js
+  git `update-ref` comments are MODELLED source and are not counted. The artifact records
+  `working_tree_dirty:true`.
 - **`PROVIDER_ENFORCED`** — needs a live provider and a credential. The only thing that would move
   it is a *negative canary* (a deliberate refusal, observed); its cost and its limits are measured
   in [docs/1105-negative-canary-design.md](./docs/1105-negative-canary-design.md), which is a
@@ -165,15 +166,17 @@ averaging ratios scores `0/0` as 100%. `NOT COVERED` cannot be misread that way 
 number. A count is printed only where a count means something.
 
 ```bash
-node bin/coderifts-conformance.js --profiles          # the table above
+node bin/coderifts-conformance.js --profiles          # the table above (default --evidence recorded)
 node bin/coderifts-conformance.js --profiles --json   # machine shape, explicit `green` per profile
-node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT   # exit 3 — gate CI on one claim
+node bin/coderifts-conformance.js --evidence live --profiles   # NOT_RUN for recorded profiles; no fallback
+node bin/coderifts-conformance.js --assurance RECEIPT_CRYPTO   # exit 0 in recorded mode (COVERED / RECORDED)
+node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT    # exit 3 — PARTIAL is not COVERED
 ```
 
-`--assurance <ID>` exits **0** only when that profile is COVERED, **3** when it is NOT RUN or NOT
-COVERED, and **2** for an unknown id. Exit 3 is distinct from exit 1 on purpose: "nothing proved
-this" is not "this was disproved". A CI job pointed at an empty profile fails instead of going
-green forever.
+`--assurance <ID>` exits **0** only when that profile is COVERED (LIVE or RECORDED), **3** when it
+is PARTIAL, NOT RUN or NOT COVERED, and **2** for an unknown id. Exit 3 is distinct from exit 1 on
+purpose: "nothing proved this" is not "this was disproved". A CI job pointed at a PARTIAL or empty
+profile fails instead of going green forever.
 
 One vector fits none of the seven and is recorded rather than forced: **`ADV-6`** (SHA pin vs the
 moving `@v0` tag) asserts supply-chain integrity of the enforcing component, which is a
@@ -230,8 +233,10 @@ left exactly as it was found.
 
 **These rows do not feed `--profiles` or `--assurance`, on purpose.** Those drive CI gates, and a
 gate whose colour depends on whether a database happened to be reachable is worse than one that is
-honestly red. The seven-profile report keeps saying `NOT COVERED`, which remains true *of the
-suite*; this subject reports separately what a run *with* a database observed.
+honestly red. The seven-profile report takes `CREDENTIAL_BOUNDARY` / `ATOMIC_COMMIT` from the
+**recorded** prove-transcript (PARTIAL, gaps named), not from this live subject. Data-plane
+skips remain true of the live path; this subject reports separately what a run *with* a database
+observed.
 
 `DP-PG-SEAL-REQUIRED` was not designed — it was found. The first version of `DP-PG-SINGLE-USE`
 INSERTed and committed, and the deferred trigger refused it. That refusal turned out to be the

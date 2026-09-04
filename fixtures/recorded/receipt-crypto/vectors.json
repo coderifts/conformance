@@ -1,0 +1,288 @@
+{
+  "note": "Ephemeral test key. NOT the production key. Regenerate with: node test/gen-vectors.js",
+  "generated_by": "test/gen-vectors.js",
+  "kid": "test-k1",
+  "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+  "vectors": [
+    {
+      "name": "valid_v1",
+      "token": "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYXBpIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoifQ.7Kx_USW55DQmVcEe6BBGbd5RbwO6CXksujss1hDqh0_QK_P9EuZ62MMOsR2-ShPgshFQatF9LrKFwS4HquCKBg",
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "valid_v2",
+      "token": "eyJ2IjoyLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYW5vbiIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiNGY1M2NkYTE4YzJiYWEwYzAzNTRiYjVmOWEzZWNiZTVlZDEyYWI0ZDhlMTFiYTg3M2MyZjExMTYxMjAyYjk0NSJ9.BL0jhuSjFT7PSVRR2zonoC6dpnmJnofhK-Lf1bPdrpgmferAXs-7Ch3bvR2i4vW-FeOfaG-APRhGIKhIs3bPCw",
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "valid_v3",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiNGY1M2NkYTE4YzJiYWEwYzAzNTRiYjVmOWEzZWNiZTVlZDEyYWI0ZDhlMTFiYTg3M2MyZjExMTYxMjAyYjk0NSIsImlyIjoic2hhMjU2OmYzZGU3NzIxZGY2ZWU1MjJiYzkyMjAzY2Y2YjcxZWIzYWM3YjFkMGVlYTEwNmJhMDFkMmJmODE5MzhhM2EzMzQifQ.q4-fUJaySY-DWqfqYL-ttzCV2n0tp9KugcASNhlsVM247SyqKqO0Wg8LWMVxSQsg5wAG-xd_g0ONLCD8th98CA",
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "valid_v3_empty_reg",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMiIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiIiwiaXIiOiJzaGEyNTY6ZjNkZTc3MjFkZjZlZTUyMmJjOTIyMDNjZjZiNzFlYjNhYzdiMWQwZWVhMTA2YmEwMWQyYmY4MTkzOGEzYTMzNCJ9.6NVKNImep1OuHgA0mCv0oL9FMooPw5c-yu5YuZhFL93lmMAHI4qGQzlYyEXUjc4IIBItEzbDaQGaJTihxJlCDQ",
+      "expected": {
+        "valid": true
+      }
+    },
+    {
+      "name": "tampered_fp",
+      "token": "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYXBpIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoifQ.7Kx_USW55DQmVcEe6BBGbd5RbwO6CXksujss1hDqh0_QK_P9EuZ62MMOsR2-ShPgshFQatF9LrKFwS4HquCKBg",
+      "expected": {
+        "valid": false,
+        "reason": "signature_mismatch"
+      }
+    },
+    {
+      "name": "tampered_reg_v2",
+      "token": "eyJ2IjoyLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYW5vbiIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZjAifQ.BL0jhuSjFT7PSVRR2zonoC6dpnmJnofhK-Lf1bPdrpgmferAXs-7Ch3bvR2i4vW-FeOfaG-APRhGIKhIs3bPCw",
+      "expected": {
+        "valid": false,
+        "reason": "signature_mismatch"
+      }
+    },
+    {
+      "name": "tampered_ir_v3",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiNGY1M2NkYTE4YzJiYWEwYzAzNTRiYjVmOWEzZWNiZTVlZDEyYWI0ZDhlMTFiYTg3M2MyZjExMTYxMjAyYjk0NSIsImlyIjoic2hhMjU2OjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAifQ.q4-fUJaySY-DWqfqYL-ttzCV2n0tp9KugcASNhlsVM247SyqKqO0Wg8LWMVxSQsg5wAG-xd_g0ONLCD8th98CA",
+      "expected": {
+        "valid": false,
+        "reason": "signature_mismatch"
+      }
+    },
+    {
+      "name": "tampered_reg_v3",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZjAiLCJpciI6InNoYTI1NjpmM2RlNzcyMWRmNmVlNTIyYmM5MjIwM2NmNmI3MWViM2FjN2IxZDBlZWExMDZiYTAxZDJiZjgxOTM4YTNhMzM0In0.q4-fUJaySY-DWqfqYL-ttzCV2n0tp9KugcASNhlsVM247SyqKqO0Wg8LWMVxSQsg5wAG-xd_g0ONLCD8th98CA",
+      "expected": {
+        "valid": false,
+        "reason": "signature_mismatch"
+      }
+    },
+    {
+      "name": "wrong_order_v3",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMyIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIiwicmVnIjoiNGY1M2NkYTE4YzJiYWEwYzAzNTRiYjVmOWEzZWNiZTVlZDEyYWI0ZDhlMTFiYTg3M2MyZjExMTYxMjAyYjk0NSIsImlyIjoic2hhMjU2OmYzZGU3NzIxZGY2ZWU1MjJiYzkyMjAzY2Y2YjcxZWIzYWM3YjFkMGVlYTEwNmJhMDFkMmJmODE5MzhhM2EzMzQifQ.hCvnGv3tlhX-HgepsSTtcdV3nbI__nQCA4RXFB3g0t39kb2ylGBr789n08btiy0pppDrfKUvO2pUGq2f4cQbDA",
+      "expected": {
+        "valid": false,
+        "reason": "signature_mismatch"
+      }
+    },
+    {
+      "name": "wrong_kid",
+      "token": "eyJ2IjoxLCJraWQiOiJ3cm9uZy1rOSIsImZwIjoic2hhMjU2OjExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTEiLCJwcmV2IjoibnVsbCIsImNhbGxlciI6ImFwaSIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIn0.p1LhUcjS7b7ullKSMM5--oVJd368o6uQ4K5VH3FyJESH959cdPbFPCioMTGHH1J-kt9YrqRqnhYrN4cMS8l_DQ",
+      "expected": {
+        "valid": false,
+        "reason": "unknown_kid"
+      }
+    },
+    {
+      "name": "truncated",
+      "token": "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYXBpIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoifQ",
+      "expected": {
+        "valid": false,
+        "reason": "malformed_structure"
+      }
+    },
+    {
+      "name": "garbage_base64",
+      "token": "dGhpcyBpcyBub3QganNvbg.jZ4A2a578tdaky7IKRPwHFd-zelKsC8V05-PWAYVTLMAN1szziVYL-wM1yowJNQQagisj1IElqCDgLtJZghoqw",
+      "expected": {
+        "valid": false,
+        "reason": "bad_json"
+      }
+    },
+    {
+      "name": "valid_v4",
+      "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+      "expected": {
+        "valid": true,
+        "status": "VERIFIED_CURRENT"
+      }
+    },
+    {
+      "name": "expired_v4",
+      "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDAwLTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.xtah2sYzcMBhq6KFOyAtSaqpyqBwsKSa3_2ZhEGywymv_jF3owR9w3SasG_bWRtjA3qFmu6ek_SspWGUZSc5Cg",
+      "expected": {
+        "valid": false,
+        "status": "VERIFIED_EXPIRED"
+      }
+    },
+    {
+      "name": "downgrade_v4_as_v3",
+      "token": "eyJ2IjozLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6InwyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFp8c2hhMjU2OmNjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2MifQ.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+      "expected": {
+        "valid": false,
+        "status": "INVALID_SIGNATURE",
+        "reason": "delimiter_in_field"
+      }
+    },
+    {
+      "name": "unsupported_v5",
+      "token": "eyJ2Ijo1LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYXBpIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoifQ.7Kx_USW55DQmVcEe6BBGbd5RbwO6CXksujss1hDqh0_QK_P9EuZ62MMOsR2-ShPgshFQatF9LrKFwS4HquCKBg",
+      "expected": {
+        "valid": false,
+        "status": "UNSUPPORTED_VERSION"
+      }
+    }
+  ],
+  "chain": {
+    "tokens": [
+      "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYXBpIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoifQ.7Kx_USW55DQmVcEe6BBGbd5RbwO6CXksujss1hDqh0_QK_P9EuZ62MMOsR2-ShPgshFQatF9LrKFwS4HquCKBg",
+      "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMiIsInByZXYiOiJzaGEyNTY6NjBkM2JhZmFiMGEwNjdlODY0MmQ5ODg0MWQ3MTlhMWU5YzY1NzgxZmYyY2EzOGIyMjQyNzU0ZjlhZjMwMjAyZCIsImNhbGxlciI6ImFwaSIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIn0.U7dsIHMgkGdzmM_A_ovCNCyl1TEPw3_pXvwJJJpqH64hmsi7qhOFQgqhcFk9I8yu99caXPjpwUgv6U1ztVrKCA",
+      "eyJ2IjoxLCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMyIsInByZXYiOiJzaGEyNTY6ODExNjhkYjIxNGFkMmYwOGU5MGZhNmE5NWFkNTA5ZTQ1MGExNWYyZGZkMmNiMjI5MjliYTFmNTA5MmNkODgyYiIsImNhbGxlciI6ImFwaSIsInRzIjoiMjAyNi0wNy0xNVQwMDowMDowMC4wMDBaIn0.vio3FCRDj9OftoSMwYRluiXD9adMRVDZReazhxz6SwN2kqBfWb_dQOHW2PST-TB-7GuMbtBgsz5FIgr27HwxDA"
+    ],
+    "expected": {
+      "valid": true,
+      "first": "genesis"
+    }
+  },
+  "bind": {
+    "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjowN2RhZWRjYmMyMTczNzc3MGUyYjNmNzlhZjM4NjI1NDEyYmYwNWM4ZjM4MzFlNGJmM2NjZDcyNmM3NDI0ZjMzIn0.vMPZd3HubSWERJbZ-CCSRXwmuxi4lqaY9V78KIO2MzqUVsGoToaBGEm9eQtOQT6a8J4OdrIrCOzpoC8-otCHAg",
+    "envelope": {
+      "spec_version": "decision-result.v1.1",
+      "decision": "BLOCK",
+      "operation": "merge",
+      "environment": "production",
+      "receipt": null,
+      "decision_body_hash": null
+    },
+    "expected_ok": {
+      "valid": true,
+      "status": "VERIFIED_CURRENT"
+    },
+    "expected_tampered": {
+      "valid": false,
+      "status": "INVALID_SIGNATURE",
+      "reason": "body_hash_mismatch"
+    }
+  },
+  "lifecycle": {
+    "note": "OPTIONAL retired_at / revoked_at on an otherwise old-shape active entry. Absent both fields → verdict identical to today. revoked_at invalidates ALL ts. retired_at invalidates only ts >= retired_at.",
+    "vectors": [
+      {
+        "name": "EG-NO-LIFECYCLE",
+        "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+        "registry": {
+          "keys": [
+            {
+              "kid": "test-k1",
+              "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+              "status": "active"
+            }
+          ]
+        },
+        "expected": {
+          "valid": true,
+          "status": "VERIFIED_CURRENT"
+        }
+      },
+      {
+        "name": "EG-SIGNED-BEFORE-RETIREMENT",
+        "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+        "registry": {
+          "keys": [
+            {
+              "kid": "test-k1",
+              "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+              "status": "active",
+              "retired_at": "2026-08-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "expected": {
+          "valid": true,
+          "status": "VERIFIED_CURRENT"
+        }
+      },
+      {
+        "name": "EG-RETIRED-BEFORE-SIGNING",
+        "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+        "registry": {
+          "keys": [
+            {
+              "kid": "test-k1",
+              "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+              "status": "active",
+              "retired_at": "2026-07-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "expected": {
+          "valid": false,
+          "status": "KEY_RETIRED_AFTER_SIGNING",
+          "reason": "KEY_RETIRED_AFTER_SIGNING"
+        }
+      },
+      {
+        "name": "EG-REVOKED-ANY",
+        "token": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LWsxIiwiZnAiOiJzaGEyNTY6MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA3LTE1VDAwOjAwOjAwLjAwMFoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDk5LTAxLTAxVDAwOjAwOjAwLjAwMFoiLCJiaCI6InNoYTI1NjpjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjIn0.BIUPPIvaj3XbTJ5whMj8soj3XpcsWkG9ddpjlaf4ktKi3XnbNlCwVGf8A6G_0LJaPHtYIwRQf6p8W_ilZEBADg",
+        "registry": {
+          "keys": [
+            {
+              "kid": "test-k1",
+              "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+              "status": "active",
+              "revoked_at": "2026-08-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "expected": {
+          "valid": false,
+          "status": "KEY_REVOKED",
+          "reason": "KEY_REVOKED"
+        }
+      }
+    ]
+  },
+  "retired": {
+    "registry": {
+      "keys": [
+        {
+          "kid": "test-k1",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAB+QFPL1Y/NJTE/6xYr3/FchsS99EB54itXrPs9ZJlP8=\n-----END PUBLIC KEY-----\n",
+          "status": "active",
+          "valid_from": null,
+          "retired_at": null
+        },
+        {
+          "kid": "test-retired-k0",
+          "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAutgQnK0N8odL7mRTJRSzggfIZL4rRnbIbNqB1h2+wPs=\n-----END PUBLIC KEY-----\n",
+          "status": "retired",
+          "valid_from": null,
+          "retired_at": "2026-07-10T00:00:00.000Z"
+        }
+      ]
+    },
+    "token_valid_at_issue": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LXJldGlyZWQtazAiLCJmcCI6InNoYTI1NjoxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwicHJldiI6Im51bGwiLCJjYWxsZXIiOiJidW5kbGUiLCJ0cyI6IjIwMjYtMDctMDVUMDA6MDA6MDAuMDAwWiIsInJlZyI6IiIsImlyIjoiIiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImJoIjoic2hhMjU2OmNjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2MifQ.1h_BPv3HvDB3o3XIypy3tcNJni6bb90UNwrtcMrTJhVJwLtKeDctS5YE1E_a30Gt86ewmn8Cu0OiIVAnTflNAQ",
+    "token_after_retire": "eyJ2Ijo0LCJraWQiOiJ0ZXN0LXJldGlyZWQtazAiLCJmcCI6InNoYTI1NjoxMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExIiwicHJldiI6Im51bGwiLCJjYWxsZXIiOiJidW5kbGUiLCJ0cyI6IjIwMjYtMDctMjBUMDA6MDA6MDAuMDAwWiIsInJlZyI6IiIsImlyIjoiIiwiZXhwaXJlc19hdCI6IjIwOTktMDEtMDFUMDA6MDA6MDAuMDAwWiIsImJoIjoic2hhMjU2OmNjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2MifQ.gQSlL4mqM4H_iKJumoKcN_qkgP1UT7qB2pZxqTrj-46Dth8fopRujFNDaSN0hVDrf9LnOysBgki_AxOQPlJGAg",
+    "expected_valid_at_issue": {
+      "valid": true,
+      "status": "RETIRED_KEY_VALID_AT_ISSUE"
+    },
+    "expected_after_retire": {
+      "valid": false,
+      "status": "KEY_RETIRED_AFTER_SIGNING",
+      "reason": "KEY_RETIRED_AFTER_SIGNING"
+    }
+  },
+  "live": {
+    "note": "REAL production v3 receipt captured from coderifts/demo PR #4. Verified against the live prod PUBLIC key (kid 2026-07-k1). Frozen artifact -- NOT regenerated.",
+    "source": "coderifts/demo PR #4 sticky comment",
+    "kid": "2026-07-k1",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAJh8xDXLaOCpQ+bBC9d2I+zG1qVsCpeCuWbtH+aGjC7A=\n-----END PUBLIC KEY-----\n",
+    "vectors": [
+      {
+        "name": "live_v3_demo",
+        "token": "eyJ2IjozLCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6NzA2OTkzNDE1NDk3ODQwNDIyNGIyMGZkMWM1ZDllM2EwZGRjYzY5Y2FjYTU4NjdmOGU3Mzc2NmUyODZjY2ZlYyIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoid2ViaG9vayIsInRzIjoiMjAyNi0wNy0yNFQwNzo0NDo0NS44MDBaIiwicmVnIjoiNGY1M2NkYTE4YzJiYWEwYzAzNTRiYjVmOWEzZWNiZTVlZDEyYWI0ZDhlMTFiYTg3M2MyZjExMTYxMjAyYjk0NSIsImlyIjoic2hhMjU2OmYzZGU3NzIxZGY2ZWU1MjJiYzkyMjAzY2Y2YjcxZWIzYWM3YjFkMGVlYTEwNmJhMDFkMmJmODE5MzhhM2EzMzQifQ.2_PhB-rDQ69MQq_JmklXUNroUbVehCr1Prr6sSHArBn6AA6eodZjiWUPEbOo7BFEuKAVQnInh-48J-oIM5phCA",
+        "expected": {
+          "valid": true
+        }
+      }
+    ]
+  }
+}

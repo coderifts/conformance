@@ -43,11 +43,11 @@ describe('attack-matrix.v1.json schema — runner honors it, does not invent a v
     assert.equal(AP.ATTACK_MATRIX.populates_profile, null);
   });
 
-  it('ATOMIC_COMMIT stays NOT_COVERED', () => {
+  it('ATOMIC_COMMIT is not COVERED by this fixture — PARTIAL is the recorded transcript, not the matrix', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'ATOMIC_COMMIT');
-    assert.equal(row.status, AP.STATUS.NOT_COVERED);
+    assert.notEqual(row.coverage, AP.COVERAGE.COVERED);
     assert.equal(row.green, false);
-    assert.equal(row.vectors, 0);
+    assert.equal(AP.VECTOR_MAP.filter((v) => v.profile === 'ATOMIC_COMMIT').length, 0);
   });
 
   it('does not enlarge adversarial.v1.json excluded[] — still the auditor four', () => {

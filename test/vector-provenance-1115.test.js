@@ -66,14 +66,15 @@ describe('the retirement happened, and it stays done', () => {
 });
 
 describe('the row was KEPT, and it says where the proof lives', () => {
-  it('RECEIPT_CRYPTO is NOT_COVERED with zero vectors — and is still one of the seven', () => {
+  it('RECEIPT_CRYPTO stays one of the seven; cases.v1.json still has zero crypto rows', () => {
     const report = AP.buildProfileReport();
-    assert.equal(report.length, 7, 'the retirement removes vectors, never a claim');
+    assert.equal(report.length, 7, 'the retirement removes case-file vectors, never a claim');
+    const mapped = AP.VECTOR_MAP.filter((v) => v.profile === 'RECEIPT_CRYPTO');
+    assert.equal(mapped.length, 0, 'cases.v1.json overlay is still empty — recorded bytes are not case rows');
     const row = report.find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.equal(row.status, AP.STATUS.NOT_COVERED);
-    assert.equal(row.vectors, 0);
-    assert.equal(row.runnable, 0);
-    assert.equal(row.green, false, 'an empty profile is never green');
+    assert.equal(row.coverage, AP.COVERAGE.COVERED);
+    assert.equal(row.evidence_tier, AP.EVIDENCE_TIER.RECORDED);
+    assert.equal(row.green, true);
   });
 
   it('DELETING the row is refused by this test, not by convention', () => {
@@ -82,22 +83,19 @@ describe('the row was KEPT, and it says where the proof lives', () => {
     assert.ok(AP.PROFILE_IDS.includes('RECEIPT_CRYPTO'));
   });
 
-  it('why_empty names the retirement, the blocker, and BOTH homes the vectors moved to', () => {
-    const row = AP.buildProfileReport().find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.match(row.why_empty, /RETIRED FROM THIS SUITE/);
-    // The blocker, because "remove them" without saying where is an instruction that fails.
-    assert.match(row.why_empty, /THE REMOVAL COULD NOT START HERE/);
-    assert.match(row.why_empty, /vendored from the app and gated/);
-    // Both homes, named.
-    assert.match(row.why_empty, /receipt-crypto-vectors\.v1\.json/);
-    assert.match(row.why_empty, /receipt-verifier as SIGNED TOKEN BYTES/);
-    // And the reason a runner here was refused.
-    assert.match(row.why_empty, /agreeing with itself/);
+  it('the profile text still names the retirement, the blocker, and that a mint-then-verify runner was refused', () => {
+    const def = AP.PROFILES.find((p) => p.id === 'RECEIPT_CRYPTO');
+    assert.match(def.why_empty, /RETIRED FROM cases\.v1\.json/);
+    assert.match(def.why_empty, /THE REMOVAL COULD NOT START HERE/);
+    assert.match(def.why_empty, /vendored from the app and gated/);
+    assert.match(def.why_empty, /agreeing with itself/);
+    assert.match(def.why_empty, /not a claim that the property is unproven/i);
   });
 
-  it('NOT COVERED is scoped to this suite, never stated as "unproven"', () => {
+  it('COVERED/RECORDED does_not_prove is non-empty and names the live ceiling', () => {
     const row = AP.buildProfileReport().find((r) => r.id === 'RECEIPT_CRYPTO');
-    assert.match(row.why_empty, /not a claim that the property is unproven/i);
+    assert.ok(row.does_not_prove.length >= 4);
+    assert.ok(row.does_not_prove.some((d) => /live kernel/.test(d)));
   });
 
   it('the README carries the same account as the code, not a friendlier one', () => {

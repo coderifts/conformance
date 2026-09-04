@@ -28,7 +28,8 @@ const { agentGuardDecideSubject } = require('../subjects/agent-guard-decide');
 const { runAndPrint } = require('../lib/model-acceptance');
 const { runDataPlane, ROW } = require('../subjects/data-plane');
 const {
-  STATUS, PROFILE_IDS, buildProfileReport, renderProfileTable, renderProfileJson,
+  COVERAGE, PROFILE_IDS, DEFAULT_EVIDENCE,
+  buildProfileReport, renderProfileTable, renderProfileJson,
 } = require('../lib/assurance-profiles');
 
 const SUBJECTS = {
@@ -95,20 +96,25 @@ function parseArgs(argv) {
   let json = false;
   let profilesReport = false;
   let assurance = null;
+  let evidence = DEFAULT_EVIDENCE;
   for (let i = 2; i < argv.length; i += 1) {
     if (argv[i] === '--subject') subject = argv[++i];
     else if (argv[i] === '--profile') profile = argv[++i];
     else if (argv[i] === '--profiles') profilesReport = true;
     else if (argv[i] === '--assurance') assurance = argv[++i];
+    else if (argv[i] === '--evidence') evidence = argv[++i];
     else if (argv[i] === '--json') json = true;
     else if (argv[i] === '--help' || argv[i] === '-h') {
       process.stdout.write(
-        'Usage: coderifts-conformance [--subject <name>] [--profile <name>]\n'
+        'Usage: coderifts-conformance [--subject <name>] [--profile <name>] [--evidence recorded|live]\n'
         + `Subjects: ${Object.keys(SUBJECTS).join(', ')}\n`
         + 'Profiles: normative (default), enforcement_consistent, all\n'
-        + '--profiles            report the seven ASSURANCE profiles and what each one proves\n'
+        + '--profiles            report the seven ASSURANCE profiles (coverage × evidence_tier)\n'
         + '--assurance <ID>      exit non-zero unless that assurance profile is COVERED\n'
         + `                      (${PROFILE_IDS.join(', ')})\n`
+        + '--evidence recorded   (default) verify vendored pinned external artifacts\n'
+        + '--evidence live       produce new proof on available infra; NOT_RUN without infra\n'
+        + '                      (does not fall back to recorded)\n'
         + 'data-plane: EXECUTES the capability-demo atomic chain (examples/atomic-v2) and reports\n'
         + '  per-row evidence. Keyless and offline; ATOMIC_COMMIT and the database half of\n'
         + '  CREDENTIAL_BOUNDARY need CODERIFTS_DATAPLANE_PG, and are skipped-with-reason without it.\n'
@@ -119,19 +125,22 @@ function parseArgs(argv) {
       process.exit(0);
     }
   }
-  return { subject, profile, json, profilesReport, assurance };
+  if (evidence !== 'recorded' && evidence !== 'live') {
+    process.stderr.write(`unknown --evidence ${evidence}; known: recorded, live\n`);
+    process.exit(2);
+  }
+  return { subject, profile, json, profilesReport, assurance, evidence };
 }
 
 async function main() {
   const {
-    subject: subjectName, profile, json, profilesReport, assurance,
+    subject: subjectName, profile, json, profilesReport, assurance, evidence,
   } = parseArgs(process.argv);
 
   // ── assurance-profile reporting ──
-  // Exits 0 because it is a REPORT, not a run: it says truthfully that four profiles have no
-  // vectors. Exiting non-zero would make `--profiles` unusable as documentation.
+  // Exits 0 because it is a REPORT, not a run. PARTIAL and NOT_COVERED rows print as words.
   if (profilesReport) {
-    const rows = buildProfileReport();
+    const rows = buildProfileReport({ evidence });
     process.stdout.write(json
       ? `${JSON.stringify(renderProfileJson(rows), null, 2)}\n`
       : `${renderProfileTable(rows)}\n`);
@@ -139,24 +148,31 @@ async function main() {
   }
 
   // ── gating on ONE assurance profile ──
-  // A CI job pointed at an empty profile must not go green forever. Selecting zero vectors and
-  // exiting 0 is exactly the "0/0 reads like a pass" failure, so anything but COVERED exits 3 —
-  // distinct from 1 (a vector failed), because "nothing proved this" is not "this was disproved".
+  // Anything but COVERED exits 3 — PARTIAL included. COVERED+RECORDED is a pass of the
+  // recorded claim; COVERED+LIVE+FAIL would still be COVERED (a found regression is a
+  // different exit, from the subject run). Distinct from 1 (a vector failed).
   if (assurance !== null) {
-    const rows = buildProfileReport();
+    const rows = buildProfileReport({ evidence });
     const row = rows.find((r) => r.id === assurance);
     if (!row) {
       process.stderr.write(`unknown assurance profile ${assurance}; known: ${PROFILE_IDS.join(', ')}\n`);
       process.exit(2);
     }
     if (json) process.stdout.write(`${JSON.stringify(renderProfileJson([row]), null, 2)}\n`);
-    if (row.status === STATUS.COVERED) {
-      if (!json) process.stdout.write(`${row.id}: COVERED — ${row.runnable} vector(s) run\n`);
+    const coverage = row.coverage || row.status;
+    if (coverage === COVERAGE.COVERED) {
+      if (!json) {
+        process.stdout.write(
+          `${row.id}: COVERED / ${row.evidence_tier} — ${row.runnable} vector(s)\n`,
+        );
+      }
       process.exit(0);
     }
+    const label = coverage === COVERAGE.PARTIAL
+      ? 'PARTIAL'
+      : (row.evidence_tier === 'NOT_RUN' ? 'NOT RUN' : 'NOT COVERED');
     process.stderr.write(
-      `${row.id}: ${row.status === STATUS.NOT_RUN ? 'NOT RUN' : 'NOT COVERED'} — this suite does `
-      + 'not prove this claim.\n'
+      `${row.id}: ${label} / ${row.evidence_tier} — this suite does not prove this claim.\n`
       + `  ${row.why_empty || 'no vector exists'}\n`,
     );
     process.exit(3);

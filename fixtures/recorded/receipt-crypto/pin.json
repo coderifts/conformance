@@ -1,0 +1,26 @@
+{
+  "schema": "cr.conformance.recorded-pin.v1",
+  "profile": "RECEIPT_CRYPTO",
+  "producer": {
+    "name": "receipt-verifier",
+    "repo": "https://github.com/coderifts/receipt-verifier",
+    "version": "git:4d3cc48d36a2ee7ff256eec8d76f819843bfd429",
+    "digest": "git:4d3cc48d36a2ee7ff256eec8d76f819843bfd429",
+    "artifact_commit": "6a6ec85ca6283830377c321af4b2804bcb9b1d15",
+    "generator": "test/gen-vectors.js"
+  },
+  "subject": {
+    "name": "receipt-verifier",
+    "version": "git:4d3cc48d36a2ee7ff256eec8d76f819843bfd429",
+    "digest": "sha256:b2ac4482763ad3c4d743e0073f418740f08083f37b397d6074fea3a4ccf93532"
+  },
+  "artifacts": [
+    {
+      "path": "vectors.json",
+      "role": "bundle",
+      "sha256": "b2ac4482763ad3c4d743e0073f418740f08083f37b397d6074fea3a4ccf93532"
+    }
+  ],
+  "inputs_sha256": "sha256:b2ac4482763ad3c4d743e0073f418740f08083f37b397d6074fea3a4ccf93532",
+  "note": "Committed signed token bytes from receipt-verifier. Conformance does not mint these. JS+Python cross-checked in the producer. Ephemeral test-k1 — NOT the production key."
+}

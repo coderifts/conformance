@@ -77,10 +77,15 @@ describe('the mapping is total, exclusive, and honest about how each vector runs
 
 describe('an empty profile can never render as a pass', () => {
   it('status is derived from the vectors, never asserted by hand', () => {
+    const overlay = new Set(['RECEIPT_CRYPTO', 'CREDENTIAL_BOUNDARY', 'ATOMIC_COMMIT']);
     for (const r of AP.buildProfileReport()) {
       const mapped = AP.VECTOR_MAP.filter((v) => v.profile === r.id);
-      assert.equal(r.status, AP.coverageStatus(mapped), r.id);
-      assert.equal(r.green, r.status === AP.STATUS.COVERED);
+      if (!overlay.has(r.id)) {
+        assert.equal(r.coverage, AP.coverageStatus(mapped), r.id);
+        assert.equal(r.evidence_tier, AP.evidenceTierFromVectors(mapped), r.id);
+      }
+      assert.equal(r.green, AP.isGreen(r), r.id);
+      assert.equal(r.status, r.coverage, `${r.id} status must alias coverage, never mix the axes`);
     }
   });
 
@@ -101,7 +106,10 @@ describe('an empty profile can never render as a pass', () => {
     ]), AP.STATUS.NOT_COVERED);
     assert.equal(AP.coverageStatus([
       { vector: 'data', runner: 'none', polarity: 'negative' },
-    ]), AP.STATUS.NOT_RUN);
+    ]), AP.COVERAGE.NOT_COVERED);
+    assert.equal(AP.evidenceTierFromVectors([
+      { vector: 'data', runner: 'none', polarity: 'negative' },
+    ]), AP.EVIDENCE_TIER.NOT_RUN);
     assert.equal(AP.coverageStatus([
       { vector: 'pos', runner: 'test', polarity: 'positive' },
       { vector: 'neg', runner: 'test', polarity: 'negative' },
@@ -113,7 +121,7 @@ describe('an empty profile can never render as a pass', () => {
 
   it('the live COVERED profiles actually have both polarities', () => {
     for (const r of AP.buildProfileReport()) {
-      if (r.status !== AP.STATUS.COVERED) continue;
+      if (r.coverage !== AP.COVERAGE.COVERED) continue;
       assert.ok(r.positive > 0, `${r.id} COVERED with no positive`);
       assert.ok(r.negative > 0, `${r.id} COVERED with no negative`);
     }
@@ -121,7 +129,7 @@ describe('an empty profile can never render as a pass', () => {
 
   it('THE GUARD BITES: a hand-forged green empty profile is refused, not printed', () => {
     const forged = AP.buildProfileReport().map((r) => (
-      r.status === AP.STATUS.NOT_COVERED ? { ...r, green: true } : r));
+      r.coverage === AP.COVERAGE.NOT_COVERED ? { ...r, green: true } : r));
     assert.throws(() => AP.assertNoGreenEmpty(forged), /marked green — refusing to render/);
     // and the renderers call the guard, so neither format can emit it
     assert.throws(() => AP.renderProfileTable(forged), /refusing to render/);
@@ -129,45 +137,64 @@ describe('an empty profile can never render as a pass', () => {
   });
 
   it('a status inconsistent with its runnable count is refused too', () => {
-    // NOT_RUN cannot have runnable vectors. NOT_COVERED with runnable>0 is the
-    // incomplete-pair case and is allowed (positives-alone are not coverage).
+    // NOT_RUN + COVERED with runnable vectors is the conflation the two-axis split forbids.
     const forged = AP.buildProfileReport().map((r) => (
-      r.id === 'RECEIPT_CRYPTO'
-        ? { ...r, status: AP.STATUS.NOT_RUN, vectors: 3, runnable: 3 }
+      r.id === 'END_TO_END'
+        ? {
+          ...r,
+          coverage: AP.COVERAGE.COVERED,
+          status: AP.COVERAGE.COVERED,
+          evidence_tier: AP.EVIDENCE_TIER.NOT_RUN,
+          green: true,
+          vectors: 3,
+          runnable: 3,
+        }
         : r));
-    assert.throws(() => AP.assertNoGreenEmpty(forged), /inconsistent/);
+    assert.throws(() => AP.assertNoGreenEmpty(forged), /inconsistent|refusing to render/);
+  });
+
+  it('MODELLED COVERED is refused at render, not printed as a pass', () => {
+    const forged = AP.buildProfileReport().map((r) => (
+      r.id === 'PROVIDER_ENFORCED'
+        ? {
+          ...r,
+          coverage: AP.COVERAGE.COVERED,
+          status: AP.COVERAGE.COVERED,
+          evidence_tier: AP.EVIDENCE_TIER.MODELLED,
+          green: true,
+        }
+        : r));
+    assert.throws(() => AP.assertNoGreenEmpty(forged), /MODELLED cannot be COVERED|refusing to render/);
   });
 
   it('TERMINAL: no empty profile is printed as a ratio, and 0/0 appears nowhere', () => {
     const out = AP.renderProfileTable();
     assert.equal(/\b0\s*\/\s*0\b/.test(out), false, '0/0 reads exactly like a pass');
     for (const r of AP.buildProfileReport()) {
-      if (r.status === AP.STATUS.COVERED) continue;
-      const line = out.split('\n').find((l) => l.includes(r.id) && /COVERED|NOT RUN/.test(l));
+      if (r.coverage === AP.COVERAGE.COVERED) continue;
+      const line = out.split('\n').find((l) => l.includes(r.id) && /COVERED|NOT RUN|PARTIAL/.test(l));
       assert.ok(line, `${r.id} must appear in the table`);
       assert.equal(/\b\d+\s*\/\s*\d+\b/.test(line), false, `${r.id} row must not carry a ratio`);
     }
   });
 
-  it('TERMINAL: there is no suite-wide x/7 that re-creates the single number', () => {
-    // CHECK THE SUMMARY LINE, NOT THE PROSE. The first version of this test scanned the whole
-    // render for /\d\/7/ and started failing when an explanation legitimately wrote "EG-A-* 7/7"
-    // about VECTOR counts in another repository. That is the same trap the ADV-1 bypass caveat
-    // documents: a naive negative regex fires on the honesty text it was meant to protect. The
-    // claim being defended is that the SUMMARY does not average seven unequal profiles, so the
-    // assertion is scoped to the summary line.
+  it('TERMINAL: the two-axis summary is a coverage count plus an evidence breakdown, not a pass-rate', () => {
     const out = AP.renderProfileTable();
-    const summary = out.split('\n').find((l) => /covered ·/.test(l));
-    assert.ok(summary, 'the summary line must exist to be checked');
-    assert.equal(/\d\s*\/\s*\d/.test(summary), false,
-      'a ratio over seven unequal claims is the number we removed');
-    assert.match(summary, /of 7 profiles/, 'the count is stated as words, not as a ratio');
+    const axis = out.split('\n').find((l) => /PROFILE COVERAGE/.test(l));
+    assert.ok(axis, 'the two-axis line must exist');
+    assert.match(axis, /PROFILE COVERAGE \d+\/7/);
+    assert.match(axis, /EVIDENCE \d+ LIVE \+ \d+ RECORDED \+ \d+ MODELLED/);
+    assert.match(axis, /OVERALL RECORDED/);
+    assert.match(axis, /FULL LIVE false/);
+    const counts = out.split('\n').find((l) => /covered ·/.test(l));
+    assert.ok(counts);
+    assert.match(counts, /of 7 profiles/);
   });
 
   it('TERMINAL: every non-covered profile prints WHY, not just that it is empty', () => {
     const out = AP.renderProfileTable();
     for (const r of AP.buildProfileReport()) {
-      if (r.status === AP.STATUS.COVERED) continue;
+      if (r.coverage === AP.COVERAGE.COVERED && r.green) continue;
       assert.ok(out.includes(`${r.id} — `), `${r.id} must have an explanation block`);
     }
   });
@@ -176,11 +203,13 @@ describe('an empty profile can never render as a pass', () => {
     const j = AP.renderProfileJson();
     for (const p of j.profiles) {
       assert.equal(typeof p.green, 'boolean', 'a consumer must not infer pass from a missing field');
-      if (p.status !== 'COVERED') {
+      if (p.coverage !== 'COVERED') {
         assert.equal(p.green, false);
         assert.ok(p.why_not_covered && p.why_not_covered.length > 80,
           `${p.id} must carry its reason in the machine shape too`);
       }
+      assert.ok(p.coverage);
+      assert.ok(p.evidence_tier);
     }
   });
 
@@ -203,22 +232,24 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on a NOT COVERED profile exits 3, not 0', () => {
-    // The whole point: a CI job pointed here must fail rather than go green forever.
+  it('--assurance on a PARTIAL profile exits 3, not 0', () => {
+    // PARTIAL is not COVERED. A CI job pointed here must fail rather than go green forever.
     const r = run(['--assurance', 'ATOMIC_COMMIT']);
     assert.equal(r.status, 3);
-    assert.match(r.stderr, /NOT COVERED — this suite does not prove this claim/);
+    assert.match(r.stderr, /PARTIAL \/ RECORDED — this suite does not prove this claim/);
   });
 
-  it('--assurance on the RETIRED profile exits 3 and says where the proof lives', () => {
-    // 0.4.0: RECEIPT_CRYPTO went from NOT RUN (23 vectors, no runner) to NOT COVERED
-    // (0 vectors — they were retired from the vendored case file). The exit code is
-    // unchanged and deliberately still 3: this suite proves nothing about it either way,
-    // and "unproved here" is not "disproved".
+  it('--assurance on RECEIPT_CRYPTO exits 0 in recorded mode (COVERED / RECORDED)', () => {
     const r = run(['--assurance', 'RECEIPT_CRYPTO']);
-    assert.equal(r.status, 3);
-    assert.match(r.stderr, /NOT COVERED/);
-    assert.match(r.stderr, /RETIRED FROM THIS SUITE/);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /COVERED \/ RECORDED/);
+  });
+
+  it('--assurance RECEIPT_CRYPTO in live mode exits 3 — NOT_RUN, no recorded fallback', () => {
+    const r = run(['--evidence', 'live', '--assurance', 'RECEIPT_CRYPTO']);
+    assert.equal(r.status, 3, r.stdout + r.stderr);
+    assert.match(r.stderr, /NOT RUN \/ NOT_RUN/);
+    assert.match(r.stderr, /does not fall back/);
   });
 
   it('exit 3 is distinct from exit 1 — unproved is not disproved', () => {
@@ -235,11 +266,13 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.match(r.stderr, /unknown assurance profile/);
   });
 
-  it('--profiles is a REPORT and exits 0 even with four profiles empty', () => {
+  it('--profiles is a REPORT and exits 0 even with empty and partial profiles', () => {
     const r = run(['--profiles']);
     assert.equal(r.status, 0);
     assert.match(r.stdout, /NOT COVERED/);
     assert.match(r.stdout, /END_TO_END/);
+    assert.match(r.stdout, /PROFILE COVERAGE/);
+    assert.match(r.stdout, /RECORDED/);
   });
 
   it('--profiles --json emits parseable JSON with all seven profiles', () => {
@@ -262,10 +295,15 @@ describe('the README shows the empty profiles, not only the passing ones', () =>
 
   it('the README states each profile status, empty ones included', () => {
     for (const r of AP.buildProfileReport()) {
-      if (r.status === AP.STATUS.COVERED) continue;
       const row = readme.split('\n').find((l) => l.includes(`\`${r.id}\``) && l.startsWith('|'));
       assert.ok(row, `${r.id} must have a table row`);
-      assert.match(row, /NOT COVERED|NOT RUN/);
+      if (r.coverage === AP.COVERAGE.COVERED) {
+        assert.match(row, /COVERED/);
+        if (r.evidence_tier === AP.EVIDENCE_TIER.RECORDED) assert.match(row, /RECORDED/);
+        if (r.evidence_tier === AP.EVIDENCE_TIER.LIVE) assert.match(row, /LIVE/);
+      } else {
+        assert.match(row, /NOT COVERED|NOT RUN|PARTIAL/);
+      }
     }
   });
 

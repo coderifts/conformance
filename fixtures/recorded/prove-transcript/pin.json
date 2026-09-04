@@ -1,0 +1,36 @@
+{
+  "schema": "cr.conformance.recorded-pin.v1",
+  "profiles": ["CREDENTIAL_BOUNDARY", "ATOMIC_COMMIT"],
+  "producer": {
+    "name": "@coderifts/prove",
+    "repo": "https://github.com/coderifts/capability-demo",
+    "version": "0.1.1",
+    "digest": "git:188479a15ecb2f4ef57f437d0cec67d94e3598fd",
+    "generator": "demo/prove.js"
+  },
+  "subject": {
+    "name": "capability-demo/examples/sample-transcript",
+    "version": "0.1.1",
+    "digest": "sha256:a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3"
+  },
+  "artifacts": [
+    {
+      "path": "transcript.json",
+      "role": "bundle",
+      "sha256": "a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3"
+    },
+    {
+      "path": "executor-keys.json",
+      "role": "keyring",
+      "sha256": "82d7d877abf56d2a996bc69a8754866ebfac6a8f674c9182670b7f32b73b6421"
+    }
+  ],
+  "inputs_sha256": "sha256:a4f641f15995b26b238c1446d8b14c9b810207e99c30aa291e03c7ea542978d3",
+  "provenance_from_artifact": {
+    "run_id": "prove-dea87c5c-c14f-4343-a030-93ba30969d4f",
+    "source_commit": "ea1da3f377ddf31709fd1a0cdeee5a35fd3a1683",
+    "working_tree_dirty": true,
+    "observed_at": "2026-09-03T20:20:15.129Z"
+  },
+  "note": "Signed cr.prove.transcript.v1 from the capability-demo sample transcript. Conformance does not mint this. The artifact records working_tree_dirty:true at source_commit ea1da3f; that is a ceiling, not a waiver."
+}
