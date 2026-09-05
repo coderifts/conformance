@@ -1,0 +1,42 @@
+{
+  "schema": "cr.conformance.recorded-pin.v1",
+  "claim": "observed_bypass_failure",
+  "related_profile": "PROVIDER_ENFORCED",
+  "producer": {
+    "name": "gh-api-local-dump",
+    "repo": "https://github.com/coderifts/demo",
+    "version": "capture:2026-09-05T11:27:29Z",
+    "digest": "local:zsobpeter-code",
+    "generator": "gh api PUT /repos/coderifts/demo/pulls/{4,5}/merge (admin token)"
+  },
+  "subject": {
+    "name": "coderifts/demo",
+    "version": "merge-api-405:2026-09-05",
+    "digest": "sha256:5749321d953c83e01e04d944b5e0f13ac1a2cfe0ad7eb0ebf778163e2445242d"
+  },
+  "artifacts": [
+    {
+      "path": "pr4-merge-refusal.json",
+      "role": "bypass_attempt",
+      "sha256": "8408d3d4dfe1179efc56111844ac2f90688a1f44a29518559c750bf149927c3a",
+      "bytes": 230,
+      "source": "PUT /repos/coderifts/demo/pulls/4/merge → 405"
+    },
+    {
+      "path": "pr5-merge-refusal.json",
+      "role": "bypass_attempt",
+      "sha256": "1e850861ed0830091a00d0fa4619ee482886d94a3491041df312a6032f06d1df",
+      "bytes": 231,
+      "source": "PUT /repos/coderifts/demo/pulls/5/merge → 405"
+    }
+  ],
+  "inputs_sha256": "sha256:5749321d953c83e01e04d944b5e0f13ac1a2cfe0ad7eb0ebf778163e2445242d",
+  "inputs_sha256_over": "pr4-merge-refusal.json=<sha256>\\npr5-merge-refusal.json=<sha256>\\n",
+  "provenance_from_artifact": {
+    "run_id": "gh-merge-attempt-2026-09-05T11:27:29Z",
+    "observed_at": "2026-09-05T11:27:29Z",
+    "freshness": "HISTORICAL",
+    "oidc_attested": false
+  },
+  "note": "Raw GitHub merge-API 405 bodies from an admin merge attempt on coderifts/demo PR#4 and PR#5. Not CodeRifts summaries. Not GitHub-signed. Capture is a local gh admin token (zsobpeter-code), not an OIDC-attested workflow. The JSON bodies do not name the PR, the actor, or a timestamp — path + pin bind them. Distinct from PROVIDER_ENFORCED: that profile's COVERED claim is check FAILURE+BLOCKED (PR#4) and check SUCCESS (PR#5). This artifact is the HTTP 405 merge-refusal. PR#4 reason is 'failing' (gate refused the merge). PR#5 reason is 'expected' (not a gate-refusal; branch BEHIND). The two reasons are the gate-specificity control."
+}

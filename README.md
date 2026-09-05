@@ -159,8 +159,17 @@ missing — the gap is named, never filled in.
   by `zsobpeter-code` on 2026-09-05, `oidc_attested:false`. Negative dump is REST (PR +
   check-runs); positive dump is GraphQL — the shapes as captured. `ADV-1` still does not
   count here. `does_not_prove` names HISTORICAL freshness, bypass actors, local gh token,
-  that BLOCKED is merge-state not a captured 405 body, and that PR#5 remains BEHIND. The
-  1105 canary design remains the cost model for a *live* 405 observation.
+  and that PR#5 remains BEHIND. A captured HTTP 405 merge-refusal is a **separate**
+  recorded artifact (`fixtures/recorded/bypass-attempt`, claim `observed_bypass_failure`)
+  — it does not change this profile's COVERED status. The 1105 canary design remains
+  the cost model for a *live* 405 observation.
+- **`observed_bypass_failure` — recorded artifact, not an eighth profile.** Admin
+  `PUT …/pulls/{4,5}/merge` returned HTTP **405** naming required context
+  `CodeRifts / contract-gate`. PR#4 reason is **failing** (gate refused the merge).
+  PR#5 reason is **expected** (gate-specificity control, not a gate-refusal; the
+  branch is BEHIND). Freshness HISTORICAL, local gh admin token, `oidc_attested:false`.
+  The 405 bodies do not identify the actor or the PR; the pin binds path → payload.
+  A gate-SUCCESS + up-to-date merge was not observed.
 - **`END_TO_END` — PARTIAL / RECORDED.** The layers are recorded; they are not one run. The
   prove-transcript is a Postgres executor whose POINT 8 merge is MODELLED. The provider bundle
   is GitHub PRs with different commits and a different `run_id`. A collage of separate artifacts

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Observed bypass-failure vendored as a **separate** recorded artifact
+  (`fixtures/recorded/bypass-attempt/`, claim `observed_bypass_failure`, pin
+  `cr.conformance.recorded-pin.v1`, role `bypass_attempt`). Admin merge-API
+  405 bodies on demo PR#4 (`CodeRifts / contract-gate is failing`) and PR#5
+  (`… is expected`). Verifier requires the required context, HTTP 405, and
+  two different reasons (gate-specificity). `does_not_prove` names HISTORICAL
+  freshness, local gh admin token (not OIDC), that PR#5 is not a gate-refusal,
+  and that a gate-SUCCESS + up-to-date merge was not observed. **Does not
+  change PROVIDER_ENFORCED COVERED status** (1370: config-closure vs
+  gate-block vs observed bypass are three claims).
 - PROVIDER_ENFORCED negative pole re-pinned from PR#10 (`CodeRifts — API Contract
   Check` FAILURE, BEHIND) to PR#4 (required `CodeRifts / contract-gate` FAILURE,
   merge BLOCKED). Positive pole remains PR#5 required-context SUCCESS. Capture
