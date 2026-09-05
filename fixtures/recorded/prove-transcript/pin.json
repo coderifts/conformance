@@ -6,31 +6,31 @@
     "repo": "https://github.com/coderifts/capability-demo",
     "version": "0.1.2",
     "digest": "git:3a34079c25ec32de2ba1c146ba134dd00e6cdd0f",
-    "generator": "demo/prove.js"
+    "generator": "bin/prove-all.js"
   },
   "subject": {
     "name": "capability-demo/examples/sample-transcript",
     "version": "0.1.2",
-    "digest": "sha256:a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096"
+    "digest": "sha256:ad4639d97982cbfb40a58a5f7be2202730aa7fcf878e4dea1f17f4d18e51d4fd"
   },
   "artifacts": [
     {
       "path": "transcript.json",
       "role": "bundle",
-      "sha256": "a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096"
+      "sha256": "ad4639d97982cbfb40a58a5f7be2202730aa7fcf878e4dea1f17f4d18e51d4fd"
     },
     {
       "path": "executor-keys.json",
       "role": "keyring",
-      "sha256": "82d7d877abf56d2a996bc69a8754866ebfac6a8f674c9182670b7f32b73b6421"
+      "sha256": "107faee16f60466e106117a6340b119178d5b5ac672c25fc363d230e5efc5883"
     }
   ],
-  "inputs_sha256": "sha256:a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096",
+  "inputs_sha256": "sha256:ad4639d97982cbfb40a58a5f7be2202730aa7fcf878e4dea1f17f4d18e51d4fd",
   "provenance_from_artifact": {
-    "run_id": "prove-fb70d9ad-eee1-4f68-a2e6-1f60e7499905",
+    "run_id": "prove-fb5c23bd-5fbd-4af3-9544-14c609a07456",
     "source_commit": "3a34079c25ec32de2ba1c146ba134dd00e6cdd0f",
-    "working_tree_dirty": true,
-    "observed_at": "2026-09-04T19:17:54.622Z"
+    "working_tree_dirty": false,
+    "observed_at": "2026-09-05T08:45:12.678Z"
   },
-  "note": "Signed cr.prove.transcript.v1 from the capability-demo sample transcript (Phase 2a: CAS-stale, no-consume-only, no-mutation-only, deny read-backs). Conformance does not mint this. The artifact records working_tree_dirty:true at source_commit 3a34079 (the transcript was generated from a dirty tree; the bytes are byte-identical to the committed transcript, but the run recorded dirty — a ceiling, not a waiver)."
+  "note": "Signed cr.prove.transcript.v1 from a CLEAN capability-demo checkout of 3a34079 (git worktree, porcelain empty; demo/keys/* gitignored and generated at run). Conformance does not mint this. working_tree_dirty:false. POINT 8 merge stays MODELLED. Does not prove a live kernel would refuse the same stale token today."
 }

@@ -110,6 +110,9 @@ function parseArgs(argv) {
         + `Subjects: ${Object.keys(SUBJECTS).join(', ')}\n`
         + 'Profiles: normative (default), enforcement_consistent, all\n'
         + '--profiles            report the seven ASSURANCE profiles (coverage × evidence_tier)\n'
+        + '                      JSON counts: vectors_present = unique vectors;\n'
+        + '                      vectors_positive/negative = polarity occurrences (a pair vector\n'
+        + '                      counts in both). present need not equal pos+neg.\n'
         + '--assurance <ID>      exit non-zero unless that assurance profile is COVERED\n'
         + `                      (${PROFILE_IDS.join(', ')})\n`
         + '--evidence recorded   (default) verify vendored pinned external artifacts\n'

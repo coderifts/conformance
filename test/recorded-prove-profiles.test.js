@@ -15,12 +15,13 @@ describe('prove-transcript pins and signature', () => {
     const pin = PP.assertPins();
     assert.equal(
       pin.artifacts.find((a) => a.path === 'transcript.json').sha256,
-      'a7164cb56e23ce39e10e176c974ee6fb6eaff94fe02f31ae16e2d987a3ac4096',
+      'ad4639d97982cbfb40a58a5f7be2202730aa7fcf878e4dea1f17f4d18e51d4fd',
     );
     assert.equal(
       pin.artifacts.find((a) => a.path === 'executor-keys.json').sha256,
-      '82d7d877abf56d2a996bc69a8754866ebfac6a8f674c9182670b7f32b73b6421',
+      '107faee16f60466e106117a6340b119178d5b5ac672c25fc363d230e5efc5883',
     );
+    assert.equal(pin.provenance_from_artifact.working_tree_dirty, false);
   });
 
   it('the transcript_token verifies with the pinned executor public key', () => {

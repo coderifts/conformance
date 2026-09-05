@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Vector-count fields document their units: `vectors_present` is unique vectors;
+  `vectors_positive` / `vectors_negative` are polarity occurrences (a `pair` vector
+  counts in both). present need not equal pos+neg.
+- Prove-transcript re-vendored from a clean capability-demo checkout of `3a34079`
+  (`working_tree_dirty:false`, run `prove-fb5c23bd-…`). COVERED status unchanged.
+
 ## 0.8.0
 
 Warrants a MINOR bump: `PROVIDER_ENFORCED` moves NOT_COVERED → COVERED / RECORDED from raw

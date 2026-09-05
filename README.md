@@ -140,7 +140,7 @@ missing — the gap is named, never filled in.
   a real target-side denial: `cr_host` INSERT → Postgres `SQLSTATE 42501` (not Node 403, not
   exit-78), with articles count BEFORE and AFTER the attempt (unchanged). POINT 3 is that
   denial, not the catalog posture receipt. `does_not_prove` is non-empty (another credential,
-  another target, raw shell, current config, dirty producer tree). db.js comments are MODELLED
+  another target, raw shell, current config). db.js comments are MODELLED
   source and are not counted.
 - **`ATOMIC_COMMIT` — COVERED / RECORDED.** The same correlated transcript shows single-use
   (replay 201 then 409 `GRANT_CONSUMED`), concurrency (`ok=1 grew=1`), CAS-stale (`STATE_DRIFT`,
@@ -148,7 +148,7 @@ missing — the gap is named, never filled in.
   ledger), no-mutation-only (executor raw INSERT `42501`), and before/after read-backs on the
   positive commit and every negative. `EG-A-STATE-NONCE-MISMATCH` was never evidence here.
   POINT 8 merge stays MODELLED and is not this profile. The artifact records
-  `working_tree_dirty:true`.
+  `working_tree_dirty:false` (generated from a clean checkout of `3a34079`).
 - **`PROVIDER_ENFORCED` — COVERED / RECORDED.** Raw GitHub API dumps of `coderifts/demo`, not a
   CodeRifts summary. Ruleset `22074842` (`coderifts-enforcement`, required `CodeRifts / contract-gate`,
   `integration_id` 2860592, `refs/heads/main`, enforcement active). Negative pole: PR#10 head

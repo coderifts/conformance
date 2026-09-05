@@ -227,6 +227,39 @@ describe('an empty profile can never render as a pass', () => {
   it('JSON: the ceiling travels with the report', () => {
     assert.match(AP.renderProfileJson().ceiling, /ONE NAMED SHAPE/);
   });
+
+  it('JSON: count fields name their units — present is unique vectors, pos/neg are polarity occurrences', () => {
+    const j = AP.renderProfileJson();
+    assert.ok(j.field_docs);
+    assert.match(j.field_docs.vectors_present, /Unique vectors/i);
+    assert.match(j.field_docs.vectors_positive, /Polarity occurrences/);
+    assert.match(j.field_docs.vectors_positive, /pair/);
+    assert.match(j.field_docs.vectors_negative, /Polarity occurrences/);
+    assert.match(j.field_docs.vectors_positive, /need not equal/);
+
+    const dl = j.profiles.find((p) => p.id === 'DECISION_LOGIC');
+    const pairN = AP.VECTOR_MAP.filter((v) => v.profile === 'DECISION_LOGIC' && v.polarity === 'pair').length;
+    assert.equal(pairN, 1, 'DECISION_LOGIC has the model-acceptance pair vector');
+    assert.equal(dl.vectors_present, 15);
+    assert.equal(dl.vectors_positive, 5);
+    assert.equal(dl.vectors_negative, 11);
+    assert.equal(
+      dl.vectors_present + pairN,
+      dl.vectors_positive + dl.vectors_negative,
+      'present + pair-count === polarity-occurrence sum',
+    );
+
+    const table = AP.renderProfileTable();
+    assert.match(table, /vectors_present = unique vectors/);
+    assert.match(table, /polarity occurrences/);
+  });
+
+  it('--help names the count-field units', () => {
+    const r = run(['--help']);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /vectors_present = unique vectors/);
+    assert.match(r.stdout, /polarity occurrences/);
+  });
 });
 
 describe('the CLI gates on a single profile with a distinct exit code', () => {
