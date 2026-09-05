@@ -9,9 +9,11 @@ const path = require('node:path');
 const PE = require('../lib/recorded-provider-enforced');
 const { COVERAGE, EVIDENCE_TIER } = require('../lib/evidence-envelope');
 
+const BUNDLE = ['pin.json', 'capture.json', 'ruleset.json', 'pr-4.json', 'pr-4-checks.json', 'pr-5.json'];
+
 function copyBundle(dest) {
   fs.mkdirSync(dest, { recursive: true });
-  for (const f of ['pin.json', 'capture.json', 'ruleset.json', 'pr-10.json', 'pr-5.json']) {
+  for (const f of BUNDLE) {
     fs.copyFileSync(path.join(PE.FIXTURE_DIR, f), path.join(dest, f));
   }
 }
@@ -23,6 +25,10 @@ describe('PROVIDER_ENFORCED recorded GitHub dumps', () => {
     assert.equal(ruleset.sha256, '363ae6b995b7cfa9be6c290f63a3699d06a1fec32fc892014ceb0056b39cd8af');
     assert.equal(ruleset.bytes, 788);
     assert.equal(fs.statSync(path.join(PE.FIXTURE_DIR, 'ruleset.json')).size, 788);
+    assert.ok(pin.artifacts.find((a) => a.path === 'pr-4.json'));
+    assert.ok(pin.artifacts.find((a) => a.path === 'pr-4-checks.json'));
+    assert.ok(pin.artifacts.find((a) => a.path === 'pr-5.json'));
+    assert.equal(pin.artifacts.some((a) => a.path === 'pr-10.json'), false);
   });
 
   it('evaluate is COVERED / RECORDED with both poles and honest capture provenance', () => {
@@ -37,25 +43,32 @@ describe('PROVIDER_ENFORCED recorded GitHub dumps', () => {
     assert.equal(out.sub_tiers.configuration_readback, EVIDENCE_TIER.RECORDED);
     assert.equal(out.sub_tiers.negative_enforcement_observation, EVIDENCE_TIER.RECORDED);
     assert.equal(out.sub_tiers.overall, EVIDENCE_TIER.RECORDED);
+    assert.ok(out.does_not_prove.length >= 4);
     assert.ok(out.does_not_prove.some((d) => /local gh token/.test(d)));
-    assert.ok(out.does_not_prove.some((d) => /BEHIND/.test(d)));
+    assert.ok(out.does_not_prove.some((d) => /HISTORICAL/.test(d)));
+    assert.ok(out.does_not_prove.some((d) => /bypass_actors/.test(d)));
     assert.ok(out.does_not_prove.some((d) => /OIDC/.test(d) || /OIDC-attested/.test(d)));
+    assert.equal(out.does_not_prove.some((d) => /PR#10/.test(d)), false);
   });
 
-  it('negative pole is PR#10 API Contract Check FAILURE on 146f19c9', () => {
+  it('negative pole is PR#4 required contract-gate FAILURE + BLOCKED, not API Contract Check + BEHIND', () => {
     const out = PE.evaluate();
-    assert.equal(out.poles.negative.number, 10);
-    assert.equal(out.poles.negative.head.startsWith('146f19c9'), true);
-    assert.equal(out.poles.negative.rollup, 'FAILURE');
-    assert.equal(out.poles.negative.mergeStateStatus, 'BEHIND');
+    assert.equal(out.poles.negative.number, 4);
+    assert.equal(out.poles.negative.head.startsWith('4b2062b9'), true);
+    assert.equal(out.poles.negative.mergeStateStatus, 'BLOCKED');
+    assert.equal(out.poles.negative.required_context, 'CodeRifts / contract-gate');
+    assert.equal(out.poles.negative.required_conclusion, 'FAILURE');
+    assert.notEqual(out.poles.negative.mergeStateStatus, 'BEHIND');
+    assert.ok(out.present.some((p) => /contract-gate FAILURE/.test(p) && /BLOCKED/.test(p)));
+    assert.equal(out.present.some((p) => /API Contract Check/.test(p)), false);
   });
 
-  it('positive pole is PR#5 contract-gate + API Contract Check SUCCESS on df76f7a7', () => {
+  it('positive pole is PR#5 required contract-gate SUCCESS on df76f7a7', () => {
     const out = PE.evaluate();
     assert.equal(out.poles.positive.number, 5);
     assert.equal(out.poles.positive.head.startsWith('df76f7a7'), true);
-    assert.equal(out.poles.positive.rollup, 'SUCCESS');
-    assert.equal(out.poles.positive.mergeStateStatus, 'BEHIND');
+    assert.equal(out.poles.positive.required_context, 'CodeRifts / contract-gate');
+    assert.equal(out.poles.positive.required_conclusion, 'SUCCESS');
   });
 
   it('digest-pin mismatch errors', () => {
@@ -63,33 +76,57 @@ describe('PROVIDER_ENFORCED recorded GitHub dumps', () => {
     copyBundle(tmp);
     const pin = JSON.parse(fs.readFileSync(path.join(tmp, 'pin.json'), 'utf8'));
     pin.artifacts = pin.artifacts.map((a) => (
-      a.path === 'pr-10.json' ? { ...a, sha256: '0'.repeat(64) } : a
+      a.path === 'pr-4.json' ? { ...a, sha256: '0'.repeat(64) } : a
     ));
     fs.writeFileSync(path.join(tmp, 'pin.json'), JSON.stringify(pin));
     assert.throws(() => PE.assertPin(tmp), /pin mismatch/);
   });
 
-  it('tampering a pole\'s bytes fails the pin — hash-verify, not a silent rescore', () => {
+  it('tampering the negative PR payload fails the pin — hash-verify, not a silent rescore', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cr-pe-gap-'));
     copyBundle(tmp);
-    const forged = JSON.parse(fs.readFileSync(path.join(tmp, 'pr-10.json'), 'utf8'));
-    forged.data.repository.pullRequest.statusCheckRollup.state = 'SUCCESS';
-    forged.data.repository.pullRequest.statusCheckRollup.contexts.nodes[0].conclusion = 'SUCCESS';
-    fs.writeFileSync(path.join(tmp, 'pr-10.json'), JSON.stringify(forged));
+    const forged = JSON.parse(fs.readFileSync(path.join(tmp, 'pr-4.json'), 'utf8'));
+    forged.mergeable_state = 'behind';
+    fs.writeFileSync(path.join(tmp, 'pr-4.json'), JSON.stringify(forged));
     assert.throws(() => PE.evaluate(tmp), /pin mismatch/);
   });
 
-  it('measurePoles without a FAILURE pole is PARTIAL and names the gap', () => {
+  it('tampering the negative check-runs payload fails the pin', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cr-pe-checks-'));
+    copyBundle(tmp);
+    const forged = JSON.parse(fs.readFileSync(path.join(tmp, 'pr-4-checks.json'), 'utf8'));
+    const gate = forged.check_runs.find((c) => c.name === 'CodeRifts / contract-gate');
+    assert.ok(gate);
+    gate.conclusion = 'success';
+    fs.writeFileSync(path.join(tmp, 'pr-4-checks.json'), JSON.stringify(forged));
+    assert.throws(() => PE.evaluate(tmp), /pin mismatch/);
+  });
+
+  it('measurePoles without a required-context FAILURE+BLOCKED pole is PARTIAL and names the gap', () => {
     const ruleset = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'ruleset.json'), 'utf8'));
-    const pr10 = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-10.json'), 'utf8'));
+    const pr4 = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-4.json'), 'utf8'));
+    const checks = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-4-checks.json'), 'utf8'));
     const pr5 = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-5.json'), 'utf8'));
     const capture = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'capture.json'), 'utf8'));
-    pr10.data.repository.pullRequest.statusCheckRollup.state = 'SUCCESS';
-    pr10.data.repository.pullRequest.statusCheckRollup.contexts.nodes[0].conclusion = 'SUCCESS';
-    const m = PE.measurePoles(ruleset, pr10, pr5, capture);
+    const gate = checks.check_runs.find((c) => c.name === 'CodeRifts / contract-gate');
+    gate.conclusion = 'success';
+    const m = PE.measurePoles(ruleset, pr4, pr5, capture, checks);
     assert.equal(m.coverage, COVERAGE.PARTIAL);
     assert.equal(m.both_poles, false);
-    assert.ok(m.missing.some((g) => /PR#10/.test(g)));
+    assert.ok(m.missing.some((g) => /PR#4/.test(g) && /contract-gate/.test(g)));
+  });
+
+  it('measurePoles with BEHIND instead of BLOCKED is PARTIAL — BEHIND is not a merge-refusal', () => {
+    const ruleset = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'ruleset.json'), 'utf8'));
+    const pr4 = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-4.json'), 'utf8'));
+    const checks = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-4-checks.json'), 'utf8'));
+    const pr5 = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'pr-5.json'), 'utf8'));
+    const capture = JSON.parse(fs.readFileSync(path.join(PE.FIXTURE_DIR, 'capture.json'), 'utf8'));
+    pr4.mergeable_state = 'behind';
+    const m = PE.measurePoles(ruleset, pr4, pr5, capture, checks);
+    assert.equal(m.coverage, COVERAGE.PARTIAL);
+    assert.equal(m.poles.negative.mergeStateStatus, 'BEHIND');
+    assert.ok(m.missing.some((g) => /BLOCKED/.test(g)));
   });
 
   it('claiming OIDC on a gh dump is refused', () => {

@@ -102,7 +102,7 @@ So a run is reported as seven profiles, in chain order, on **two axes that are n
 | `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **COVERED** | **RECORDED** — DENY `42501` + unchanged-state read-back; POINT 3 is that denial, not catalog posture | A host holding a provider credential cannot reach the target except through the guarded path. |
 | `ATOMIC_COMMIT` | **COVERED** | **RECORDED** — replay, concurrency, CAS-stale `STATE_DRIFT`, no-consume-only rollback, no-mutation-only 42501, before/after read-backs | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
-| `PROVIDER_ENFORCED` | **COVERED** | **RECORDED** — raw GitHub dumps: ruleset 22074842 + PR#10 FAILURE + PR#5 SUCCESS; capture is a local `gh` dump, not OIDC | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
+| `PROVIDER_ENFORCED` | **COVERED** | **RECORDED** — raw GitHub dumps: ruleset 22074842 + PR#4 required-context FAILURE+BLOCKED + PR#5 required-context SUCCESS; capture is a local `gh` dump, not OIDC | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
 | `END_TO_END` | **PARTIAL** | **RECORDED** — layers exist separately; prove-transcript POINT 8 is MODELLED and does not share a run_id with the GitHub PRs | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 
 **PROFILE COVERAGE 6/7 · EVIDENCE 2 LIVE + 5 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
@@ -151,15 +151,16 @@ missing — the gap is named, never filled in.
   `working_tree_dirty:false` (generated from a clean checkout of `3a34079`).
 - **`PROVIDER_ENFORCED` — COVERED / RECORDED.** Raw GitHub API dumps of `coderifts/demo`, not a
   CodeRifts summary. Ruleset `22074842` (`coderifts-enforcement`, required `CodeRifts / contract-gate`,
-  `integration_id` 2860592, `refs/heads/main`, enforcement active). Negative pole: PR#10 head
-  `146f19c9`, `statusCheckRollup` FAILURE, `CodeRifts — API Contract Check` FAILURE (app 2860592).
-  Positive pole: PR#5 head `df76f7a7`, rollup SUCCESS, `CodeRifts / contract-gate` SUCCESS and
-  `API Contract Check` SUCCESS. Both `mergeStateStatus` BEHIND — the CHECK verdict is the
-  evidence, not the merge button. Capture provenance: local `gh api` by `zsobpeter-code` on
-  2026-09-04, `oidc_attested:false`, no workflow-run bind (GitHub App checks, not Actions).
-  `ADV-1` still does not count here. `does_not_prove` names HISTORICAL freshness, bypass
-  actors, the check-name split on PR#10 vs the required context, and that this is not a 405
-  merge refusal. The 1105 canary design remains the cost model for a *live* 405 observation.
+  `integration_id` 2860592, `refs/heads/main`, enforcement active). Negative pole: PR#4 head
+  `4b2062b9`, REST `mergeable_state` blocked, required context `CodeRifts / contract-gate`
+  COMPLETED FAILURE (app 2860592). Positive pole: PR#5 head `df76f7a7`, required context
+  `CodeRifts / contract-gate` SUCCESS (same app). Both poles on that required context — not
+  the differently-named `CodeRifts — API Contract Check`. Capture provenance: local `gh api`
+  by `zsobpeter-code` on 2026-09-05, `oidc_attested:false`. Negative dump is REST (PR +
+  check-runs); positive dump is GraphQL — the shapes as captured. `ADV-1` still does not
+  count here. `does_not_prove` names HISTORICAL freshness, bypass actors, local gh token,
+  that BLOCKED is merge-state not a captured 405 body, and that PR#5 remains BEHIND. The
+  1105 canary design remains the cost model for a *live* 405 observation.
 - **`END_TO_END` — PARTIAL / RECORDED.** The layers are recorded; they are not one run. The
   prove-transcript is a Postgres executor whose POINT 8 merge is MODELLED. The provider bundle
   is GitHub PRs with different commits and a different `run_id`. A collage of separate artifacts

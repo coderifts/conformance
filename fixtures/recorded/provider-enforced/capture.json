@@ -8,14 +8,15 @@
     "id": 243386091,
     "type": "User"
   },
-  "observed_at": "2026-09-04T19:55:24Z",
+  "observed_at": "2026-09-05T10:16:00Z",
   "subject_repo": "coderifts/demo",
   "commands": [
     "gh api repos/coderifts/demo/rulesets/22074842",
-    "gh api graphql (pullRequest 10, statusCheckRollup contexts first:20)",
+    "gh api repos/coderifts/demo/pulls/4",
+    "gh api repos/coderifts/demo/commits/4b2062b91efa12d740185b19d8d1dc6aab8f7402/check-runs",
     "gh api graphql (pullRequest 5, statusCheckRollup contexts first:20)"
   ],
-  "limit": "captured by a local gh token, not a GitHub OIDC-attested runner. GitHub payloads are not GitHub-signed.",
+  "limit": "captured by a local gh token, not a GitHub OIDC-attested runner. GitHub payloads are not GitHub-signed. Negative pole is REST; positive pole is GraphQL — the shapes as captured, not rewritten.",
   "workflow_run_bound": false,
-  "workflow_run_bound_reason": "CheckRun.checkSuite.workflowRun is null on both poles — these are GitHub App checks (app databaseId 2860592), not Actions workflow runs."
+  "workflow_run_bound_reason": "The required context 'CodeRifts / contract-gate' is a GitHub App check (app id 2860592), not an Actions workflow run. A second check 'contract-gate (Action)' is GitHub Actions app 15368 and is not the ruleset context."
 }

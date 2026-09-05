@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- PROVIDER_ENFORCED negative pole re-pinned from PR#10 (`CodeRifts — API Contract
+  Check` FAILURE, BEHIND) to PR#4 (required `CodeRifts / contract-gate` FAILURE,
+  merge BLOCKED). Positive pole remains PR#5 required-context SUCCESS. Capture
+  is still a local gh dump (`oidc_attested:false`). COVERED / RECORDED on the
+  required context, not the differently-named check.
 - Vector-count fields document their units: `vectors_present` is unique vectors;
   `vectors_positive` / `vectors_negative` are polarity occurrences (a `pair` vector
   counts in both). present need not equal pos+neg.
