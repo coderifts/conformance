@@ -1,0 +1,70 @@
+{
+  "schema": "cr.conformance.recorded-pin.v1",
+  "profiles": [
+    "END_TO_END"
+  ],
+  "producer": {
+    "name": "@coderifts/prove",
+    "repo": "https://github.com/coderifts/capability-demo",
+    "version": "0.1.3",
+    "digest": "git:2aac73ede59b8087b7f3fbf6e5ee52c0d2f2b9a4",
+    "generator": "bin/prove-all.js"
+  },
+  "subject": {
+    "name": "capability-demo contract-publish E2E (single correlated run)",
+    "version": "0.1.3",
+    "digest": "sha256:62d1c127ebf2d1b9f38f9d223af79ec9c34d82f9493d38220c132bf167ea86f7"
+  },
+  "artifacts": [
+    {
+      "path": "transcript.json",
+      "role": "bundle",
+      "sha256": "62d1c127ebf2d1b9f38f9d223af79ec9c34d82f9493d38220c132bf167ea86f7",
+      "bytes": 12082
+    },
+    {
+      "path": "executor-keys.json",
+      "role": "keyring",
+      "sha256": "cb64fcce323be6147f29bfb019121abd1a252bf6ef3266a13cae820a0c73ba47",
+      "bytes": 568
+    },
+    {
+      "path": "readback.json",
+      "role": "provider_observation",
+      "sha256": "5f9eb3a44bfedc5182b4e6ea3c848bf4f8ff45c3490349cc2c64249a255f13bd",
+      "bytes": 229
+    },
+    {
+      "path": "negative-transcript.json",
+      "role": "negative",
+      "sha256": "907c775eb6e675157217448aa6b3257fe261a7f8aa9b9cb322ae2cc1de15a6c0",
+      "bytes": 11369
+    },
+    {
+      "path": "negative-readback.json",
+      "role": "negative_observation",
+      "sha256": "c4a05b144dfc5aa85098d63c0a7ecb6c374829581a2d3cf83b5db754dbaceaee",
+      "bytes": 229
+    }
+  ],
+  "inputs_sha256": "sha256:62d1c127ebf2d1b9f38f9d223af79ec9c34d82f9493d38220c132bf167ea86f7",
+  "provenance_from_artifact": {
+    "run_id": "prove-8855a062-ff4a-42e5-83bb-a3fb8c086d1e",
+    "source_commit": "2aac73ede59b8087b7f3fbf6e5ee52c0d2f2b9a4",
+    "working_tree_dirty": false,
+    "observed_at": "2026-09-05T21:57:16.338Z"
+  },
+  "note": "ONE correlated contract-publish run, producer-emitted. Captured from a clean clone at 2aac73e with npm ci: `node bin/prove-all.js` wrote this artifact itself, so conformance mints nothing (self_minted:false). working_tree_dirty is false, so the artifact is reproducible from the pinned commit. THIS IS NOT THE prove-transcript x provider-capture PATH: that one correlates a Postgres executor run with a separate GitHub capture, shares no run_id, and stays PARTIAL because it is a collage of two runs. This fixture is a single run whose readback names the same commit as the governed contract, bound by a signature the measure re-verifies. TWO POLES: the negative is a second run of the same producer at the same commit with a readback naming a different commit. It is the demo's own refusal, captured -- conformance mints nothing.",
+  "poles": {
+    "positive": {
+      "artifact": "transcript.json",
+      "run_id": "prove-8855a062-ff4a-42e5-83bb-a3fb8c086d1e",
+      "shows": "the readback names the governed contract's commit; the signed correlation verifies"
+    },
+    "negative": {
+      "artifact": "negative-transcript.json",
+      "run_id": "prove-83b9a05f-e4f1-43b2-ab56-2d854470210e",
+      "shows": "the SAME producer, same commit, same contract -- only the readback names a different commit. It refuses: POINT 8 MODELLED, no correlation emitted, exit 1. This pole is producer-emitted, not a spliced file: the demo itself declined to correlate."
+    }
+  }
+}

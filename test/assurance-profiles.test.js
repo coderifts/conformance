@@ -131,10 +131,22 @@ describe('an empty profile can never render as a pass', () => {
   });
 
   it('THE GUARD BITES: a hand-forged green empty profile is refused, not printed', () => {
-    const forged = AP.buildProfileReport().map((r) => (
-      r.coverage !== AP.COVERAGE.COVERED ? { ...r, green: true } : r));
+    // REWRITTEN 2026-09-12. It used to forge by marking every non-COVERED row green — which
+    // silently became a no-op the day every profile reached COVERED, and a guard-test that tests
+    // nothing is worse than none. The forged row is now constructed outright, so this asserts the
+    // GUARD rather than today's coverage.
+    const forged = AP.buildProfileReport().map((r) => ({ ...r }));
+    forged.push({
+      ...forged[0],
+      id: 'FORGED_EMPTY',
+      coverage: AP.COVERAGE.NOT_COVERED,
+      green: true,
+      vectors: 0,
+      runnable: 0,
+      positive: 0,
+      negative: 0,
+    });
     assert.throws(() => AP.assertNoGreenEmpty(forged), /marked green — refusing to render/);
-    // and the renderers call the guard, so neither format can emit it
     assert.throws(() => AP.renderProfileTable(forged), /refusing to render/);
     assert.throws(() => AP.renderProfileJson(forged), /refusing to render/);
   });
@@ -268,10 +280,29 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on END_TO_END exits 3 — PARTIAL is not COVERED', () => {
+  it('--assurance on END_TO_END exits 0 now that the correlated run is vendored', () => {
+    // INVERTED: END_TO_END is COVERED from the demo's single correlated contract-publish run.
     const r = run(['--assurance', 'END_TO_END']);
-    assert.equal(r.status, 3);
-    assert.match(r.stderr, /PARTIAL \/ RECORDED — this suite does not prove this claim/);
+    assert.equal(r.status, 0, r.stderr);
+  });
+
+  it('exit 3 STILL fires when a profile cannot be proved — tested by removing its evidence', () => {
+    // THE PROPERTY THAT MUST SURVIVE 7/7. Exit 3 used to be tested only because END_TO_END happened
+    // to be PARTIAL; reaching COVERED would have deleted the test of an exit code that means
+    // "unproved", not "disproved". So it is now exercised directly: take the evidence away and the
+    // profile must fall back to the honest non-COVERED answer, not vanish.
+    const fs2 = require('node:fs');
+    const path2 = require('node:path');
+    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
+    const src = path2.join(dir, 'negative-transcript.json');
+    const stash = `${src}.stashed`;
+    fs2.renameSync(src, stash);
+    try {
+      const r = run(['--assurance', 'END_TO_END']);
+      assert.notEqual(r.status, 0, 'a profile whose evidence is missing must not stay green');
+    } finally { fs2.renameSync(stash, src); }
+    // and the fixture is restored, so the suite order cannot matter
+    assert.equal(run(['--assurance', 'END_TO_END']).status, 0);
   });
 
   it('--assurance PROVIDER_ENFORCED exits 0 in recorded mode (COVERED / RECORDED)', () => {
@@ -303,11 +334,19 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
   });
 
   it('exit 3 is distinct from exit 1 — unproved is not disproved', () => {
-    const notCovered = run(['--assurance', 'END_TO_END']).status;
+    // Same property, same reason it must not depend on any profile being PARTIAL today.
+    const fs2 = require('node:fs');
+    const path2 = require('node:path');
+    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
+    const src = path2.join(dir, 'negative-transcript.json');
+    const stash = `${src}.stashed2`;
+    fs2.renameSync(src, stash);
+    let unproved;
+    try { unproved = run(['--assurance', 'END_TO_END']).status; } finally { fs2.renameSync(stash, src); }
     const failingRun = run(['--subject', 'branch-on-decision']).status;
-    assert.equal(notCovered, 3);
+    assert.notEqual(unproved, 0);
     assert.equal(failingRun, 1);
-    assert.notEqual(notCovered, failingRun);
+    assert.notEqual(unproved, failingRun, 'unproved and disproved must not share an exit code');
   });
 
   it('an unknown profile id exits 2 rather than being treated as empty', () => {
@@ -316,13 +355,21 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.match(r.stderr, /unknown assurance profile/);
   });
 
-  it('--profiles is a REPORT and exits 0 even with a PARTIAL profile', () => {
+  it('--profiles is a REPORT and exits 0 — the report property, not today\'s coverage', () => {
+    // It used to assert /PARTIAL/ and 6/7, which pinned the state of the table rather than the
+    // property being tested: --profiles REPORTS and does not gate. Now that every profile is
+    // COVERED the old assertions could only be satisfied by keeping something un-covered, which is
+    // the tail wagging the dog. What is asserted is the contract of the flag.
     const r = run(['--profiles']);
-    assert.equal(r.status, 0);
+    assert.equal(r.status, 0, 'a report must not gate');
     assert.match(r.stdout, /END_TO_END/);
-    assert.match(r.stdout, /PARTIAL/);
-    assert.match(r.stdout, /PROFILE COVERAGE 6\/7/);
+    assert.match(r.stdout, /PROFILE COVERAGE 7\/7/);
     assert.match(r.stdout, /RECORDED/);
+    // Both axes must still be printed separately — conflating them is the thing this table exists
+    // to prevent, and that stays true at 7/7.
+    assert.match(r.stdout, /two axes: coverage × evidence_tier/);
+    assert.match(r.stdout, /COVERED\s+LIVE/);
+    assert.match(r.stdout, /COVERED\s+RECORDED/);
   });
 
   it('--profiles --json emits parseable JSON with all seven profiles', () => {
