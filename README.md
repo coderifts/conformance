@@ -102,7 +102,7 @@ So a run is reported as seven profiles, in chain order, on **two axes that are n
 | `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **COVERED** | **RECORDED** — DENY `42501` + unchanged-state read-back; POINT 3 is that denial, not catalog posture | A host holding a provider credential cannot reach the target except through the guarded path. |
 | `ATOMIC_COMMIT` | **COVERED** | **RECORDED** — replay, concurrency, CAS-stale `STATE_DRIFT`, no-consume-only rollback, no-mutation-only 42501, before/after read-backs | A claim and the mutation it authorises either both happen or neither does, and a replayed nonce buys nothing. |
-| `PROVIDER_ENFORCED` | **COVERED** | **RECORDED** — raw GitHub dumps: ruleset 22074842 + PR#4 required-context FAILURE+BLOCKED + PR#5 required-context SUCCESS; capture is a local `gh` dump, not OIDC | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
+| `PROVIDER_ENFORCED` | **COVERED** | **RECORDED** — raw GitHub dumps: ruleset 22074842 + PR#4 required-context FAILURE+BLOCKED + PR#5 SUCCESS + merge-API 405 (PR#4 failing / PR#5 expected); local `gh` dump, not OIDC | A provider actually refused a merge or a deploy because the gate said so — observed, not modelled. |
 | `END_TO_END` | **PARTIAL** | **RECORDED** — layers exist separately; prove-transcript POINT 8 is MODELLED and does not share a run_id with the GitHub PRs | The whole chain holds on one real change: decision → receipt → guarded execution → atomic commit → provider enforcement. |
 
 **PROFILE COVERAGE 6/7 · EVIDENCE 2 LIVE + 5 RECORDED + 0 MODELLED · OVERALL RECORDED · FULL LIVE false.**
@@ -158,18 +158,17 @@ missing — the gap is named, never filled in.
   the differently-named `CodeRifts — API Contract Check`. Capture provenance: local `gh api`
   by `zsobpeter-code` on 2026-09-05, `oidc_attested:false`. Negative dump is REST (PR +
   check-runs); positive dump is GraphQL — the shapes as captured. `ADV-1` still does not
-  count here. `does_not_prove` names HISTORICAL freshness, bypass actors, local gh token,
-  and that PR#5 remains BEHIND. A captured HTTP 405 merge-refusal is a **separate**
-  recorded artifact (`fixtures/recorded/bypass-attempt`, claim `observed_bypass_failure`)
-  — it does not change this profile's COVERED status. The 1105 canary design remains
-  the cost model for a *live* 405 observation.
-- **`observed_bypass_failure` — recorded artifact, not an eighth profile.** Admin
-  `PUT …/pulls/{4,5}/merge` returned HTTP **405** naming required context
-  `CodeRifts / contract-gate`. PR#4 reason is **failing** (gate refused the merge).
-  PR#5 reason is **expected** (gate-specificity control, not a gate-refusal; the
-  branch is BEHIND). Freshness HISTORICAL, local gh admin token, `oidc_attested:false`.
+  count here. The envelope also carries the merge-API **405** bodies (PR#4
+  `contract-gate is failing`; PR#5 `is expected` as control) — the gate refused
+  the admin merge, not only the check. `does_not_prove` names HISTORICAL freshness,
+  bypass actors, local gh token, that PR#5 remains BEHIND / 405-expected, and that
+  no merge landed. The 1105 canary design remains the cost model for a *live* 405.
+- **`observed_bypass_failure` — recorded 405 pin, not an eighth profile.** The
+  bytes live in `fixtures/recorded/bypass-attempt/` and are **scored on
+  PROVIDER_ENFORCED** (1395). Admin `PUT …/pulls/{4,5}/merge` returned HTTP **405**
+  naming `CodeRifts / contract-gate`. PR#4 reason is **failing**; PR#5 is
+  **expected** (BEHIND, not a gate-refusal). HISTORICAL, local gh, `oidc_attested:false`.
   The 405 bodies do not identify the actor or the PR; the pin binds path → payload.
-  A gate-SUCCESS + up-to-date merge was not observed.
 - **`END_TO_END` — PARTIAL / RECORDED.** The layers are recorded; they are not one run. The
   prove-transcript is a Postgres executor whose POINT 8 merge is MODELLED. The provider bundle
   is GitHub PRs with different commits and a different `run_id`. A collage of separate artifacts

@@ -7,7 +7,11 @@ const os = require('node:os');
 const path = require('node:path');
 
 const PE = require('../lib/recorded-provider-enforced');
+const BA = require('../lib/recorded-bypass-attempt');
 const { COVERAGE, EVIDENCE_TIER } = require('../lib/evidence-envelope');
+
+const PR4_405_SHA = '8408d3d4dfe1179efc56111844ac2f90688a1f44a29518559c750bf149927c3a';
+const PR5_405_SHA = '1e850861ed0830091a00d0fa4619ee482886d94a3491041df312a6032f06d1df';
 
 const BUNDLE = ['pin.json', 'capture.json', 'ruleset.json', 'pr-4.json', 'pr-4-checks.json', 'pr-5.json'];
 
@@ -49,6 +53,28 @@ describe('PROVIDER_ENFORCED recorded GitHub dumps', () => {
     assert.ok(out.does_not_prove.some((d) => /bypass_actors/.test(d)));
     assert.ok(out.does_not_prove.some((d) => /OIDC/.test(d) || /OIDC-attested/.test(d)));
     assert.equal(out.does_not_prove.some((d) => /PR#10/.test(d)), false);
+    assert.ok(out.does_not_prove.some((d) => /BEHIND/.test(d) || /expected/.test(d)));
+    assert.equal(out.does_not_prove.some((d) => /separate recorded artifact/.test(d)), false,
+      '405 is on this envelope, not a redirect to a side artifact');
+  });
+
+  it('1395: merge-API 405 bodies are ON the PROVIDER_ENFORCED envelope (not a redirect)', () => {
+    const out = PE.evaluate();
+    assert.equal(out.coverage, COVERAGE.COVERED);
+    assert.equal(out.evidence_tier, EVIDENCE_TIER.RECORDED);
+    const shas = out.envelope.artifacts.map((a) => a.sha256);
+    assert.ok(shas.includes(PR4_405_SHA), 'PR#4 405 failing body must be a negative artifact');
+    assert.ok(shas.includes(PR5_405_SHA), 'PR#5 405 expected body must be on the envelope (control)');
+    assert.equal(out.envelope.artifacts.find((a) => a.sha256 === PR4_405_SHA).role, 'negative');
+    assert.equal(out.envelope.artifacts.find((a) => a.sha256 === PR5_405_SHA).role, 'positive');
+    assert.equal(out.refusals.pr4.status, '405');
+    assert.equal(out.refusals.pr4.reason, 'failing');
+    assert.equal(out.refusals.pr5.status, '405');
+    assert.equal(out.refusals.pr5.reason, 'expected');
+    assert.ok(out.present.some((p) => /405/.test(p) && /failing/.test(p)));
+    assert.ok(out.present.some((p) => /405/.test(p) && /expected/.test(p)));
+    assert.equal(BA.assertPin().artifacts.find((a) => a.path === 'pr4-merge-refusal.json').sha256,
+      PR4_405_SHA);
   });
 
   it('negative pole is PR#4 required contract-gate FAILURE + BLOCKED, not API Contract Check + BEHIND', () => {

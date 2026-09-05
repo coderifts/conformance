@@ -78,7 +78,7 @@ describe('observed bypass-attempt recorded 405 bodies', () => {
     assert.ok(out.does_not_prove.some((d) => /actor|admin/.test(d)));
   });
 
-  it('this is not an eighth assurance profile — PROVIDER_ENFORCED coverage is unchanged', () => {
+  it('this is not an eighth assurance profile — the 405 is PROVIDER_ENFORCED envelope evidence', () => {
     assert.equal(AP.PROFILE_IDS.includes('observed_bypass_failure'), false);
     assert.equal(AP.PROFILE_IDS.includes('OBSERVED_BYPASS_FAILURE'), false);
     const pe = PE.evaluate();
@@ -86,6 +86,9 @@ describe('observed bypass-attempt recorded 405 bodies', () => {
     assert.equal(pe.evidence_tier, EVIDENCE_TIER.RECORDED);
     assert.equal(pe.poles.negative.required_conclusion, 'FAILURE');
     assert.equal(pe.poles.negative.mergeStateStatus, 'BLOCKED');
+    const shas = pe.envelope.artifacts.map((a) => a.sha256);
+    assert.ok(shas.includes(PR4_SHA));
+    assert.ok(shas.includes(PR5_SHA));
   });
 
   it('digest-pin mismatch errors — hash-verify, not a silent rescore', () => {

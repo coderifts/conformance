@@ -2,21 +2,30 @@
 
 ## Unreleased
 
-- Observed bypass-failure vendored as a **separate** recorded artifact
-  (`fixtures/recorded/bypass-attempt/`, claim `observed_bypass_failure`, pin
-  `cr.conformance.recorded-pin.v1`, role `bypass_attempt`). Admin merge-API
-  405 bodies on demo PR#4 (`CodeRifts / contract-gate is failing`) and PR#5
-  (`… is expected`). Verifier requires the required context, HTTP 405, and
-  two different reasons (gate-specificity). `does_not_prove` names HISTORICAL
-  freshness, local gh admin token (not OIDC), that PR#5 is not a gate-refusal,
-  and that a gate-SUCCESS + up-to-date merge was not observed. **Does not
-  change PROVIDER_ENFORCED COVERED status** (1370: config-closure vs
-  gate-block vs observed bypass are three claims).
+## 0.8.1
+
+Warrants a PATCH: the observed merge-API 405 (PR#4 failing + PR#5 expected) is
+wired into the **PROVIDER_ENFORCED evidence-envelope**, so the published package
+contains those bodies (they landed in git after the `conformance-v0.8.0` tag)
+and the provider-blocking proof is on the profile, not a side artifact.
+`evidence_tier` stays **RECORDED**. COVERED now requires the check poles **and**
+the 405 pair. `does_not_prove` stays honest (HISTORICAL, local gh not OIDC,
+PR#5 405 is `expected` / BEHIND, no merge landed). Not a live 405 canary.
+
+### Changed — 405 is PROVIDER_ENFORCED envelope evidence (1395)
+
+Admin `PUT …/pulls/{4,5}/merge` HTTP 405 bodies (`fixtures/recorded/bypass-attempt/`,
+pin `cr.conformance.recorded-pin.v1`) are attached to the PROVIDER_ENFORCED
+envelope: PR#4 `CodeRifts / contract-gate is failing` (negative), PR#5
+`… is expected` (positive control). The gate not only failed the required check
+on PR#4 (`FAILURE` + `BLOCKED`) but refused the admin merge. Still HISTORICAL +
+local-gh. Not an eighth profile. Not OIDC.
+
+### Also in this HEAD (already in 1a556b7, not in 0.8.0)
+
 - PROVIDER_ENFORCED negative pole re-pinned from PR#10 (`CodeRifts — API Contract
   Check` FAILURE, BEHIND) to PR#4 (required `CodeRifts / contract-gate` FAILURE,
-  merge BLOCKED). Positive pole remains PR#5 required-context SUCCESS. Capture
-  is still a local gh dump (`oidc_attested:false`). COVERED / RECORDED on the
-  required context, not the differently-named check.
+  merge BLOCKED). Positive pole remains PR#5 required-context SUCCESS.
 - Vector-count fields document their units: `vectors_present` is unique vectors;
   `vectors_positive` / `vectors_negative` are polarity occurrences (a `pair` vector
   counts in both). present need not equal pos+neg.
