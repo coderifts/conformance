@@ -31,8 +31,8 @@
     "release:packed": "node scripts/check-packed-install.js"
   },
   "dependencies": {
-    "@coderifts/agent-guard": ">=8.1.1",
-    "@coderifts/sdk": ">=1.1.1"
+    "@coderifts/agent-guard": "14.0.0",
+    "@coderifts/sdk": "3.10.0"
   },
   "optionalDependencies": {
     "capability-demo": "git+https://github.com/coderifts/capability-demo.git#188479a15ecb2f4ef57f437d0cec67d94e3598fd"

@@ -280,7 +280,7 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on END_TO_END exits 0 — ONE grant, from authorize through consume to correlation', () => {
+  it('--assurance on END_TO_END exits 3 — one grant, but not yet shown to be ONE RUN', () => {
     // THIRD STATE OF THIS ASSERTION, and each move was a measurement rather than a decision.
     //
     //   correlated run vendored          → exit 0   the contract halves matched
@@ -293,9 +293,22 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     //
     // What makes this exit 0 different from the first one is that the gap the middle state named
     // is closed, not removed: the same check still runs and the neighbouring test proves it bites.
+    // FOURTH STATE, and each move was a measurement (1439). The authorization-continuity gap is
+    // closed and stays closed; what reopened the grade is a DIFFERENT class the auditor found:
+    // every token here is authenticated individually, and a genuinely signed token taken from
+    // another run of the same producer is still accepted. Reproduced three ways.
+    //
+    // Exit 3 is unproved, not disproved — the contract-publish chain still holds; what is not
+    // shown is that these tokens are one run. A signed cr.evidence.root.v1 closes it, and this
+    // assertion moves back to 0 when a producer emits one.
     const r = run(['--assurance', 'END_TO_END']);
-    assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.match(r.stdout, /COVERED \/ RECORDED/);
+    assert.equal(r.status, 3, r.stdout + r.stderr);
+    assert.match(`${r.stdout}${r.stderr}`, /PARTIAL/);
+    // The CLI prints a summary, not the gap list, so the REASON is asserted against the measure
+    // itself — the place that names it.
+    const m = require('../lib/recorded-contract-e2e.js').measureContractE2E();
+    assert.ok((m.missing || []).some((x) => x.startsWith('cross_run_collage')),
+      `PARTIAL for some other reason:\n${(m.missing || []).join('\n')}`);
   });
 
   it('THE BITE: a transcript whose consumed jti is not the issued one drops to PARTIAL', () => {
@@ -320,14 +333,20 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
       entry.sha256 = crypto2.createHash('sha256').update(mutated).digest('hex');
       entry.bytes = mutated.length;
       fs2.writeFileSync(pPath, JSON.stringify(pin, null, 2));
+      // AGAINST THE MEASURE, not the exit code. While the collage gap keeps the profile at exit 3
+      // for the honest fixture too, comparing exit codes could no longer tell a broken continuity
+      // from an intact one — the assertion has to be about the REASON.
+      delete require.cache[require.resolve('../lib/recorded-contract-e2e.js')];
+      const m = require('../lib/recorded-contract-e2e.js').measureContractE2E();
+      assert.ok((m.missing || []).some((x) => x.includes('authorization_not_continuous')),
+        `the continuity check did not fire:\n${(m.missing || []).join('\n')}`);
       const r = run(['--assurance', 'END_TO_END']);
       assert.equal(r.status, 3, 'a discontinuous capture must be unproved, not green');
-      assert.match(`${r.stdout}${r.stderr}`, /PARTIAL/);
     } finally {
       fs2.writeFileSync(tPath, tBytes);
       fs2.writeFileSync(pPath, pBytes);
     }
-    assert.equal(run(['--assurance', 'END_TO_END']).status, 0, 'the fixture must be restored');
+    assert.equal(run(['--assurance', 'END_TO_END']).status, 3, 'the fixture must be restored');
   });
 
   it('removing evidence never improves a verdict — the property that holds at any coverage', () => {

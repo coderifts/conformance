@@ -239,10 +239,23 @@ const CASES = [
 ];
 
 describe('evidence mutation matrix — one byte must never grade COVERED', () => {
-  it('the honest fixture is COVERED, so every refusal below is the mutation talking', () => {
+  /**
+   * The reasons the HONEST fixture already names. Every case below must add one of its OWN on top.
+   *
+   * 1439 made this necessary: while the cross-run-collage gap is open, END_TO_END is PARTIAL for
+   * the honest artifact too, so `coverage !== COVERED` became true of every mutation whether it
+   * did anything or not — 37 tests that could no longer fail. Comparing against the BASELINE keeps
+   * each case about its own mutation, in both states of the profile.
+   */
+  const BASELINE = new Set((measureContractE2E().missing || []));
+
+  it('the honest fixture names only the gaps it is entitled to', () => {
     const r = measureContractE2E();
-    assert.equal(r.coverage, 'COVERED', JSON.stringify(r.missing));
-    assert.equal(r.green, true);
+    // PARTIAL is the honest interim (1439/1432): authentic tokens from different runs are still
+    // accepted, so the set is not shown to be one run. Every OTHER check must pass, or the
+    // baseline would absorb a real regression and the matrix would stop noticing it.
+    assert.deepEqual([...BASELINE].filter((m) => !m.startsWith('cross_run_collage')), [],
+      'the honest fixture has a gap that is not the collage one');
   });
 
   it('the matrix is not thin — a handful of cases would prove a handful of paths', () => {
@@ -254,9 +267,13 @@ describe('evidence mutation matrix — one byte must never grade COVERED', () =>
       const r = measureMutated(mutate);
       assert.notEqual(r.coverage, 'COVERED', `this mutation graded COVERED:\n${JSON.stringify(r, null, 2)}`);
       assert.equal(r.green, false);
+      // A NEW reason, not merely "not green". Without this the case would pass on the baseline
+      // gap alone and prove nothing about the mutation.
+      const fresh = (r.missing || []).filter((m) => !BASELINE.has(m));
+      assert.ok(fresh.length > 0, `the mutation added no gap of its own:\n${(r.missing || []).join('\n')}`);
       if (expect) {
-        const named = (r.missing || []).some((m) => m.includes(expect));
-        assert.ok(named, `refused, but not for the expected reason "${expect}":\n${(r.missing || []).join('\n')}`);
+        const named = fresh.some((m) => m.includes(expect));
+        assert.ok(named, `refused, but not for the expected reason "${expect}":\n${fresh.join('\n')}`);
       }
     });
   }
