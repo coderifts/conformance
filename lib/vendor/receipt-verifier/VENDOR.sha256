@@ -1,0 +1,18 @@
+# VENDORED FROM receipt-verifier — DO NOT EDIT IN PLACE.
+#
+# These are byte-for-byte copies of the shared verification core. A local edit here would be a
+# second implementation wearing the first one's name, which is the exact failure 1423 came from:
+# conformance had its own idea of what checking meant and it was weaker than prove's.
+#
+# test/vendor-parity.test.js re-derives these hashes, and compares them against the source repo
+# when it is present beside this one. Absent, it says so and checks the pin only — an honest
+# skip, never a silent pass.
+#
+# source_commit: 4d3cc48d36a2ee7ff256eec8d76f819843bfd429
+
+721fcac58b960b5e2aa1af91edb6cfc87ebe828a6da73879967ef79a1ca474e8  arity.js
+348d3f851cd79bf63298b51da422d11be980820576ab0bf0a2990b9f007d6249  verify.js
+a285b021b32cc9c70c963de042154dc6be7175cdeaf722a88cc7699651a7c1ea  verify-grant.js
+3bb17bd4f16d5ee3cf3fbb754b4df9aa570a615ca94ff2a97b751c4fabd3bd0d  verify-prove-transcript.js
+7ca498fad4b23e4ae8f28c42c30058bc3526a00d5cc6d6f36380335bf25d3288  verify-evidence.js
+bfe0c898cda3c3a4c8141726d0adb4cdb7eb9762de6264e430eff6469b90422e  keys/coderifts-keys.json
