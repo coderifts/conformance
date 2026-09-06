@@ -1,1 +1,1 @@
-{"provider":"github","required_check":"CodeRifts / contract-gate","integration_id":2860592,"rollup_state":"success","observed_at":"2026-09-12T00:00:00Z","bound_to_source":true,"commit":"ffffffffffffffffffffffffffffffffffffffff"}
+{"provider":"github","required_check":"CodeRifts / contract-gate","integration_id":2860592,"rollup_state":"success","observed_at":"2026-09-06T09:46:59Z","bound_to_source":true,"commit":"ffbdbcc9eb2e9260caee20e7a10ae55021fc1b16"}

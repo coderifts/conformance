@@ -280,24 +280,61 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on END_TO_END exits 3 — the contract half is correlated, the authorization is not', () => {
-    // RE-INVERTED. The previous round vendored a correlated contract-publish run and this asserted
-    // exit 0. Then the continuity gate measured what the correlation could not see: the transcript
-    // carries TWO grants (server d33032a5, executor d26dbacc), so the chain proves an authorize and
-    // an execution, not that the authorize covered that execution.
+  it('--assurance on END_TO_END exits 0 — ONE grant, from authorize through consume to correlation', () => {
+    // THIRD STATE OF THIS ASSERTION, and each move was a measurement rather than a decision.
     //
-    // Exit 3 is the right code — unproved, not disproved. The contract-commit correlation still
-    // holds and is still re-verified; this is a narrower claim, not a retraction.
+    //   correlated run vendored          → exit 0   the contract halves matched
+    //   continuity gate added            → exit 3   it saw TWO grants (server d33032a5,
+    //                                               executor d26dbacc): an authorize AND an
+    //                                               execution, never one covering the other
+    //   challenge-first v2 ATOMIC grant  → exit 0   the executor consumed the grant the SERVER
+    //                                               issued; issued, consumed and attested jti are
+    //                                               one value, re-checked here, not read as a claim
+    //
+    // What makes this exit 0 different from the first one is that the gap the middle state named
+    // is closed, not removed: the same check still runs and the neighbouring test proves it bites.
     const r = run(['--assurance', 'END_TO_END']);
-    assert.equal(r.status, 3, r.stdout);
-    assert.match(r.stderr, /PARTIAL \/ RECORDED/);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /COVERED \/ RECORDED/);
+  });
+
+  it('THE BITE: a transcript whose consumed jti is not the issued one drops to PARTIAL', () => {
+    // COVERED must mean the continuity check FIRED, not that it was skipped. Measured by breaking
+    // exactly one field of the vendored artifact and restoring it — the pin is recomputed for the
+    // mutation and put back, so a failure here cannot leave the fixture wrong.
+    const fs2 = require('node:fs');
+    const path2 = require('node:path');
+    const crypto2 = require('node:crypto');
+    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
+    const tPath = path2.join(dir, 'transcript.json');
+    const pPath = path2.join(dir, 'pin.json');
+    const tBytes = fs2.readFileSync(tPath);
+    const pBytes = fs2.readFileSync(pPath);
+    try {
+      const t = JSON.parse(tBytes.toString('utf8'));
+      t.continuity.identities.consumed_jti = '00000000-0000-4000-8000-000000000000';
+      const mutated = Buffer.from(JSON.stringify(t), 'utf8');
+      fs2.writeFileSync(tPath, mutated);
+      const pin = JSON.parse(pBytes.toString('utf8'));
+      const entry = pin.artifacts.find((a) => a.path === 'transcript.json');
+      entry.sha256 = crypto2.createHash('sha256').update(mutated).digest('hex');
+      entry.bytes = mutated.length;
+      fs2.writeFileSync(pPath, JSON.stringify(pin, null, 2));
+      const r = run(['--assurance', 'END_TO_END']);
+      assert.equal(r.status, 3, 'a discontinuous capture must be unproved, not green');
+      assert.match(`${r.stdout}${r.stderr}`, /PARTIAL/);
+    } finally {
+      fs2.writeFileSync(tPath, tBytes);
+      fs2.writeFileSync(pPath, pBytes);
+    }
+    assert.equal(run(['--assurance', 'END_TO_END']).status, 0, 'the fixture must be restored');
   });
 
   it('removing evidence never improves a verdict — the property that holds at any coverage', () => {
-    // Written to survive BOTH worlds. Today END_TO_END is PARTIAL so exit 3 fires unaided; when
-    // continuity lands it will be COVERED and this removal is what still exercises the path.
-    // Asserting a fixed code would be brittle; "removing evidence cannot make it greener" is the
-    // invariant, and it is the one that matters.
+    // Written to survive BOTH worlds, and it now runs in the second one: END_TO_END is COVERED,
+    // so removing the negative pole is what exercises the path. Asserting a fixed code would be
+    // brittle; "removing evidence cannot make it greener" is the invariant, and it is the one
+    // that matters.
     const fs2 = require('node:fs');
     const path2 = require('node:path');
     const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
