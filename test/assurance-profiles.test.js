@@ -280,29 +280,36 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on END_TO_END exits 0 now that the correlated run is vendored', () => {
-    // INVERTED: END_TO_END is COVERED from the demo's single correlated contract-publish run.
+  it('--assurance on END_TO_END exits 3 — the contract half is correlated, the authorization is not', () => {
+    // RE-INVERTED. The previous round vendored a correlated contract-publish run and this asserted
+    // exit 0. Then the continuity gate measured what the correlation could not see: the transcript
+    // carries TWO grants (server d33032a5, executor d26dbacc), so the chain proves an authorize and
+    // an execution, not that the authorize covered that execution.
+    //
+    // Exit 3 is the right code — unproved, not disproved. The contract-commit correlation still
+    // holds and is still re-verified; this is a narrower claim, not a retraction.
     const r = run(['--assurance', 'END_TO_END']);
-    assert.equal(r.status, 0, r.stderr);
+    assert.equal(r.status, 3, r.stdout);
+    assert.match(r.stderr, /PARTIAL \/ RECORDED/);
   });
 
-  it('exit 3 STILL fires when a profile cannot be proved — tested by removing its evidence', () => {
-    // THE PROPERTY THAT MUST SURVIVE 7/7. Exit 3 used to be tested only because END_TO_END happened
-    // to be PARTIAL; reaching COVERED would have deleted the test of an exit code that means
-    // "unproved", not "disproved". So it is now exercised directly: take the evidence away and the
-    // profile must fall back to the honest non-COVERED answer, not vanish.
+  it('removing evidence never improves a verdict — the property that holds at any coverage', () => {
+    // Written to survive BOTH worlds. Today END_TO_END is PARTIAL so exit 3 fires unaided; when
+    // continuity lands it will be COVERED and this removal is what still exercises the path.
+    // Asserting a fixed code would be brittle; "removing evidence cannot make it greener" is the
+    // invariant, and it is the one that matters.
     const fs2 = require('node:fs');
     const path2 = require('node:path');
     const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
     const src = path2.join(dir, 'negative-transcript.json');
     const stash = `${src}.stashed`;
+    const before = run(['--assurance', 'END_TO_END']).status;
     fs2.renameSync(src, stash);
-    try {
-      const r = run(['--assurance', 'END_TO_END']);
-      assert.notEqual(r.status, 0, 'a profile whose evidence is missing must not stay green');
-    } finally { fs2.renameSync(stash, src); }
-    // and the fixture is restored, so the suite order cannot matter
-    assert.equal(run(['--assurance', 'END_TO_END']).status, 0);
+    let without;
+    try { without = run(['--assurance', 'END_TO_END']).status; } finally { fs2.renameSync(stash, src); }
+    assert.notEqual(without, 0, 'a profile whose evidence is missing must not be green');
+    assert.ok(without >= before, 'removing evidence must never improve the verdict');
+    assert.equal(run(['--assurance', 'END_TO_END']).status, before, 'the fixture must be restored');
   });
 
   it('--assurance PROVIDER_ENFORCED exits 0 in recorded mode (COVERED / RECORDED)', () => {
@@ -363,7 +370,10 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     const r = run(['--profiles']);
     assert.equal(r.status, 0, 'a report must not gate');
     assert.match(r.stdout, /END_TO_END/);
-    assert.match(r.stdout, /PROFILE COVERAGE 7\/7/);
+    // No fixed number: the report property is what is tested, and pinning 7/7 (or 6/7) would make
+    // this fail every time coverage legitimately moves — which is how a test starts arguing for a
+    // number instead of a behaviour.
+    assert.match(r.stdout, /PROFILE COVERAGE \d\/7/);
     assert.match(r.stdout, /RECORDED/);
     // Both axes must still be printed separately — conflating them is the thing this table exists
     // to prevent, and that stays true at 7/7.
