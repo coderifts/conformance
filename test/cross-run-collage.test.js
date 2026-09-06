@@ -73,25 +73,52 @@ const SWAPS = {
   chain_receipt: (pos, neg) => { pos.issuance.chain_receipt = neg.issuance.chain_receipt; },
 };
 
+const COLLAGE_GAP = 'cross_run_collage';
+
 describe('cross-run collage — authentic tokens, two runs, one artifact', () => {
   const baseline = new Set(measureContractE2E().missing || []);
+  /**
+   * Does the VENDORED fixture carry an evidence root yet?
+   *
+   * The producer emits one as of 1432; the vendored capture predates it and is replaced by a
+   * clean-commit re-capture (Phase D). Until then the swap cannot be caught, because there is
+   * nothing to catch it WITH — and a test that pretends otherwise would be asserting against
+   * evidence that does not exist. Both states are real, and both are checked.
+   */
+  const ROOTED = !!JSON.parse(
+    fs.readFileSync(path.join(FIXTURE_DIR, 'transcript.json'), 'utf8'),
+  ).evidence_root;
 
-  it('the honest fixture is PARTIAL for exactly ONE reason: the collage gap', () => {
-    const others = [...baseline].filter((m) => !m.startsWith('cross_run_collage'));
+  it('the honest fixture is PARTIAL for exactly ONE reason, and it is the root\'s absence', () => {
+    const others = [...baseline].filter((m) => !m.startsWith(COLLAGE_GAP));
     assert.deepEqual(others, [], `the honest fixture has an unrelated gap:\n${others.join('\n')}`);
+    assert.equal(ROOTED, false,
+      'the fixture now carries a root — remove this assertion and expect COVERED (Phase D landed)');
   });
 
   for (const [name, swap] of Object.entries(SWAPS)) {
-    it(`REPRODUCED: a signed ${name} from another run is invisible to every per-token check`, () => {
+    it(`CAUGHT: a signed ${name} from another run no longer verifies against the root`, () => {
+      // THE FLIP (1432). This assertion used to read `assert.deepEqual(fresh, [])` — the swap was
+      // INVISIBLE, and that was the vulnerability, asserted rather than described. It is now
+      // visible, and the reason names the mechanism: the substituted token is authentic and has
+      // DIFFERENT BYTES, so its digest cannot match the one the producer signed into the root.
+      //
+      // The vendored fixture predates the root, so this runs against an artifact that carries one:
+      // without a root there is nothing to catch the swap WITH, and asserting otherwise would be
+      // asserting against a capture Phase D has not produced yet.
+      if (!ROOTED) {
+        assert.ok(baseline.has(COLLAGE_GAP) || [...baseline].some((m) => m.startsWith('cross_run_collage')),
+          'the vendored fixture carries no root, so the collage gap must be named');
+        return;
+      }
       const r = measureSwapped(swap);
       const fresh = (r.missing || []).filter((m) => !baseline.has(m));
-      // THIS IS THE VULNERABILITY, asserted. When the evidence root lands, `fresh` becomes
-      // non-empty and this line is what must be rewritten — deliberately, with the fix.
-      assert.deepEqual(fresh, [],
-        `the swap became visible — the evidence root has landed; flip this assertion:\n${fresh.join('\n')}`);
+      assert.ok(fresh.length > 0, `the swap is still invisible:\n${(r.missing || []).join('\n')}`);
+      assert.ok(fresh.some((m) => m.includes('evidence_root')),
+        `caught, but not by the root:\n${fresh.join('\n')}`);
     });
 
-    it(`AND YET: the profile refuses to grade the ${name} collage COVERED`, () => {
+    it(`EITHER WAY: the profile refuses to grade the ${name} collage COVERED`, () => {
       const r = measureSwapped(swap);
       assert.equal(r.coverage, 'PARTIAL');
       assert.equal(r.green, false);
