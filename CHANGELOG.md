@@ -2,6 +2,48 @@
 
 ## Unreleased
 
+## 0.8.3
+
+The measure now AUTHENTICATES every signed token, not only the pin (P0.1, 1423). A second auditor
+showed the gap on 0.8.2: flip the last character of `issuance.execution_grant` or of
+`transcript_token`, recompute the pin, and END_TO_END still graded **COVERED**. Both mutations were
+reproduced against 0.8.2 — including against the tarball fetched from the registry — before
+anything was changed.
+
+The pin and the signatures answer different questions. The pin says "these are the bytes we
+vendored"; only a signature says "the named issuer produced them". Whoever can edit the vendored
+bytes can also edit the file the hash lives in, so a pin alone is a check against accident, not
+against an editor. 0.8.2 verified the pin and exactly ONE signature (the correlation's).
+
+`measureContractE2E` now calls a canonical evidence verifier — receipt-verifier's shared core,
+vendored under `lib/vendor/receipt-verifier/` with a `VENDOR.sha256` pin — which authenticates the
+execution grant, the chain receipt, the prove transcript token and the correlation, each against
+its own issuer's key. A token whose signature does not verify is a NAMED gap ("the execution_grant
+signature does not verify") and the profile drops to **PARTIAL**. An ABSENT required token is a gap
+too: deletion is the strongest tamper there is and must never read as a pass.
+
+Why a shared core rather than more checks here: the real shape of the bug was two verifiers
+disagreeing. capability-demo's `prove --check` refused both of the auditor's mutations while this
+measure accepted them — and, measured the other way, `prove --check` was the one that skipped the
+correlation signature. Complementary blind spots, each reading as thorough on its own.
+
+Also in this release: a 37-case mutation matrix (every signed token, every correlation binding
+field, the keyring, the continuity identities, provenance and the structural claims), each case
+recomputing the pin so a green result could only ever mean the signature check stopped it; and
+`scripts/check-packed-install.js`, which installs the built tarball and re-runs the measure from
+the INSTALLED package — 0.8.2 shipped a measure that graded a mutation COVERED and every test in
+the repo passed, because the tests read the working tree and a working tree is not the artifact.
+
+Two overclaims found by the matrix and corrected: the profile printed "one run_id across N points"
+while the points carry no run_id at all (a spliced point naming another run was invisible), and the
+continuity block's own `issued_jti` was not load-bearing, so it could disagree with the issuance
+in silence.
+
+HONEST BOUNDARY (unchanged): this strengthens the 7/7 — the measure now authenticates rather than
+only pinning — and does not change what END_TO_END claims. It is still the contract-publish E2E,
+witness-attested and not provider-signed, and '7/7' does NOT mean CodeRifts merged a PR.
+
+
 ## 0.8.2
 
 END_TO_END is COVERED — the suite is 7/7 (2 LIVE + 5 RECORDED). The vendored end-to-end capture is

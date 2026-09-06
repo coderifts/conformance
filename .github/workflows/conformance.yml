@@ -1,0 +1,43 @@
+# Two jobs, because they answer different questions.
+#
+#   suite          does the code in this checkout behave?
+#   packed-install does the package we would PUBLISH behave?
+#
+# 0.8.2 is why the second one exists. Its measure graded a byte-mutated execution grant as
+# COVERED, and every test in this repo passed the whole time — the tests read the working tree,
+# and a working tree is not the artifact an adopter installs.
+name: conformance
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npm test
+
+  packed-install:
+    # Packs the tarball, installs it into a scratch project, and drives the measure through the
+    # INSTALLED module: the clean fixture must read COVERED, and the auditor's one-byte mutation
+    # of the execution grant — with the pin recomputed, as an attacker would — must read PARTIAL
+    # naming the signature. Runs on every push, not only at publish: a measure that stops
+    # authenticating is cheapest to notice in the commit that broke it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: The PUBLISHED measure authenticates (installs the real .tgz)
+        run: node scripts/check-packed-install.js
