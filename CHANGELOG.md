@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## 0.8.2
+
+END_TO_END is COVERED — the suite is 7/7 (2 LIVE + 5 RECORDED). The vendored end-to-end capture is
+a single authorization-continuous run: one server-issued v2 ATOMIC grant flows through authorize,
+consume, attestation and correlation (issued_jti === consumed_jti === attestation_jti,
+issued_scope_hash === correlation_scope_hash), captured on a clean commit (git:a39a407,
+working_tree_dirty false), with a negative pole (same producer, different readback commit). This is
+the authorization-continuity an auditor requires: the SAME grant end to end, not two grants placed
+in one transcript. measureContractE2E re-verifies the grant-identity from the vendored bytes and
+returns COVERED / RECORDED. HONEST BOUNDARY (unchanged, in the profile's last does_not_prove line):
+this is the contract-publish E2E — witness-attested, not provider-signed; the v2 ATOMIC grant is
+non-replayable (the nonce preimage exists nowhere); '7/7' does NOT mean CodeRifts merged a PR (that
+is PATH B).
+
+
 ## 0.8.1
 
 Warrants a PATCH: the observed merge-API 405 (PR#4 failing + PR#5 expected) is
