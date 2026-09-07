@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.8.5
+
+END_TO_END reads COVERED (7/7): the vendored fixture now carries a real bare-Git target-state transition. POINT 8 is TARGET_STATE_TRANSITION_PROVEN — a governed ref moved to the authorized commit under a signed grant, and a separate read-only process observed it afterwards (proof_scope TRUSTED_EXECUTOR, provider_witness NOT_APPLICABLE, externally_witnessed false). Vendoring the real capture also uncovered and fixed two defects the old PARTIAL fixture had masked: the four transition correlations are now a conjunct of the verdict (a named gap that did not move the grade), and the AUDITOR-1 mutation control is a byte-level flip (the char-level flip was a no-op when a signature's last base64url char decodes its low bits to nothing). No negative control weakened. This is trusted-executor-integrity, not a provider merge (PATH B) and not externally witnessed.
+
+
 ## 0.8.4
 
 Vendors the shared verified-execution-binding core (the authorization verdict alongside the coverage facts) and the receipt-binding + v1-ATOMIC fixes, with per-file git-show pins. END_TO_END stays PARTIAL (6/7): the vendored fixture carries no cr.evidence.root.v1, so cross_run_collage is a named gap — an honest 6/7, not a claimed 7/7. The 7/7 requires a fresh root-bearing capture (a later release).
