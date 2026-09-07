@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.8.4
+
+Vendors the shared verified-execution-binding core (the authorization verdict alongside the coverage facts) and the receipt-binding + v1-ATOMIC fixes, with per-file git-show pins. END_TO_END stays PARTIAL (6/7): the vendored fixture carries no cr.evidence.root.v1, so cross_run_collage is a named gap — an honest 6/7, not a claimed 7/7. The 7/7 requires a fresh root-bearing capture (a later release).
+
+
 ## 0.8.3
 
 The measure now AUTHENTICATES every signed token, not only the pin (P0.1, 1423). A second auditor
