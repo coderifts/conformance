@@ -8,7 +8,7 @@
 # when it is present beside this one. Absent, it says so and checks the pin only — an honest
 # skip, never a silent pass.
 #
-# verified-execution-binding.js is vendored at ce5fd34e93a6e8cdcc71d7ebcba09497088844e1 (1459 — the one predicate).
+# verified-execution-binding.js is vendored at 1e41542296551139c41e2d4b4cff2e67bc42aa06 (1459 — the one predicate).
 # source_commit: 7887719fa6e2bd1f70907f119e1c2a9b7c6a84ff (evidence-root.js and verify-evidence.js re-vendored for 1432)
 
 721fcac58b960b5e2aa1af91edb6cfc87ebe828a6da73879967ef79a1ca474e8  arity.js
