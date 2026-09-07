@@ -36,11 +36,45 @@ const { measureContractE2E, FIXTURE_DIR } = require('../lib/recorded-contract-e2
 const ARTIFACTS = ['transcript.json', 'executor-keys.json', 'readback.json',
   'negative-transcript.json', 'negative-readback.json', 'pin.json'];
 
-/** Flip the LAST character to a different one of the same alphabet. One byte, nothing else. */
+/**
+ * Flip the LAST character to a different one of the same alphabet. One byte, nothing else.
+ *
+ * ── WHY THIS IS NOT ENOUGH ON ITS OWN, MEASURED ─────────────────────────────────────────────
+ *
+ * An Ed25519 signature is 64 bytes and base64url-encodes to 86 characters. 86 × 6 = 516 bits, so
+ * the final character carries FOUR BITS THAT DECODE TO NOTHING. Flipping it produces a different
+ * STRING whose decoded bytes are byte-identical — `Buffer.from(a,'base64url').equals(
+ * Buffer.from(b,'base64url'))` is true — and the signature therefore still verifies.
+ *
+ * The vendored grant's signature happens to end in 'A', so AUDITOR-1 was mutating nothing: it
+ * passed only because the artifact's BYTES changed and the pin was recomputed, never because a
+ * signature was broken. On the previous fixture the last character happened to be one whose flip
+ * did reach a real byte, so the control looked sound for as long as one capture stood still.
+ *
+ * `flipSignatureByte` below is what the two AUDITOR cases use now. This helper is kept, because
+ * "the string changed but the signature did not" is itself a case worth having, and it is added
+ * to the matrix under its own name.
+ */
 function flipLast(s) {
   const last = s[s.length - 1];
   const alt = last === 'A' ? 'B' : 'A';
   return s.slice(0, -1) + alt;
+}
+
+/**
+ * Change the DECODED signature by one bit, and prove it changed before returning.
+ *
+ * A negative control whose mutation might be a no-op is not a control. The assertion is inside the
+ * helper so no future case can silently inherit the defect this replaced.
+ */
+function flipSignatureByte(token) {
+  const i = token.lastIndexOf('.');
+  const head = token.slice(0, i + 1);
+  const sig = Buffer.from(token.slice(i + 1), 'base64url');
+  const out = Buffer.from(sig);
+  out[0] ^= 0x01;
+  assert.ok(!out.equals(sig), 'the mutation did not change the signature bytes');
+  return head + out.toString('base64url');
 }
 
 /** Flip one character in the middle of a base64url segment. */
@@ -94,12 +128,20 @@ function measureMutated(mutate) {
 /** [name, mutate, expected substring of a `missing` entry] */
 const CASES = [
   // ── THE AUDITOR'S TWO, BY NAME. Both graded COVERED before this round. ────────────────────
-  ['AUDITOR-1: execution_grant last character + pin recompute',
-    ({ read, write }) => { const t = read('transcript.json'); t.issuance.execution_grant = flipLast(t.issuance.execution_grant); write('transcript.json', t); },
+  ['AUDITOR-1: execution_grant signature byte + pin recompute',
+    ({ read, write }) => { const t = read('transcript.json'); t.issuance.execution_grant = flipSignatureByte(t.issuance.execution_grant); write('transcript.json', t); },
     'execution_grant signature does not verify'],
-  ['AUDITOR-2: transcript_token last character + pin recompute',
-    ({ read, write }) => { const t = read('transcript.json'); t.transcript_token = flipLast(t.transcript_token); write('transcript.json', t); },
+  ['AUDITOR-2: transcript_token signature byte + pin recompute',
+    ({ read, write }) => { const t = read('transcript.json'); t.transcript_token = flipSignatureByte(t.transcript_token); write('transcript.json', t); },
     'transcript_token signature does not verify'],
+  // THE NO-OP CASE, KEPT AS A CASE. Flipping the grant signature's trailing base64 character
+  // yields a different STRING that decodes to the same 64 bytes, so no signature breaks. It must
+  // still be refused — and it is, by the evidence root, which binds the token's BYTES rather than
+  // what they decode to. Naming the layer that catches it is the point: without the root this
+  // edit would be invisible, and the matrix would have been silent about it.
+  ['execution_grant: trailing base64 bit (decodes identically — only the root catches it)',
+    ({ read, write }) => { const t = read('transcript.json'); t.issuance.execution_grant = flipLast(t.issuance.execution_grant); write('transcript.json', t); },
+    'evidence_root'],
 
   // ── execution_grant ───────────────────────────────────────────────────────────────────────
   ['execution_grant: payload segment mutated',
@@ -254,8 +296,13 @@ describe('evidence mutation matrix — one byte must never grade COVERED', () =>
     // PARTIAL is the honest interim (1439/1432): authentic tokens from different runs are still
     // accepted, so the set is not shown to be one run. Every OTHER check must pass, or the
     // baseline would absorb a real regression and the matrix would stop noticing it.
+    // The collage filter is kept but is now expected to remove nothing: the vendored capture
+    // carries an evidence root, so the gap it used to name is closed and the BASELINE IS EMPTY.
+    // An empty baseline is what makes every case below strict — `fresh.length > 0` can no longer
+    // be satisfied by a pre-existing gap.
     assert.deepEqual([...BASELINE].filter((m) => !m.startsWith('cross_run_collage')), [],
       'the honest fixture has a gap that is not the collage one');
+    assert.deepEqual([...BASELINE], [], 'the honest fixture is no longer gap-free');
   });
 
   it('the matrix is not thin — a handful of cases would prove a handful of paths', () => {

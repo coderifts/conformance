@@ -280,7 +280,7 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 
-  it('--assurance on END_TO_END exits 3 — one grant, but not yet shown to be ONE RUN', () => {
+  it('--assurance on END_TO_END exits 0 — one grant, and now shown to be ONE RUN', () => {
     // THIRD STATE OF THIS ASSERTION, and each move was a measurement rather than a decision.
     //
     //   correlated run vendored          → exit 0   the contract halves matched
@@ -298,17 +298,28 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     // every token here is authenticated individually, and a genuinely signed token taken from
     // another run of the same producer is still accepted. Reproduced three ways.
     //
-    // Exit 3 is unproved, not disproved — the contract-publish chain still holds; what is not
-    // shown is that these tokens are one run. A signed cr.evidence.root.v1 closes it, and this
-    // assertion moves back to 0 when a producer emits one.
+    // Exit 3 was unproved, not disproved — the contract-publish chain held; what was not shown was
+    // that these tokens are one run. The comment above promised this assertion would move back to
+    // 0 when a producer emitted a root. It did.
+    //
+    //   fifth state, bare-Git 7/7 capture → exit 0   the artifact carries a signed
+    //                                                cr.evidence.root.v1, POINT 8 is filled from
+    //                                                an observed target-state transition, and the
+    //                                                collage gap is closed rather than removed.
+    //
+    // AND THAT DISTINCTION IS ASSERTED, not asserted-about. An exit code of 0 is what a profile
+    // that stopped checking would also print, so the reason is pinned twice: the measure must name
+    // ZERO gaps (not "no collage gap"), and the neighbouring cross-run-collage suite proves the
+    // check that closed it still refuses a swap. A green code with a silent check is the failure
+    // mode this pairing exists to make impossible.
     const r = run(['--assurance', 'END_TO_END']);
-    assert.equal(r.status, 3, r.stdout + r.stderr);
-    assert.match(`${r.stdout}${r.stderr}`, /PARTIAL/);
-    // The CLI prints a summary, not the gap list, so the REASON is asserted against the measure
-    // itself — the place that names it.
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(`${r.stdout}${r.stderr}`, /COVERED/);
     const m = require('../lib/recorded-contract-e2e.js').measureContractE2E();
-    assert.ok((m.missing || []).some((x) => x.startsWith('cross_run_collage')),
-      `PARTIAL for some other reason:\n${(m.missing || []).join('\n')}`);
+    assert.deepEqual(m.missing || [], [],
+      `exit 0 with a named gap:\n${(m.missing || []).join('\n')}`);
+    assert.ok((m.present || []).some((x) => x.includes('cr.evidence.root.v1')),
+      'the collage gap closed without a root being present — that is removal, not closure');
   });
 
   it('THE BITE: a transcript whose consumed jti is not the issued one drops to PARTIAL', () => {
@@ -333,9 +344,10 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
       entry.sha256 = crypto2.createHash('sha256').update(mutated).digest('hex');
       entry.bytes = mutated.length;
       fs2.writeFileSync(pPath, JSON.stringify(pin, null, 2));
-      // AGAINST THE MEASURE, not the exit code. While the collage gap keeps the profile at exit 3
-      // for the honest fixture too, comparing exit codes could no longer tell a broken continuity
-      // from an intact one — the assertion has to be about the REASON.
+      // AGAINST THE MEASURE AND the exit code. The reason assertion was written when the collage
+      // gap held the honest fixture at exit 3 too, so the code could not tell a broken continuity
+      // from an intact one. The honest fixture is now COVERED, so the code discriminates again —
+      // and BOTH are checked, because the reason is what makes the code mean something.
       delete require.cache[require.resolve('../lib/recorded-contract-e2e.js')];
       const m = require('../lib/recorded-contract-e2e.js').measureContractE2E();
       assert.ok((m.missing || []).some((x) => x.includes('authorization_not_continuous')),
@@ -346,7 +358,10 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
       fs2.writeFileSync(tPath, tBytes);
       fs2.writeFileSync(pPath, pBytes);
     }
-    assert.equal(run(['--assurance', 'END_TO_END']).status, 3, 'the fixture must be restored');
+    // RESTORED means green again — and that round trip is the assertion. Breaking one field drops
+    // the profile from 0 to 3 and putting it back returns it to 0, so this proves the bite is the
+    // mutation's doing rather than a profile that was never green in the first place.
+    assert.equal(run(['--assurance', 'END_TO_END']).status, 0, 'the fixture must be restored');
   });
 
   it('removing evidence never improves a verdict — the property that holds at any coverage', () => {

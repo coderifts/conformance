@@ -37,6 +37,16 @@ const BASE = 'a'.repeat(40);
 const CONTRACT_COMMIT = 'b'.repeat(40);
 const BLOB = `sha256:${'c'.repeat(64)}`;
 
+/**
+ * A transition block for the CONSTRUCTED cases — a legacy artifact that never had one, given one.
+ *
+ * NOT used for the negative controls any more, and the reason is a measurement. The profile now
+ * ANCHORS the block: the observation is compared field by field against `readback.json` (a
+ * root-bound slot) and `expected` against the signed correlation. A block invented out of thin air
+ * disagrees with both, so every case built this way would be refused by the anchor before its own
+ * mutation was ever reached — eight controls that fire for the wrong reason and stop covering the
+ * check they name. The negatives below edit the fixture's REAL block instead.
+ */
 function transitionBlock(over = {}) {
   return {
     observation: {
@@ -56,6 +66,14 @@ function transitionBlock(over = {}) {
       ...(over.expected || {}),
     },
   };
+}
+
+/** Deep-clone the vendored block and apply one edit — the negatives' input. */
+function editRealBlock(t, over) {
+  const b = JSON.parse(JSON.stringify(t.target_state_transition));
+  Object.assign(b.observation, over.observation || {});
+  Object.assign(b.expected, over.expected || {});
+  t.target_state_transition = b;
 }
 
 /** Copy the vendored set, apply an edit, recompute the pin, run the REAL measure. */
@@ -124,23 +142,39 @@ describe('the four correlations, re-checked offline', () => {
     assert.deepEqual(fresh(r), []);
   });
 
-  it('an honest transition block adds no gap', () => {
-    const r = measureWith((t) => { t.target_state_transition = transitionBlock(); });
+  it('the fixture\'s own transition block adds no gap', () => {
+    const r = measureWith(() => {});
     assert.deepEqual(fresh(r).filter((m) => /^transition /.test(m)), []);
   });
 
+  it('an INVENTED block is refused by the ANCHOR, before any correlation is reached', () => {
+    // The property that makes the negatives below mean something. A block whose every internal
+    // field agrees with its neighbours is still refused, because it does not agree with the
+    // root-bound readback bytes. Self-consistency is not evidence.
+    const r = measureWith((t) => { t.target_state_transition = transitionBlock(); });
+    const gaps = fresh(r).filter((m) => m.startsWith('transition '));
+    assert.ok(gaps.some((m) => /observation_anchored_/.test(m)),
+      `an invented block was not caught by the anchor:\n${gaps.join('\n') || '(none)'}`);
+    assert.notEqual(r.coverage, 'COVERED');
+  });
+
+  // Each edit changes ONE field of the fixture's real block to a value that is well-formed and
+  // wrong. `needle` is the check that must name it — asserting the refusal alone would pass on any
+  // gap at all, including one from a neighbouring check that happened to fire.
+  const REAL = JSON.parse(fs.readFileSync(path.join(FIXTURE_DIR, 'transcript.json'), 'utf8'))
+    .target_state_transition;
   for (const [name, over, needle] of [
     ['after_state_token', { observation: { observed_commit: 'd'.repeat(40) } }, /after_state_token/],
     ['blob_digest', { observation: { contract_blob_digest: `sha256:${'e'.repeat(64)}` } }, /blob_digest/],
     ['content_sha256', { expected: { after_payload_digest: `sha256:${'f'.repeat(64)}` } }, /content_sha256/],
-    ['single_parent (a merge)', { expected: { parents: [BASE, 'e'.repeat(40)] } }, /single_parent/],
+    ['single_parent (a merge)', { expected: { parents: [REAL.expected.base, 'e'.repeat(40)] } }, /single_parent/],
     ['single_parent (wrong parent)', { expected: { parents: ['e'.repeat(40)] } }, /single_parent/],
-    ['state_transition (did not move)', { observation: { before_commit: CONTRACT_COMMIT } }, /state_transition/],
+    ['state_transition (did not move)', { observation: { before_commit: REAL.expected.contract_commit } }, /state_transition/],
     ['observer_mode', { observation: { observer_mode: 'read_write' } }, /observer_mode/],
-    ['observation_source', { observation: { observation_source: 'hand-written' } }, /observer_mode/],
+    ['observation_source', { observation: { observation_source: 'hand-written' } }, /observation_source|observer_mode/],
   ]) {
     it(`REFUSED: ${name}`, () => {
-      const r = measureWith((t) => { t.target_state_transition = transitionBlock(over); });
+      const r = measureWith((t) => editRealBlock(t, over));
       const gaps = fresh(r).filter((m) => m.startsWith('transition '));
       assert.ok(gaps.some((m) => needle.test(m)),
         `no transition gap matched ${needle}:\n${gaps.join('\n') || '(none)'}`);

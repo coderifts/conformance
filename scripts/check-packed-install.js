@@ -22,10 +22,14 @@
  *
  *   CLEAN    the honest fixture must read COVERED. Without this, a measure that refuses
  *            everything would "pass" the mutation pole and ship broken.
- *   MUTATED  the auditor's exact mutation — one byte of the execution grant, PLUS a recomputed
- *            pin — must read PARTIAL, naming the signature. The pin recompute is what makes this
- *            a test of authentication rather than of arithmetic: an attacker editing vendored
- *            bytes also owns the file the hash is written in.
+ *   MUTATED  one bit of the execution grant's DECODED signature, PLUS a recomputed pin — must
+ *            read PARTIAL, naming the signature. The pin recompute is what makes this a test of
+ *            authentication rather than of arithmetic: an attacker editing vendored bytes also
+ *            owns the file the hash is written in.
+ *   NO-OP    the auditor's original character flip, which on this capture decodes to the SAME
+ *            signature. It must still be refused — by the evidence root, which binds the token's
+ *            bytes rather than what they decode to. Two layers, each proved by the pole it is the
+ *            only one to catch, so neither can quietly stop working behind the other.
  *
  * Exit 0 = the published measure authenticates. Exit 1 = it does not, with the reason named.
  */
@@ -46,8 +50,31 @@ function run(cmd, args, opts) {
   return r;
 }
 
-/** Flip the last character — the auditor's mutation, exactly. */
+/**
+ * Flip the last character — the auditor's mutation, exactly as they wrote it.
+ *
+ * KEPT, AND NO LONGER USED AS THE SIGNATURE POLE. Measured on the bare-Git 7/7 capture: an Ed25519
+ * signature is 64 bytes and base64url-encodes to 86 characters, of which the last carries FOUR
+ * BITS THAT DECODE TO NOTHING. This capture's grant signature ends in 'A', so flipping it yields a
+ * different STRING that decodes to the identical 64 bytes — the signature still verifies, and the
+ * only thing that changed is the file's bytes.
+ *
+ * That is why this gate started failing with "refused, but NOT for the signature": it was correct.
+ * The mutation had become a no-op against the authentication path, and the pole was proving the
+ * evidence root instead. Re-pointing the expected reason would have retired the check this gate
+ * exists for, so the mutation was fixed instead of the assertion.
+ */
 const flipLast = (s) => s.slice(0, -1) + (s[s.length - 1] === 'A' ? 'B' : 'A');
+
+/** Flip one bit of the DECODED signature, and refuse to proceed if that changed nothing. */
+function flipSignatureByte(token) {
+  const i = token.lastIndexOf('.');
+  const sig = Buffer.from(token.slice(i + 1), 'base64url');
+  const out = Buffer.from(sig);
+  out[0] ^= 0x01;
+  if (out.equals(sig)) throw new Error('the mutation did not change the signature bytes');
+  return token.slice(0, i + 1) + out.toString('base64url');
+}
 
 /** Recompute every hash in the pin, as an attacker editing vendored bytes would. */
 function repin(dir) {
@@ -132,8 +159,9 @@ try {
   // ── POLE 2: the auditor's mutation, inside the installed package ──────────────────────────
   const dir = path.join(installed, E2E);
   const tPath = path.join(dir, 'transcript.json');
-  const t = JSON.parse(fs.readFileSync(tPath, 'utf8'));
-  t.issuance.execution_grant = flipLast(t.issuance.execution_grant);
+  const pristine = fs.readFileSync(tPath);
+  const t = JSON.parse(pristine.toString('utf8'));
+  t.issuance.execution_grant = flipSignatureByte(t.issuance.execution_grant);
   fs.writeFileSync(tPath, JSON.stringify(t, null, 2));
   repin(dir);
 
@@ -155,11 +183,42 @@ try {
       + 'something else, so the authentication path is still unproven.\n');
   }
 
-  if (!cleanOk || !mutatedOk) {
+  // ── POLE 3: the NO-OP flip — a different string, the same signature ───────────────────────
+  //
+  // This pole exists because pole 2 stopped being able to prove it. The edit below leaves the
+  // decoded signature untouched, so the authentication path has nothing to say about it; only the
+  // evidence root, which digests the token's bytes, refuses it. Without this the root could stop
+  // working and every remaining check would still pass.
+  fs.writeFileSync(tPath, pristine);
+  const t3 = JSON.parse(pristine.toString('utf8'));
+  const flipped = flipLast(t3.issuance.execution_grant);
+  const decodesSame = Buffer.from(t3.issuance.execution_grant.split('.').pop(), 'base64url')
+    .equals(Buffer.from(flipped.split('.').pop(), 'base64url'));
+  t3.issuance.execution_grant = flipped;
+  fs.writeFileSync(tPath, JSON.stringify(t3, null, 2));
+  repin(dir);
+
+  const noop = measureInstalled(proj);
+  // If a future capture's signature ends in a character whose flip DOES reach a real byte, this
+  // pole is not a no-op any more and cannot prove what it claims. Say so rather than passing.
+  const noopRootNamed = (noop.missing || []).some((m) => m.includes('evidence_root'));
+  const noopOk = decodesSame
+    ? noop.coverage === 'PARTIAL' && noop.green === false && noopRootNamed
+    : noop.coverage === 'PARTIAL' && noop.green === false;
+  process.stdout.write(`  ${noopOk ? 'OK  ' : 'FAIL'} NO-OP flip (decodes ${decodesSame ? 'identically' : 'DIFFERENTLY on this capture'}): `
+    + `${noop.coverage} / green=${noop.green}${decodesSame ? ' — refused by the root, not the signature' : ''}\n`);
+  if (!noopOk) for (const m of noop.missing || []) process.stdout.write(`         - ${m}\n`);
+  if (!decodesSame) {
+    process.stdout.write('         ^ NOTE: on this capture the character flip reaches a real '
+      + 'signature byte, so this pole no longer isolates the root. It still must refuse.\n');
+  }
+
+  if (!cleanOk || !mutatedOk || !noopOk) {
     process.stdout.write('\nTHE PUBLISHED MEASURE DOES NOT AUTHENTICATE. Do not release.\n');
     process.exit(1);
   }
-  process.stdout.write('\nthe published measure authenticates: clean COVERED, mutated PARTIAL by signature.\n');
+  process.stdout.write('\nthe published measure authenticates: clean COVERED, mutated PARTIAL by '
+    + 'signature, no-op flip PARTIAL by the evidence root.\n');
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }
