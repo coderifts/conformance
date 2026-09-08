@@ -16,16 +16,24 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const DOC = fs.readFileSync(path.join(ROOT, 'VERIFY.md'), 'utf8');
 const CLI = path.join(ROOT, 'bin', 'coderifts-conformance.js');
 
-const run = (fixtureDir) => spawnSync(process.execPath, [CLI, '--assurance', 'END_TO_END'], {
-  encoding: 'utf8',
-  env: fixtureDir ? { ...process.env, CODERIFTS_E2E_FIXTURE_DIR: fixtureDir } : process.env,
-});
+/**
+ * THE DOCUMENTED COMMAND, run as documented.
+ *
+ * MEASURED, and this is why this file missed a release blocker: it drove the CLI through
+ * CODERIFTS_E2E_FIXTURE_DIR while VERIFY.md tells a reader to pass `--dir`. The env var worked,
+ * the flag was ignored, and every negative here passed against bytes the documented command would
+ * never have graded. A doc test that runs a different command than the doc is not a doc test.
+ */
+const run = (fixtureDir, extra = []) => spawnSync(process.execPath,
+  [CLI, '--assurance', 'END_TO_END', ...(fixtureDir ? ['--dir', fixtureDir] : []), ...extra],
+  { encoding: 'utf8' });
 
 describe('VERIFY.md command 1 — the full verify passes', () => {
   it('exits 0 and prints the line the document quotes', () => {
@@ -107,5 +115,84 @@ describe('the proof folder ships what VERIFY.md points at', () => {
       assert.ok(head.includes(token), `VERIFY.md's opening omits ${token}`);
     }
     assert.match(head, /No pull request was merged and no provider witnessed anything/);
+  });
+});
+
+describe('the --dir acceptance matrix — the release blocker, pinned', () => {
+  /**
+   * BOTH auditors reproduced the same thing: `--dir` was parsed by nobody, so
+   *
+   *   --assurance END_TO_END --dir /nonexistent            -> COVERED, exit 0
+   *   --assurance END_TO_END --dir proof/negatives/…       -> COVERED, exit 0
+   *   --assurance END_TO_END --potato                      -> COVERED, exit 0
+   *
+   * Every one of those is a FALSE POSITIVE about a directory the command never opened, and the
+   * middle one is the published reproduction command. All seven inputs are pinned here because
+   * five of them passing is exactly the state that shipped.
+   */
+  const abs = (rel) => path.join(ROOT, rel);
+
+  it('1 · no --dir grades the EMBEDDED fixture, COVERED, exit 0', () => {
+    const r = run(null);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /source: embedded/);
+  });
+
+  it('2 · an external POSITIVE directory is COVERED, exit 0', () => {
+    const r = run(abs('fixtures/recorded/end-to-end'));
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /source: external/);
+  });
+
+  for (const name of ['two-grant', 'tampered-attestation']) {
+    it(`3/4 · ${name} is PARTIAL, exit 3, and names the directory it graded`, () => {
+      const dir = abs(`proof/negatives/${name}`);
+      const r = run(dir);
+      assert.equal(r.status, 3, r.stdout + r.stderr);
+      const out = r.stdout + r.stderr;
+      assert.ok(out.includes(`evidence_dir: ${dir}`),
+        `the verdict does not name the bytes it graded:\n${out}`);
+      assert.match(out, /source: external/);
+    });
+  }
+
+  it('5 · a NONEXISTENT directory is refused — never the embedded fixture', () => {
+    const r = run('/nonexistent-capture-dir');
+    assert.notEqual(r.status, 0, `a missing directory graded as a pass:\n${r.stdout}`);
+    assert.match(r.stdout + r.stderr, /does not exist/);
+    // The specific regression: falling back to whatever was lying around.
+    assert.doesNotMatch(r.stdout + r.stderr, /source: embedded/);
+  });
+
+  it('6 · a directory MISSING required files is refused, and says which', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'partial-capture-'));
+    try {
+      fs.copyFileSync(abs('fixtures/recorded/end-to-end/transcript.json'),
+        path.join(dir, 'transcript.json'));
+      const r = run(dir);
+      assert.notEqual(r.status, 0, r.stdout);
+      assert.match(r.stdout + r.stderr, /is missing .*pin\.json|missing (executor-keys|readback)/);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('7 · an UNKNOWN argument is a usage error, exit 2', () => {
+    const r = run(null, ['--potato']);
+    assert.equal(r.status, 2, `--potato was ignored:\n${r.stdout}${r.stderr}`);
+    assert.match(r.stderr, /unknown argument: --potato/);
+  });
+
+  it('--dir with no value is refused rather than swallowing the next flag', () => {
+    const r = spawnSync(process.execPath, [CLI, '--assurance', 'END_TO_END', '--dir'], { encoding: 'utf8' });
+    assert.notEqual(r.status, 0);
+  });
+
+  it('VERIFY.md documents --dir, and no longer teaches the env var', () => {
+    assert.match(DOC, /--assurance END_TO_END --dir /,
+      'VERIFY.md does not show the --dir command a reader must run');
+    assert.ok(!DOC.includes('CODERIFTS_E2E_FIXTURE_DIR'),
+      'VERIFY.md still teaches the env var, which is not the documented interface');
+    assert.match(DOC, /evidence_dir/, 'VERIFY.md does not tell a reader to check evidence_dir');
   });
 });

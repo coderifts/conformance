@@ -8,6 +8,9 @@
 # when it is present beside this one. Absent, it says so and checks the pin only — an honest
 # skip, never a silent pass.
 #
+# verified-execution-binding.js + verify.js are vendored from the WORKING TREE: the core now
+# VERIFIES the decision receipt instead of believing a caller's `verified: true` flag, and a
+# caller-asserted receipt can no longer reach AUTHORIZED_AND_COMMITTED.
 # verify-grant.js is vendored from the WORKING TREE (the two RESERVED INERT v2 fields —
 # call_hash, executor_image_digest — are admitted and read by nothing; measured zero behaviour
 # change on every shipped capture, positive and negative).
@@ -25,5 +28,5 @@
 98cd9b989a25095e0442f91f68a1adecd6e6a2a5b05902bf2580b8cba973c5e2  verify-evidence.js
 4d5476fc44bbfc2a847feeb313a1c6c08ef7fd832a2348ef3c244bd8d3f03fcd  evidence-root.js
 bfe0c898cda3c3a4c8141726d0adb4cdb7eb9762de6264e430eff6469b90422e  keys/coderifts-keys.json
-fbed73d908d67b89fcb7149416d979a83aebe79429f75197b93aa21d61a57ff9  verified-execution-binding.js
+81237e4986d6df55568ad29494f86541d35e8be7224f5909a1dbfab1930b5ef4  verified-execution-binding.js
 035105de0f163d112038624eb2bf93cee059a565216fd8b03489964f6b0b2fa8  verify-attest.js

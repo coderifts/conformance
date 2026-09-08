@@ -76,22 +76,30 @@ signature.** A capture whose every signature was forged would pass this and fail
 ## 3 · The refusals — the gate is not a rubber stamp
 
 ```
-CODERIFTS_E2E_FIXTURE_DIR=<path-to>/proof/negatives/two-grant \
-  npx @coderifts/conformance --assurance END_TO_END
-
-CODERIFTS_E2E_FIXTURE_DIR=<path-to>/proof/negatives/tampered-attestation \
-  npx @coderifts/conformance --assurance END_TO_END
+npx @coderifts/conformance --assurance END_TO_END --dir <path-to>/proof/negatives/two-grant
+npx @coderifts/conformance --assurance END_TO_END --dir <path-to>/proof/negatives/tampered-attestation
 ```
 
 Both print, **on stderr** (a refusal goes to the stream a pipeline treats as the problem — pipe
 stdout only and you will see nothing):
 
 ```
+evidence_dir: /abs/path/to/proof/negatives/two-grant
+source: external
 END_TO_END: PARTIAL / RECORDED — this suite does not prove this claim.
   the vendored run is not correlated — see gaps; a fixture that cannot be re-verified is not evidence
 ```
 exit **3** — *unproved*, which in this package is deliberately not the same as *disproved* (exit 1).
-`END_TO_END: COVERED` on command 1 goes to stdout.
+`END_TO_END: COVERED` on command 1 goes to stdout, with its own `evidence_dir` / `source` lines.
+
+**`evidence_dir` and `source` are printed on every run**, and reading them is the point. A verdict
+that does not name the bytes it graded is a verdict about a capture you have to assume: `--dir` was
+IGNORED for a whole release, so `--dir /nonexistent` printed `COVERED, exit 0` about the embedded
+fixture. Check that `evidence_dir` is the directory you meant. A path that does not exist, or one
+missing any of `transcript.json`, `readback.json`, `executor-keys.json`, `pin.json`, is REFUSED —
+it never falls back to the embedded capture.
+
+An unrecognised argument is a usage error (exit 2), not a shrug. `--potato` used to be ignored.
 
 **`two-grant`** is a REAL earlier capture of the same producer, from before one grant carried the
 whole chain. Every signature in it verifies; nothing is forged. It is refused because

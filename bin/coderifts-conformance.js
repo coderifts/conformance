@@ -97,8 +97,10 @@ function parseArgs(argv) {
   let profilesReport = false;
   let assurance = null;
   let evidence = DEFAULT_EVIDENCE;
+  let dir = null;
   for (let i = 2; i < argv.length; i += 1) {
-    if (argv[i] === '--subject') subject = argv[++i];
+    if (argv[i] === '--dir') dir = argv[++i];
+    else if (argv[i] === '--subject') subject = argv[++i];
     else if (argv[i] === '--profile') profile = argv[++i];
     else if (argv[i] === '--profiles') profilesReport = true;
     else if (argv[i] === '--assurance') assurance = argv[++i];
@@ -114,6 +116,9 @@ function parseArgs(argv) {
         + '                      vectors_positive/negative = polarity occurrences (a pair vector\n'
         + '                      counts in both). present need not equal pos+neg.\n'
         + '--assurance <ID>      exit non-zero unless that assurance profile is COVERED\n'
+        + '--dir <path>          grade an EXTERNAL capture directory instead of the embedded\n'
+        + '                      fixture (END_TO_END). An unreadable or incomplete directory is\n'
+        + '                      refused; it never falls back to the embedded capture.\n'
         + `                      (${PROFILE_IDS.join(', ')})\n`
         + '--evidence recorded   (default) verify vendored pinned external artifacts\n'
         + '--evidence live       produce new proof on available infra; NOT_RUN without infra\n'
@@ -126,24 +131,37 @@ function parseArgs(argv) {
         + 'Exit 0 iff all selected cases pass. Offline; no API key.\n',
       );
       process.exit(0);
+    } else {
+      // ── AN UNKNOWN ARGUMENT IS A USAGE ERROR, NOT A SHRUG ─────────────────────────────
+      //
+      // MEASURED: `--potato` was silently ignored and the run exited 0. So was `--dir`, for the
+      // same reason — an unrecognised flag fell through the chain and the command answered a
+      // question nobody asked. A typo in a reproduction command must not read as a pass.
+      process.stderr.write(`unknown argument: ${argv[i]}\n`
+        + 'run with --help for the accepted arguments\n');
+      process.exit(2);
     }
+  }
+  if (dir !== null && (typeof dir !== 'string' || dir.length === 0 || dir.startsWith('--'))) {
+    process.stderr.write('--dir requires a path\n');
+    process.exit(2);
   }
   if (evidence !== 'recorded' && evidence !== 'live') {
     process.stderr.write(`unknown --evidence ${evidence}; known: recorded, live\n`);
     process.exit(2);
   }
-  return { subject, profile, json, profilesReport, assurance, evidence };
+  return { subject, profile, json, profilesReport, assurance, evidence, dir };
 }
 
 async function main() {
   const {
-    subject: subjectName, profile, json, profilesReport, assurance, evidence,
+    subject: subjectName, profile, json, profilesReport, assurance, evidence, dir,
   } = parseArgs(process.argv);
 
   // ── assurance-profile reporting ──
   // Exits 0 because it is a REPORT, not a run. PARTIAL and NOT_COVERED rows print as words.
   if (profilesReport) {
-    const rows = buildProfileReport({ evidence });
+    const rows = buildProfileReport({ evidence, dir });
     process.stdout.write(json
       ? `${JSON.stringify(renderProfileJson(rows), null, 2)}\n`
       : `${renderProfileTable(rows)}\n`);
@@ -155,13 +173,21 @@ async function main() {
   // recorded claim; COVERED+LIVE+FAIL would still be COVERED (a found regression is a
   // different exit, from the subject run). Distinct from 1 (a vector failed).
   if (assurance !== null) {
-    const rows = buildProfileReport({ evidence });
+    const rows = buildProfileReport({ evidence, dir });
     const row = rows.find((r) => r.id === assurance);
     if (!row) {
       process.stderr.write(`unknown assurance profile ${assurance}; known: ${PROFILE_IDS.join(', ')}\n`);
       process.exit(2);
     }
     if (json) process.stdout.write(`${JSON.stringify(renderProfileJson([row]), null, 2)}\n`);
+    // WHICH BYTES PRODUCED THIS ANSWER — always, pass or fail. A verdict whose subject a reader
+    // has to infer from whether they remembered a flag is how `--dir /nonexistent` read as COVERED
+    // for a whole release: the output was true of a capture nobody had asked about.
+    if (!json && row.evidence_dir) {
+      const stream = row.coverage === COVERAGE.COVERED ? process.stdout : process.stderr;
+      stream.write(`evidence_dir: ${row.evidence_dir}\n`);
+      stream.write(`source: ${row.source}\n`);
+    }
     const coverage = row.coverage || row.status;
     if (coverage === COVERAGE.COVERED) {
       if (!json) {
@@ -174,6 +200,9 @@ async function main() {
     const label = coverage === COVERAGE.PARTIAL
       ? 'PARTIAL'
       : (row.evidence_tier === 'NOT_RUN' ? 'NOT RUN' : 'NOT COVERED');
+    // THE REASON, not only the grade. MEASURED: `--dir /nonexistent` printed PARTIAL and nothing
+    // else — a reader got a refusal with no way to tell a typo'd path from a genuinely failing
+    // capture. The gaps are what they act on.
     process.stderr.write(
       `${row.id}: ${label} / ${row.evidence_tier} — this suite does not prove this claim.\n`
       + `  ${row.why_empty || 'no vector exists'}\n`,

@@ -148,3 +148,41 @@ describe('the documentation states the same coverage the tool prints', () => {
       `README does not state END_TO_END as ${graded}`);
   });
 });
+
+describe('the does_not_prove text describes THIS capture\'s target kind', () => {
+  it('a local bare-Git capture names no provider as a party', () => {
+    // MEASURED: the static text said "the provider did what the readback says" and "the provider's
+    // copy of the contract" for a capture with no provider anywhere in it. That is not merely
+    // stale — it tells a reader there IS a provider whose behaviour is unproven, which is a
+    // stronger and different claim than "there is no provider".
+    const m = measureContractE2E();
+    const artifact = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'transcript.json'), 'utf8'));
+    const tst = artifact.target_state_transition || {};
+    if (tst.target_kind !== 'git_bare_ref' || tst.provider_witness !== 'NOT_APPLICABLE') return;
+    const text = (m.does_not_prove || []).join('\n');
+    for (const stale of [/the provider did what the readback says/i, /provider's copy of the contract/i,
+      /contract-publish chain/i]) {
+      assert.doesNotMatch(text, stale,
+        `a local bare-Git capture carries provider-domain wording: ${stale}`);
+    }
+    // …and it says what it IS, from the fields rather than from prose.
+    assert.ok(text.includes(tst.target_kind), 'the limits do not name the target kind');
+    assert.ok(text.includes(tst.provider_witness), 'the limits do not name provider_witness');
+    assert.match(text, /git\.ref\.update chain/);
+  });
+
+  it('the wording is GENERATED — a provider-shaped capture still gets provider wording', () => {
+    // Otherwise this would be a find-and-replace that breaks the moment a PATH-B capture is
+    // graded again, and nobody would notice until a reader was told there is no provider in a
+    // capture that has one.
+    const { e2eDoesNotProve } = require('../lib/recorded-contract-e2e.js');
+    const provider = e2eDoesNotProve({
+      rootPresent: true,
+      attestationCarried: true,
+      transition: { target_kind: 'provider_merge', provider_witness: 'PRESENT' },
+    }).join('\n');
+    assert.match(provider, /provider's copy of the contract/);
+    assert.doesNotMatch(provider, /LOCAL bare-Git target/);
+  });
+});

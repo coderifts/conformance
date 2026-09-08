@@ -274,6 +274,52 @@ describe('an empty profile can never render as a pass', () => {
   });
 });
 
+
+/**
+ * A PRIVATE COPY of the vendored capture, for a test that needs to break one.
+ *
+ * ── WHY EVERY MUTATION NEEDS ITS OWN DIRECTORY ──────────────────────────────────────────────
+ *
+ * MEASURED: the full suite failed roughly one run in four, and the failures moved. Three tests in
+ * this file rewrote `fixtures/recorded/end-to-end/transcript.json` (and renamed a file out of it)
+ * and restored them in a `finally` — correct in isolation, and a shared mutable global once
+ * anything else read the same directory concurrently. A neighbour reading the default fixture
+ * mid-mutation saw a broken capture and reported a failure that belonged to nobody.
+ *
+ * A restore-in-finally cannot fix that: the window is the whole body, not the failure path. The
+ * only fix is not to touch the shared bytes at all.
+ */
+function withCapture(mutate) {
+  const fs2 = require('node:fs');
+  const path2 = require('node:path');
+  const os2 = require('node:os');
+  const src = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
+  const dir = fs2.mkdtempSync(path2.join(os2.tmpdir(), 'cr-capture-'));
+  for (const f of fs2.readdirSync(src)) fs2.copyFileSync(path2.join(src, f), path2.join(dir, f));
+  if (mutate) mutate(dir);
+  return {
+    dir,
+    cleanup: () => fs2.rmSync(dir, { recursive: true, force: true }),
+  };
+}
+
+/** Recompute the pin over a copy, exactly as an editor of vendored bytes would. */
+function repin(dir) {
+  const fs2 = require('node:fs');
+  const path2 = require('node:path');
+  const crypto2 = require('node:crypto');
+  const pPath = path2.join(dir, 'pin.json');
+  const pin = JSON.parse(fs2.readFileSync(pPath, 'utf8'));
+  for (const a of pin.artifacts) {
+    const abs = path2.join(dir, a.path);
+    if (!fs2.existsSync(abs)) continue;
+    const b = fs2.readFileSync(abs);
+    a.sha256 = crypto2.createHash('sha256').update(b).digest('hex');
+    a.bytes = b.length;
+  }
+  fs2.writeFileSync(pPath, JSON.stringify(pin, null, 2));
+}
+
 describe('the CLI gates on a single profile with a distinct exit code', () => {
   it('--assurance on a COVERED profile exits 0', () => {
     const r = run(['--assurance', 'DECISION_LOGIC']);
@@ -324,44 +370,30 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
 
   it('THE BITE: a transcript whose consumed jti is not the issued one drops to PARTIAL', () => {
     // COVERED must mean the continuity check FIRED, not that it was skipped. Measured by breaking
-    // exactly one field of the vendored artifact and restoring it — the pin is recomputed for the
-    // mutation and put back, so a failure here cannot leave the fixture wrong.
-    const fs2 = require('node:fs');
-    const path2 = require('node:path');
-    const crypto2 = require('node:crypto');
-    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
-    const tPath = path2.join(dir, 'transcript.json');
-    const pPath = path2.join(dir, 'pin.json');
-    const tBytes = fs2.readFileSync(tPath);
-    const pBytes = fs2.readFileSync(pPath);
-    try {
-      const t = JSON.parse(tBytes.toString('utf8'));
+    // exactly one field — ON A PRIVATE COPY. The earlier version broke the SHARED fixture and put
+    // it back in a `finally`, which is correct alone and a race with every concurrent reader.
+    const { dir, cleanup } = withCapture((d) => {
+      const fs2 = require('node:fs');
+      const path2 = require('node:path');
+      const tPath = path2.join(d, 'transcript.json');
+      const t = JSON.parse(fs2.readFileSync(tPath, 'utf8'));
       t.continuity.identities.consumed_jti = '00000000-0000-4000-8000-000000000000';
-      const mutated = Buffer.from(JSON.stringify(t), 'utf8');
-      fs2.writeFileSync(tPath, mutated);
-      const pin = JSON.parse(pBytes.toString('utf8'));
-      const entry = pin.artifacts.find((a) => a.path === 'transcript.json');
-      entry.sha256 = crypto2.createHash('sha256').update(mutated).digest('hex');
-      entry.bytes = mutated.length;
-      fs2.writeFileSync(pPath, JSON.stringify(pin, null, 2));
-      // AGAINST THE MEASURE AND the exit code. The reason assertion was written when the collage
-      // gap held the honest fixture at exit 3 too, so the code could not tell a broken continuity
-      // from an intact one. The honest fixture is now COVERED, so the code discriminates again —
-      // and BOTH are checked, because the reason is what makes the code mean something.
-      delete require.cache[require.resolve('../lib/recorded-contract-e2e.js')];
-      const m = require('../lib/recorded-contract-e2e.js').measureContractE2E();
+      fs2.writeFileSync(tPath, JSON.stringify(t));
+      repin(d);
+    });
+    try {
+      const m = require('../lib/recorded-contract-e2e.js').measureContractE2E({ dir });
       assert.ok((m.missing || []).some((x) => x.includes('authorization_not_continuous')),
         `the continuity check did not fire:\n${(m.missing || []).join('\n')}`);
-      const r = run(['--assurance', 'END_TO_END']);
-      assert.equal(r.status, 3, 'a discontinuous capture must be unproved, not green');
+      // The subprocess gets the SAME private directory — the documented `--dir`, not an env var.
+      assert.equal(run(['--assurance', 'END_TO_END', '--dir', dir]).status, 3,
+        'a discontinuous capture must be unproved, not green');
     } finally {
-      fs2.writeFileSync(tPath, tBytes);
-      fs2.writeFileSync(pPath, pBytes);
+      cleanup();
     }
-    // RESTORED means green again — and that round trip is the assertion. Breaking one field drops
-    // the profile from 0 to 3 and putting it back returns it to 0, so this proves the bite is the
-    // mutation's doing rather than a profile that was never green in the first place.
-    assert.equal(run(['--assurance', 'END_TO_END']).status, 0, 'the fixture must be restored');
+    // AND the untouched shared capture is still green — the round trip that proves the bite is the
+    // mutation's doing, now without ever having written to the shared bytes.
+    assert.equal(run(['--assurance', 'END_TO_END']).status, 0, 'the shared fixture must be intact');
   });
 
   it('removing evidence never improves a verdict — the property that holds at any coverage', () => {
@@ -369,18 +401,25 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
     // so removing the negative pole is what exercises the path. Asserting a fixed code would be
     // brittle; "removing evidence cannot make it greener" is the invariant, and it is the one
     // that matters.
-    const fs2 = require('node:fs');
-    const path2 = require('node:path');
-    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
-    const src = path2.join(dir, 'negative-transcript.json');
-    const stash = `${src}.stashed`;
-    const before = run(['--assurance', 'END_TO_END']).status;
-    fs2.renameSync(src, stash);
+    // BOTH SIDES ON PRIVATE COPIES — the intact one too, so `before` and `without` describe the
+    // same bytes and neither depends on the shared fixture holding still while a neighbour reads it.
+    const intact = withCapture();
+    const stripped = withCapture((d) => {
+      require('node:fs').rmSync(require('node:path').join(d, 'negative-transcript.json'));
+    });
+    let before;
     let without;
-    try { without = run(['--assurance', 'END_TO_END']).status; } finally { fs2.renameSync(stash, src); }
+    try {
+      before = run(['--assurance', 'END_TO_END', '--dir', intact.dir]).status;
+      without = run(['--assurance', 'END_TO_END', '--dir', stripped.dir]).status;
+    } finally {
+      intact.cleanup();
+      stripped.cleanup();
+    }
     assert.notEqual(without, 0, 'a profile whose evidence is missing must not be green');
     assert.ok(without >= before, 'removing evidence must never improve the verdict');
-    assert.equal(run(['--assurance', 'END_TO_END']).status, before, 'the fixture must be restored');
+    assert.equal(run(['--assurance', 'END_TO_END']).status, before,
+      'the shared fixture must be untouched and grade the same');
   });
 
   it('--assurance PROVIDER_ENFORCED exits 0 in recorded mode (COVERED / RECORDED)', () => {
@@ -413,14 +452,14 @@ describe('the CLI gates on a single profile with a distinct exit code', () => {
 
   it('exit 3 is distinct from exit 1 — unproved is not disproved', () => {
     // Same property, same reason it must not depend on any profile being PARTIAL today.
-    const fs2 = require('node:fs');
-    const path2 = require('node:path');
-    const dir = path2.join(__dirname, '..', 'fixtures', 'recorded', 'end-to-end');
-    const src = path2.join(dir, 'negative-transcript.json');
-    const stash = `${src}.stashed2`;
-    fs2.renameSync(src, stash);
+    // A PRIVATE COPY. Removing the negative pole from the SHARED fixture — even with a rename
+    // put back in a `finally` — is a mutation every concurrent reader can see, and it is one of
+    // the three that made this suite fail about once in four runs.
+    const { dir: capture, cleanup } = withCapture((d) => {
+      require('node:fs').rmSync(require('node:path').join(d, 'negative-transcript.json'));
+    });
     let unproved;
-    try { unproved = run(['--assurance', 'END_TO_END']).status; } finally { fs2.renameSync(stash, src); }
+    try { unproved = run(['--assurance', 'END_TO_END', '--dir', capture]).status; } finally { cleanup(); }
     const failingRun = run(['--subject', 'branch-on-decision']).status;
     assert.notEqual(unproved, 0);
     assert.equal(failingRun, 1);
