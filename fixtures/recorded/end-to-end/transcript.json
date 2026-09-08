@@ -1,12 +1,12 @@
 {
   "v": "cr.prove.artifact.v1",
-  "run_id": "prove-59fec9f6-01aa-4421-8536-b6eb51b66086",
-  "started_at": "2026-09-08T09:49:14.585Z",
-  "finished_at": "2026-09-08T09:49:19.678Z",
+  "run_id": "prove-cc8c3176-7225-4ec0-bf88-464c931439b2",
+  "started_at": "2026-09-08T21:19:58.552Z",
+  "finished_at": "2026-09-08T21:20:04.583Z",
   "verdict": "PASS",
   "db_mode": "throwaway-docker",
   "provenance": {
-    "source_commit": "9f358621c6232b696fc619235ed7aac66599d329",
+    "source_commit": "6ec0a0489bceb9de64aef43bb406ced6e9161a50",
     "source_commit_reason": null,
     "working_tree_dirty": false,
     "working_tree_dirty_reason": null,
@@ -76,63 +76,63 @@
       "name": "authorize",
       "state": "PROVEN",
       "ok": true,
-      "detail": "server-issued 2026-07-k1 grant jti 886a6a5a-ade6-4acd-8e9e-186371dc1d9b decision_id dec_ce1e9ed8-3aa6-4e43-b101-d2a5a65f34ea GRANT_CURRENT at issuance (not DEMO-KEY); source=live"
+      "detail": "server-issued 2026-07-k1 grant jti 39c130c5-1b90-470f-a696-2f260b4a8aff decision_id dec_a3faf336-19f6-4b8d-ab07-aa4f23bcc644 GRANT_CURRENT at issuance (not DEMO-KEY); source=live"
     },
     {
       "n": 2,
       "name": "grant issuance",
       "state": "PROVEN",
       "ok": true,
-      "detail": "the governed grant was issued and consumed: jti 886a6a5a-ade6-4acd-8e9e-186371dc1d9b, claimed in the ledger (refs/coderifts/consumed/…) in the same transaction as the ref update and READ BACK from the object database. POINTS 3-7 below are the executor MECHANISM and carry their own grant (6fea9d13-8cc4-4f8c-a139-6101a3c908f0)."
+      "detail": "the governed grant was issued and consumed: jti 39c130c5-1b90-470f-a696-2f260b4a8aff, claimed in the ledger (refs/coderifts/consumed/…) in the same transaction as the ref update and READ BACK from the object database"
     },
     {
       "n": 3,
       "name": "executor credential-boundary",
       "state": "PROVEN",
       "ok": true,
-      "detail": "host INSERT refused SQLSTATE 42501; articles count unchanged (0 → 0)"
+      "detail": "the HOST role attempted `git update-ref refs/heads/main <contract> <base>` against the governed ref and the target refused it (fatal: update_ref failed for ref 'refs/heads/main': cannot lock ref 'refs/heads/main': Unable to create '/private/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-KSLC4S/repo.git/./refs/heads/main.lock': Permission denied); the ref did not move. The separation is the TARGET's mode bits, not two identities — one machine, one OS user"
     },
     {
       "n": 4,
       "name": "nonce consume (one-use)",
       "state": "PROVEN",
       "ok": true,
-      "detail": "the same grant cannot be consumed twice — the ledger PK is the mechanism"
+      "detail": "the same grant replayed against the same target was refused BY THE LEDGER (GRANT_CONSUMED), not by the compare-and-swap happening to fail — both would refuse, and only one of them is the one-use property. The claim on `refs/coderifts/consumed/<jti>` is made in the same transaction as the ref update"
     },
     {
       "n": 5,
       "name": "CAS under concurrency",
       "state": "PROVEN",
       "ok": true,
-      "detail": "two racing writers, exactly one mutation"
+      "detail": "the ref moved by COMPARE-AND-SWAP: `gitAtomicExecute refs/heads/main 65fe5dd5b067 → c9fe6d2a1ee5` — the old value was supplied by the caller from the authorize, never re-read at execution time, so a ref that had moved since the grant was issued would refuse rather than overwrite"
     },
     {
       "n": 6,
       "name": "attestation",
       "state": "PROVEN",
       "ok": true,
-      "detail": "signature verifies and binds jti 6fea9d13-8cc4-4f8c-a139-6101a3c908f0 (ATTEST_VALID); a forged signature over the same bytes is REFUSED (ATTEST_INVALID_SIGNATURE)"
+      "detail": "a cr.exec.attest.v1 signed by DEMO-EXECUTOR-KEY-DO-NOT-USE verifies, and the grant id in this sentence is READ FROM THE VERIFIED TOKEN: 39c130c5-1b90-470f-a696-2f260b4a8aff. It commits result sha256:7d1ea55452a2…, the digest of this transition (before ⨝ after ⨝ bytes), so a signature over a different move does not match"
     },
     {
       "n": 7,
       "name": "gate",
       "state": "PROVEN",
       "ok": true,
-      "detail": "cr.gate.preimage.v1 sealed in the consuming transaction; the ledger's signature IS the attestation's, and each link was checked separately"
+      "detail": "cr.gate.preimage.v1 sealed by the executor in the SAME transaction as the ledger claim and the ref update — the claim, the state change and the seal cannot come apart, because a bare update-ref would move the ref and leave nothing saying which authorization moved it"
     },
     {
       "n": 8,
       "name": "target_state_transition",
       "state": "TARGET_STATE_TRANSITION_PROVEN",
       "ok": true,
-      "detail": "the governed ref refs/heads/main moved 6f2457c49c37 → b105be00f098 under a signed cr.exec.v2 grant, and a SEPARATE PROCESS that cannot write read the object database afterwards and found it there. Four correlations hold: the ref carries the authorized commit; the bytes at it hash to sha256:3475e74d2656…, which is what the grant bound AND what the preflight payload hashes to; the ref moved FROM the base the grant was issued against; and the authorized commit has exactly one parent, that base. The binding is SIGNED (sha256:f96351a6dcbc…). TRUSTED-EXECUTOR SCOPE: the executor and the observer are one machine and one OS user, separated by the target's mode bits — NOT by two identities, and NOT by any third party. No provider witnessed this and no pull request was merged (that is PATH B). The merge_evidence slot stays absent for exactly that reason: there is no provider merge evidence, and this point does not claim there is."
+      "detail": "the governed ref refs/heads/main moved 65fe5dd5b067 → c9fe6d2a1ee5 under a signed cr.exec.v2 grant, and a SEPARATE PROCESS that cannot write read the object database afterwards and found it there. Four correlations hold: the ref carries the authorized commit; the bytes at it hash to sha256:3475e74d2656…, which is what the grant bound AND what the preflight payload hashes to; the ref moved FROM the base the grant was issued against; and the authorized commit has exactly one parent, that base. The binding is SIGNED (sha256:77e631c8f58d…). TRUSTED-EXECUTOR SCOPE: the executor and the observer are one machine and one OS user, separated by the target's mode bits — NOT by two identities, and NOT by any third party. No provider witnessed this and no pull request was merged (that is PATH B). The merge_evidence slot stays absent for exactly that reason: there is no provider merge evidence, and this point does not claim there is."
     },
     {
       "n": 9,
       "name": "deploy",
       "state": "PROVEN",
       "ok": true,
-      "detail": "the executor seal binds deployment demo-deployment and verifies (cr.atomic.execution.attestation.v1); a forged signature over the same bytes is REFUSED. A PUBLIC verifier for this envelope now exists — receipt-verifier verify-atomic-attestation.js — so the bundle slot grades it rather than refusing it for want of one"
+      "detail": "the executor seal (cr.atomic.execution.attestation.v1) binds the governed ref refs/heads/main moving 65fe5dd5b067 → c9fe6d2a1ee5 under grant 39c130c5-1b90-470f-a696-2f260b4a8aff; a forged signature over the same bytes is REFUSED"
     },
     {
       "n": 10,
@@ -148,9 +148,9 @@
     "reason": null,
     "detail": null,
     "identities": {
-      "issued_jti": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
-      "consumed_jti": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
-      "attestation_jti": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
+      "issued_jti": "39c130c5-1b90-470f-a696-2f260b4a8aff",
+      "consumed_jti": "39c130c5-1b90-470f-a696-2f260b4a8aff",
+      "attestation_jti": "39c130c5-1b90-470f-a696-2f260b4a8aff",
       "issued_scope_hash": null,
       "correlation_scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d"
     }
@@ -159,11 +159,11 @@
     "ok": true,
     "v": "cr.exec.correlation.v1",
     "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
-    "contract_commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
+    "contract_commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
     "contract_path": "demo/contracts/openapi.yaml",
-    "readback_commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
-    "correlation_hash": "sha256:f96351a6dcbc6b6b0f7cf5987fd1deaaf14e8dc0908c59026dfa326f44420964",
-    "signature": "LvVKldqqHFD-vEkn7ldtwFXOTv30jHBAjAZJRJfpFmfac38jZnjv2QeDYX20HfBROjqO487t1XNvKnKJTrxwDQ"
+    "readback_commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
+    "correlation_hash": "sha256:77e631c8f58dc9e252293e5016f1a70114bc373aefb8d07df4eac80511855549",
+    "signature": "dOQ1JpiLZ9lmHys75cGP0h2cZu0dYI1Jl61lm60qoQvP4E7PpxLH_xNyNjrbkmWxASbgrdWD0ue44FFh2ennCA"
   },
   "target_state_transition": {
     "state": "PROVEN_BY_TRUSTED_EXECUTOR",
@@ -172,28 +172,28 @@
     "externally_witnessed": false,
     "target_kind": "git_bare_ref",
     "expected": {
-      "base": "6f2457c49c377db3029d03414a04466f83d85712",
-      "contract_commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
+      "base": "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
+      "contract_commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
       "contract_path": "demo/contracts/openapi.yaml",
       "contract_blob_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "after_payload_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "canonical_target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-      "repo_id": "git-root:6f2457c49c377db3029d03414a04466f83d85712",
+      "repo_id": "git-root:65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
       "ref": "refs/heads/main",
       "parents": [
-        "6f2457c49c377db3029d03414a04466f83d85712"
+        "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8"
       ],
-      "grant_id": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b"
+      "grant_id": "39c130c5-1b90-470f-a696-2f260b4a8aff"
     },
     "observation": {
       "v": "cr.git.observation.v1",
       "target_ref": "refs/heads/main",
-      "repo_path": "/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-2DWi7U/repo.git",
-      "repo_lineage_id": "git-root:6f2457c49c377db3029d03414a04466f83d85712",
-      "before_commit": "6f2457c49c377db3029d03414a04466f83d85712",
+      "repo_path": "/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-KSLC4S/repo.git",
+      "repo_lineage_id": "git-root:65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
+      "before_commit": "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
       "before_source": "reflog",
-      "observed_commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
-      "commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
+      "observed_commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
+      "commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
       "contract_path": "demo/contracts/openapi.yaml",
       "contract_blob_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "contract_bytes_len": 535,
@@ -202,7 +202,7 @@
       ],
       "observation_source": "git-object-database",
       "observer_mode": "read_only",
-      "observed_at": "2026-09-08T09:49:19.088Z",
+      "observed_at": "2026-09-08T21:20:03.772Z",
       "does_not_prove": [
         "that the executor told the truth — the observer and the executor run on the same machine, and this raises the claim from \"somebody typed the right commit\" to \"a process that cannot write read the target afterwards and found it moved\"",
         "that any provider merged anything — there is no external witness here (proof_scope: TRUSTED_EXECUTOR, provider_witness: ABSENT)",
@@ -275,30 +275,30 @@
       {
         "id": "executor_attested",
         "ok": true,
-        "detail": "a cr.exec.attest.v1 token signed by DEMO-EXECUTOR-KEY-DO-NOT-USE commits grant 886a6a5a-ade and result sha256:aa72f91dca90…, and it verifies here"
+        "detail": "a cr.exec.attest.v1 token signed by DEMO-EXECUTOR-KEY-DO-NOT-USE commits grant 39c130c5-1b9 and result sha256:7d1ea55452a2…, and it verifies here"
       }
     ],
     "failures": [],
     "grant": {
       "v": "cr.exec.v2",
       "kid": "2026-07-k1",
-      "grant_id": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
-      "receipt_hash": "sha256:7bc45c2e9837918c51efb3a0d8b4f212871fd794c52a9b5963e9df9b99a5f83d",
+      "grant_id": "39c130c5-1b90-470f-a696-2f260b4a8aff",
+      "receipt_hash": "sha256:2949f63bbe3b0cc0b166749fbf390f25529b1e9534fe583af15d08726f1f8ba0",
       "tenant_id": "default",
       "executor_id": "demo-deployment",
       "adapter_id": "git-ref-cas",
       "operation": "git.ref.update",
       "target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-      "expected_state_token": "6f2457c49c377db3029d03414a04466f83d85712",
+      "expected_state_token": "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
       "after_payload_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
-      "nonce_hash": "sha256:6c7e0365a35ac293e382392401af592c3cdf1f4236ef0b8acbd5749b0ce4aa22",
+      "nonce_hash": "sha256:6561bc5ffa4ecb28bcd183687705a1d87d702b4def849b7f6e4a29082076a027",
       "policy_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "audience_hash": "sha256:3edaf3526166383596baf3806caccd063610c0236edcc7dc7194b460f2e18801",
-      "not_before": "2026-09-08T09:49:18Z",
-      "expires_at": "2026-09-08T09:54:18Z",
+      "not_before": "2026-09-08T21:20:03Z",
+      "expires_at": "2026-09-08T21:25:03Z",
       "max_attempts": 1
     },
-    "attestation": "cr.exec.attest.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJ2IjoiY3IuZXhlYy5hdHRlc3QudjEiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwiZ3JhbnRfanRpIjoiODg2YTZhNWEtYWRlNi00YWNkLThlOWUtMTg2MzcxZGMxZDliIiwicmVjZWlwdF9kaWdlc3QiOiJzaGEyNTY6N2JjNDVjMmU5ODM3OTE4YzUxZWZiM2EwZDhiNGYyMTI4NzFmZDc5NGM1MmE5YjU5NjNlOWRmOWI5OWE1ZjgzZCIsInNjb3BlX2hhc2giOiJzaGEyNTY6MzQ3NWU3NGQyNjU2ZTQzYjMyNTI2YWY3ZTkwZGRhYjdmZWYyOTJjZDM4Y2JiZjRmODM2NWM1N2Q1MGZmZDU1ZCIsImNvbW1pdHRlZF9hdCI6IjIwMjYtMDktMDhUMDk6NDk6MTcuMDcxWiIsInN0YXRlX25vbmNlIjoiNmYyNDU3YzQ5YzM3N2RiMzAyOWQwMzQxNGEwNDQ2NmY4M2Q4NTcxMiIsInJlc3VsdF9kaWdlc3QiOiJzaGEyNTY6YWE3MmY5MWRjYTkwZjMzNGVhOWJkYTc0YjNiY2Y4YjI1ZmFkZjE5MTQ5ZmNjZDJmMjM4YTIwMWNlODYxMDUyNiJ9|5CmDoa1J1YXKATa-43qOh330oCkpVazmnCqEy5VsIuzLedz8wTNAax6UbhIM7pdyBRndO3li0FEHXdkBsJR4DQ",
+    "attestation": "cr.exec.attest.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJ2IjoiY3IuZXhlYy5hdHRlc3QudjEiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwiZ3JhbnRfanRpIjoiMzljMTMwYzUtMWI5MC00NzBmLWE2OTYtMmYyNjBiNGE4YWZmIiwicmVjZWlwdF9kaWdlc3QiOiJzaGEyNTY6Mjk0OWY2M2JiZTNiMGNjMGIxNjY3NDlmYmYzOTBmMjU1MjliMWU5NTM0ZmU1ODNhZjE1ZDA4NzI2ZjFmOGJhMCIsInNjb3BlX2hhc2giOiJzaGEyNTY6MzQ3NWU3NGQyNjU2ZTQzYjMyNTI2YWY3ZTkwZGRhYjdmZWYyOTJjZDM4Y2JiZjRmODM2NWM1N2Q1MGZmZDU1ZCIsImNvbW1pdHRlZF9hdCI6IjIwMjYtMDktMDhUMjE6MjA6MDEuNTEwWiIsInN0YXRlX25vbmNlIjoiNjVmZTVkZDViMDY3YWQ3YWZiNGEyZGYzMjY5ZWQzZWZjYTI2NDJmOCIsInJlc3VsdF9kaWdlc3QiOiJzaGEyNTY6N2QxZWE1NTQ1MmEyMGQ1YTQxMDU1NmFiMzQxMWFlZDk2ZTEzM2NlOTBkZjBkNWUwMmI0OTljNTliN2M4M2M2YSJ9|YhKBQSyxBsgAow0C9q_gdlOA7LwZJYusvBi3u4MGriLZ-BgV0JhaJw9sj957iKIDa6roVbEeY8A-3Di-Wq1QAg",
     "state_challenge": null,
     "nonce_consumed": true,
     "roles": [
@@ -307,7 +307,7 @@
         "may": "challenge and authorize",
         "attempted": "git update-ref refs/heads/main <contract> <base>",
         "outcome": "DENIED",
-        "detail": "fatal: update_ref failed for ref 'refs/heads/main': cannot lock ref 'refs/heads/main': Unable to create '/private/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-2DWi7U/repo.git/./refs/heads/main.lock': Permission denied"
+        "detail": "fatal: update_ref failed for ref 'refs/heads/main': cannot lock ref 'refs/heads/main': Unable to create '/private/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-KSLC4S/repo.git/./refs/heads/main.lock': Permission denied"
       },
       {
         "role": "observer",
@@ -319,7 +319,7 @@
       {
         "role": "executor",
         "may": "perform exactly the authorized update, through the ledger",
-        "attempted": "gitAtomicExecute refs/heads/main 6f2457c49c37 → b105be00f098",
+        "attempted": "gitAtomicExecute refs/heads/main 65fe5dd5b067 → c9fe6d2a1ee5",
         "outcome": "SUCCESS",
         "detail": null
       }
@@ -333,61 +333,61 @@
   },
   "evidence_root": {
     "v": "cr.evidence.root.v1",
-    "run_id": "prove-59fec9f6-01aa-4421-8536-b6eb51b66086",
+    "run_id": "prove-cc8c3176-7225-4ec0-bf88-464c931439b2",
     "executor_kid": "DEMO-EXECUTOR-KEY-DO-NOT-USE",
     "producer": {
       "name": "@coderifts/prove",
-      "version": "0.1.8",
-      "commit": "9f358621c6232b696fc619235ed7aac66599d329"
+      "version": "0.1.9",
+      "commit": "6ec0a0489bceb9de64aef43bb406ced6e9161a50"
     },
     "operation": "git.ref.update",
     "target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-    "contract_commit": "b105be00f098edc39a99f55ec05f5a52f498c871",
+    "contract_commit": "c9fe6d2a1ee58333989eb1805d8ed56bfe5977ec",
     "artifact_digests": {
-      "chain_receipt": "sha256:7bc45c2e9837918c51efb3a0d8b4f212871fd794c52a9b5963e9df9b99a5f83d",
-      "execution_grant": "sha256:13ef514dd139f2c2b02c61e39e63cd3910747ce7c4497cefa66e5aa300e7d3b1",
-      "transcript_token": "sha256:8d8862f7c89daa738ee00dcbc306189a1d60a4f17fd99d4616b355b941dc29c2",
-      "correlation": "sha256:b9d6ce54b155d0e89942a2af1c19c6477bef7e7186cd04926b11969f1b530663",
-      "atomic_attestation": "sha256:6fa1677d975d69dadc4fa2beb660c0c582b4af948ae79997ae2b4d2f25d9db11",
-      "provider_readback": "sha256:180c8ddcd346575ffa7938993b419ccf6d8e2dda03893aa3d2713214cbe691c6"
+      "chain_receipt": "sha256:2949f63bbe3b0cc0b166749fbf390f25529b1e9534fe583af15d08726f1f8ba0",
+      "execution_grant": "sha256:0a5a14fbecbe8a65083b4581e785c63b8bc6e29d13866b7293de3273bde61aaf",
+      "transcript_token": "sha256:416f090b04973097037c57ec8abd544f7e74839c03ea288cf76940b8ee0769f8",
+      "correlation": "sha256:eea50395fe366ea36b04c8a8c438f31297b181e4f651b425d455fadab267f373",
+      "atomic_attestation": "sha256:44303f5f83b64413c038776a35636a3526a035ef14d51871f97d8f27110da3e7",
+      "provider_readback": "sha256:0922229bf9ca7c75398cc4c5e0f841c6787b914f9ebf4751347f05dbc03e62f7"
     },
-    "grant_id": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
-    "receipt_hash": "sha256:7bc45c2e9837918c51efb3a0d8b4f212871fd794c52a9b5963e9df9b99a5f83d",
+    "grant_id": "39c130c5-1b90-470f-a696-2f260b4a8aff",
+    "receipt_hash": "sha256:2949f63bbe3b0cc0b166749fbf390f25529b1e9534fe583af15d08726f1f8ba0",
     "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
     "policy_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "state_token_hash": "6f2457c49c377db3029d03414a04466f83d85712",
-    "signature": "LH-NRffeTrKfWudVs-dFA5bvsHznlLTsr3khDsCBAs0FcYlJh4JIavTZ2_rjbWWw85NZfIkpddhOldt12QZQCg"
+    "state_token_hash": "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
+    "signature": "_6AtStT7gk9DHYS_Ktb5guY03eY84M1sXonDHCb2oBiuPYtshF2Ip4uVIZQ0pbN9G2Z01FhCG-yKNH77vnwBAw"
   },
-  "transcript_token": "cr.prove.transcript.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJkZXBsb3ltZW50X2lkIjoiZGVtby1kZXBsb3ltZW50IiwiZXhlY3V0b3Jfa2lkIjoiREVNTy1FWEVDVVRPUi1LRVktRE8tTk9ULVVTRSIsIm1lYXN1cmVkX2F0IjoiMjAyNi0wOS0wOFQwOTo0OToxOS4xNzBaIiwic2VjdGlvbnMiOlt7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImV4ZWN1dG9yX3JvbGUiOiJjcl9leGVjdXRvciIsImV4ZWN1dG9yX3NxbHN0YXRlIjoiNDI1MDEiLCJob3N0X3JvbGUiOiJjcl9ob3N0IiwiaG9zdF9zcWxzdGF0ZSI6IjQyNTAxIiwiaG9zdF90aXRsZV9hZnRlciI6MCwiaG9zdF90aXRsZV9iZWZvcmUiOjAsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoiZGVueSIsIm5hbWUiOiJERU5ZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7InZlcmRpY3QiOiJQQVNTIiwidmVyaWZ5IjoiUE9TVFVSRV9QQVNTIn0sImlkIjoicG9zdHVyZSIsIm5hbWUiOiJQT1NUVVJFIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImZpcnN0IjoyMDEsInNlY29uZCI6NDA5LCJzdGF0dXMiOiJHUkFOVF9DT05TVU1FRCJ9LCJpZCI6InJlcGxheSIsIm5hbWUiOiJSRVBMQVkiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MCwiY29uZmxpY3QiOjE5LCJncmV3IjoxLCJvayI6MX0sImlkIjoiY29uY3VycmVuY3kiLCJuYW1lIjoiQ09OQ1VSUkVOQ1kiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MSwiZXhwZWN0ZWRfc3RhdGVfdG9rZW4iOiJzaGEyNTY6MzZkZjE2ZDllNTQ5Yzg5YjI0NTJiZWM5YjcwMjE1MTUyZDlmZmI2NjBkYzJiY2ZlMDQ0NmYwNTg5MDFmOTJiMiIsImh0dHAiOjQwOSwianRpX2NvbnN1bWVkIjowLCJzdGFsZV9zdGF0ZV90b2tlbiI6dHJ1ZSwic3RhdHVzIjoiU1RBVEVfRFJJRlQiLCJ1bmNoYW5nZWQiOnRydWV9LCJpZCI6ImNhc19zdGFsZSIsIm5hbWUiOiJDQVMtU1RBTEUiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjAsImJlZm9yZV9jb3VudCI6MCwiZXJyb3IiOiJzaW11bGF0ZWQgY3Jhc2gtYmVmb3JlLXNlYWwiLCJsZWRnZXJfYWZ0ZXIiOjAsImxlZGdlcl9iZWZvcmUiOjAsInNraXBfc2VhbCI6dHJ1ZSwic3RhdHVzIjoiY29uc3VtZWRfdW5zaWduZWRfcm9sbGVkX2JhY2siLCJ0aHJldyI6dHJ1ZSwidW5jaGFuZ2VkIjp0cnVlfSwiaWQiOiJub19jb25zdW1lX29ubHkiLCJuYW1lIjoiTk8gQ09OU1VNRS1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImxlZGdlcl9hZnRlciI6MiwibGVkZ2VyX2JlZm9yZSI6MiwibXV0YXRpb25fb25seSI6dHJ1ZSwic3Fsc3RhdGUiOiI0MjUwMSIsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoibm9fbXV0YXRpb25fb25seSIsIm5hbWUiOiJOTyBNVVRBVElPTi1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImh0dHAiOjIwMSwianRpIjoiNmZlYTlkMTMtOGNjNC00ZjhjLWExMzktNjEwMWEzYzkwOGYwIiwic2VhbGVkIjp0cnVlLCJ3aXRoX2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkIEFORCBib3VuZCB0byBncmFudCA2ZmVhOWQxMy04Y2M0LTRmOGMtYTEzOS02MTAxYTNjOTA4ZjAiLCJ3aXRob3V0X2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkOyBncmFudC1iaW5kaW5nIE5PVCBjaGVja2VkIn0sImlkIjoiYXV0aG9yaXplZCIsIm5hbWUiOiJBVVRIT1JJWkVEIFdSSVRFICsgVkVSSUZZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2dyYW50IjoiRkFJTCIsImFmdGVyX3Jldm9rZSI6IlBBU1MiLCJkcmlmdF9uYW1lcyI6WyJob3N0X3JvbGUgZ2FpbmVkIElOU0VSVCBvbiBhcnRpY2xlcyJdfSwiaWQiOiJkcmlmdCIsIm5hbWUiOiJEUklGVCBCQVNFTElORSIsInZlcmRpY3QiOiJQQVNTIn0seyJldmlkZW5jZSI6eyJjb3VudHMiOnsiQ09ORklSTUVEIjoxLCJJTkRFVEVSTUlOQVRFIjowLCJSRUpFQ1RFRCI6MCwiUkVMRUFTRUQiOjB9LCJncmFudHMiOlt7ImFkYXB0ZXIiOiJwb3N0Z3JlcyIsImV2aWRlbmNlIjp7ImF0dGVzdF9zdGF0dXMiOiJBVFRFU1RfVkFMSUQiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwicmVhc29uIjoiY29uc3VtZWQsIHNlYWxlZCwgYW5kIGEgQ1JZUFRPR1JBUEhJQ0FMTFkgVkVSSUZJRUQgYXR0ZXN0YXRpb24gYm91bmQgdG8gdGhpcyBncmFudCBjYXJyaWVzIHRoaXMgcm93J3MgZXhhY3QgcHJlaW1hZ2UiLCJzdGF0dXMiOiJzZWFsZWQifSwianRpIjoiNmZlYTlkMTMtOGNjNC00ZjhjLWExMzktNjEwMWEzYzkwOGYwIiwib3V0Y29tZSI6IkNPTkZJUk1FRCJ9XSwibmVlZHNfYXR0ZW50aW9uIjowLCJvdXRjb21lIjoiQ09ORklSTUVEIn0sImlkIjoicmVjb3ZlcnkiLCJraW5kIjoicmVjb3ZlcnkiLCJuYW1lIjoiUkVDT1ZFUlkiLCJ2ZXJkaWN0IjoiQ09ORklSTUVEIn1dLCJ2IjoiY3IucHJvdmUudHJhbnNjcmlwdC52MSIsInZlcmRpY3QiOiJQQVNTIn0|QNTGHOvkHNWSGhET4ykDtD5ovkql2ZoAGmK2XmdNaQgpwyiytGu11OHeN5skKzgTOgO796Asus7w6INxtzfMCA",
-  "transcript_preimage_hash": "sha256:5a5e4ac5739120febd41022e5ca7f5f119a86350d73799f0eefb2573e05ae400",
+  "transcript_token": "cr.prove.transcript.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJkZXBsb3ltZW50X2lkIjoiZGVtby1kZXBsb3ltZW50IiwiZXhlY3V0b3Jfa2lkIjoiREVNTy1FWEVDVVRPUi1LRVktRE8tTk9ULVVTRSIsIm1lYXN1cmVkX2F0IjoiMjAyNi0wOS0wOFQyMToyMDowMy44NzJaIiwic2VjdGlvbnMiOlt7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImV4ZWN1dG9yX3JvbGUiOiJjcl9leGVjdXRvciIsImV4ZWN1dG9yX3NxbHN0YXRlIjoiNDI1MDEiLCJob3N0X3JvbGUiOiJjcl9ob3N0IiwiaG9zdF9zcWxzdGF0ZSI6IjQyNTAxIiwiaG9zdF90aXRsZV9hZnRlciI6MCwiaG9zdF90aXRsZV9iZWZvcmUiOjAsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoiZGVueSIsIm5hbWUiOiJERU5ZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7InZlcmRpY3QiOiJQQVNTIiwidmVyaWZ5IjoiUE9TVFVSRV9QQVNTIn0sImlkIjoicG9zdHVyZSIsIm5hbWUiOiJQT1NUVVJFIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImZpcnN0IjoyMDEsInNlY29uZCI6NDA5LCJzdGF0dXMiOiJHUkFOVF9DT05TVU1FRCJ9LCJpZCI6InJlcGxheSIsIm5hbWUiOiJSRVBMQVkiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MCwiY29uZmxpY3QiOjE5LCJncmV3IjoxLCJvayI6MX0sImlkIjoiY29uY3VycmVuY3kiLCJuYW1lIjoiQ09OQ1VSUkVOQ1kiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MSwiZXhwZWN0ZWRfc3RhdGVfdG9rZW4iOiJzaGEyNTY6ZDkwN2JjNDZhNmEzNjgxMGQ4OTgyZTljYWQ2MTJjNDk0NGY0NWJkNzk2NzA5NGI3NDFiMzI3MTg1OWYzYjI0NyIsImh0dHAiOjQwOSwianRpX2NvbnN1bWVkIjowLCJzdGFsZV9zdGF0ZV90b2tlbiI6dHJ1ZSwic3RhdHVzIjoiU1RBVEVfRFJJRlQiLCJ1bmNoYW5nZWQiOnRydWV9LCJpZCI6ImNhc19zdGFsZSIsIm5hbWUiOiJDQVMtU1RBTEUiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjAsImJlZm9yZV9jb3VudCI6MCwiZXJyb3IiOiJzaW11bGF0ZWQgY3Jhc2gtYmVmb3JlLXNlYWwiLCJsZWRnZXJfYWZ0ZXIiOjAsImxlZGdlcl9iZWZvcmUiOjAsInNraXBfc2VhbCI6dHJ1ZSwic3RhdHVzIjoiY29uc3VtZWRfdW5zaWduZWRfcm9sbGVkX2JhY2siLCJ0aHJldyI6dHJ1ZSwidW5jaGFuZ2VkIjp0cnVlfSwiaWQiOiJub19jb25zdW1lX29ubHkiLCJuYW1lIjoiTk8gQ09OU1VNRS1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImxlZGdlcl9hZnRlciI6MiwibGVkZ2VyX2JlZm9yZSI6MiwibXV0YXRpb25fb25seSI6dHJ1ZSwic3Fsc3RhdGUiOiI0MjUwMSIsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoibm9fbXV0YXRpb25fb25seSIsIm5hbWUiOiJOTyBNVVRBVElPTi1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImh0dHAiOjIwMSwianRpIjoiNjE0Y2JmMGItOTk4Yy00NGEzLTg0OTAtMWFiNjYyODk3ZDExIiwic2VhbGVkIjp0cnVlLCJ3aXRoX2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkIEFORCBib3VuZCB0byBncmFudCA2MTRjYmYwYi05OThjLTQ0YTMtODQ5MC0xYWI2NjI4OTdkMTEiLCJ3aXRob3V0X2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkOyBncmFudC1iaW5kaW5nIE5PVCBjaGVja2VkIn0sImlkIjoiYXV0aG9yaXplZCIsIm5hbWUiOiJBVVRIT1JJWkVEIFdSSVRFICsgVkVSSUZZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2dyYW50IjoiRkFJTCIsImFmdGVyX3Jldm9rZSI6IlBBU1MiLCJkcmlmdF9uYW1lcyI6WyJob3N0X3JvbGUgZ2FpbmVkIElOU0VSVCBvbiBhcnRpY2xlcyJdfSwiaWQiOiJkcmlmdCIsIm5hbWUiOiJEUklGVCBCQVNFTElORSIsInZlcmRpY3QiOiJQQVNTIn0seyJldmlkZW5jZSI6eyJjb3VudHMiOnsiQ09ORklSTUVEIjoxLCJJTkRFVEVSTUlOQVRFIjowLCJSRUpFQ1RFRCI6MCwiUkVMRUFTRUQiOjB9LCJncmFudHMiOlt7ImFkYXB0ZXIiOiJwb3N0Z3JlcyIsImV2aWRlbmNlIjp7ImF0dGVzdF9zdGF0dXMiOiJBVFRFU1RfVkFMSUQiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwicmVhc29uIjoiY29uc3VtZWQsIHNlYWxlZCwgYW5kIGEgQ1JZUFRPR1JBUEhJQ0FMTFkgVkVSSUZJRUQgYXR0ZXN0YXRpb24gYm91bmQgdG8gdGhpcyBncmFudCBjYXJyaWVzIHRoaXMgcm93J3MgZXhhY3QgcHJlaW1hZ2UiLCJzdGF0dXMiOiJzZWFsZWQifSwianRpIjoiNjE0Y2JmMGItOTk4Yy00NGEzLTg0OTAtMWFiNjYyODk3ZDExIiwib3V0Y29tZSI6IkNPTkZJUk1FRCJ9XSwibmVlZHNfYXR0ZW50aW9uIjowLCJvdXRjb21lIjoiQ09ORklSTUVEIn0sImlkIjoicmVjb3ZlcnkiLCJraW5kIjoicmVjb3ZlcnkiLCJuYW1lIjoiUkVDT1ZFUlkiLCJ2ZXJkaWN0IjoiQ09ORklSTUVEIn1dLCJ2IjoiY3IucHJvdmUudHJhbnNjcmlwdC52MSIsInZlcmRpY3QiOiJQQVNTIn0|DfGLPXQ3KA8GgrhFGwEkTGqSPLpkRrMr9TDomRQim4oxRsKiGqY1Il20gT5-OP4HQnGqxU6o0MfY0PcI7UYiCw",
+  "transcript_preimage_hash": "sha256:b244e9bf9e829b3b736bc829df8894197147decc74c5e1b4471eada1e0da0327",
   "transcript_verifies": true,
   "issuance": {
     "source": "live",
-    "captured_at": "2026-09-08T09:49:17.672Z",
-    "decision_id": "dec_ce1e9ed8-3aa6-4e43-b101-d2a5a65f34ea",
+    "captured_at": "2026-09-08T21:20:02.235Z",
+    "decision_id": "dec_a3faf336-19f6-4b8d-ab07-aa4f23bcc644",
     "verdict_fingerprint": "sha256:abb2d6f4ad87b9be5c24606ff046e91206ea5adf373db1e6402b6916a2a60b3f",
     "kid": "2026-07-k1",
-    "jti": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
+    "jti": "39c130c5-1b90-470f-a696-2f260b4a8aff",
     "verify_status": "GRANT_CURRENT",
-    "execution_grant": "eyJ2IjoiY3IuZXhlYy52MiIsImtpZCI6IjIwMjYtMDctazEiLCJncmFudF9pZCI6Ijg4NmE2YTVhLWFkZTYtNGFjZC04ZTllLTE4NjM3MWRjMWQ5YiIsInJlY2VpcHRfaGFzaCI6InNoYTI1Njo3YmM0NWMyZTk4Mzc5MThjNTFlZmIzYTBkOGI0ZjIxMjg3MWZkNzk0YzUyYTliNTk2M2U5ZGY5Yjk5YTVmODNkIiwidGVuYW50X2lkIjoiZGVmYXVsdCIsImV4ZWN1dG9yX2lkIjoiZGVtby1kZXBsb3ltZW50IiwiYWRhcHRlcl9pZCI6ImdpdC1yZWYtY2FzIiwib3BlcmF0aW9uIjoiZ2l0LnJlZi51cGRhdGUiLCJ0YXJnZXRfdXJpIjoiZ2l0Oi8vYXRvbWljLXYyLXJlZmVyZW5jZS9yZXBvLmdpdC9yZWZzL2hlYWRzL21haW4iLCJleHBlY3RlZF9zdGF0ZV90b2tlbiI6IjZmMjQ1N2M0OWMzNzdkYjMwMjlkMDM0MTRhMDQ0NjZmODNkODU3MTIiLCJhZnRlcl9wYXlsb2FkX2hhc2giOiJzaGEyNTY6MzQ3NWU3NGQyNjU2ZTQzYjMyNTI2YWY3ZTkwZGRhYjdmZWYyOTJjZDM4Y2JiZjRmODM2NWM1N2Q1MGZmZDU1ZCIsIm5vbmNlX2hhc2giOiJzaGEyNTY6NmM3ZTAzNjVhMzVhYzI5M2UzODIzOTI0MDFhZjU5MmMzY2RmMWY0MjM2ZWYwYjhhY2JkNTc0OWIwY2U0YWEyMiIsInBvbGljeV9oYXNoIjoic2hhMjU2OmUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJhdWRpZW5jZV9oYXNoIjoic2hhMjU2OjNlZGFmMzUyNjE2NjM4MzU5NmJhZjM4MDZjYWNjZDA2MzYxMGMwMjM2ZWRjYzdkYzcxOTRiNDYwZjJlMTg4MDEiLCJub3RfYmVmb3JlIjoiMjAyNi0wOS0wOFQwOTo0OToxOFoiLCJleHBpcmVzX2F0IjoiMjAyNi0wOS0wOFQwOTo1NDoxOFoiLCJtYXhfYXR0ZW1wdHMiOjF9.G7ABk2T4J36FwYEFYi23E7xA1D-X-YK-axrZirBdeGzOVOLgQoU2IbBQL2v7PrqUR0tSM0OKFpfvLfbxJfRrDw",
-    "chain_receipt": "eyJ2Ijo0LCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6YWJiMmQ2ZjRhZDg3YjliZTVjMjQ2MDZmZjA0NmU5MTIwNmVhNWFkZjM3M2RiMWU2NDAyYjY5MTZhMmE2MGIzZiIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA5LTA4VDA5OjQ5OjE4LjYzNloiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDI2LTA5LTA4VDEwOjA0OjE4WiIsImJoIjoic2hhMjU2OmNkOTFhNjZiMTgxYjA4NTViZDAwMTg2NmQyNjBmNTQ1MGQ1YTU1MWZjYjY2NTdkMDY3ZDNkOWUzZGE2Mzk4YzQifQ.VauZXeygaTn_OHNLbd78EscyjISTr8QnjIeNa58-LuxUK6BbUWAoKWq-d-NfC7NFbfu-3L9x4L7A2dylvcCXDg",
+    "execution_grant": "eyJ2IjoiY3IuZXhlYy52MiIsImtpZCI6IjIwMjYtMDctazEiLCJncmFudF9pZCI6IjM5YzEzMGM1LTFiOTAtNDcwZi1hNjk2LTJmMjYwYjRhOGFmZiIsInJlY2VpcHRfaGFzaCI6InNoYTI1NjoyOTQ5ZjYzYmJlM2IwY2MwYjE2Njc0OWZiZjM5MGYyNTUyOWIxZTk1MzRmZTU4M2FmMTVkMDg3MjZmMWY4YmEwIiwidGVuYW50X2lkIjoiZGVmYXVsdCIsImV4ZWN1dG9yX2lkIjoiZGVtby1kZXBsb3ltZW50IiwiYWRhcHRlcl9pZCI6ImdpdC1yZWYtY2FzIiwib3BlcmF0aW9uIjoiZ2l0LnJlZi51cGRhdGUiLCJ0YXJnZXRfdXJpIjoiZ2l0Oi8vYXRvbWljLXYyLXJlZmVyZW5jZS9yZXBvLmdpdC9yZWZzL2hlYWRzL21haW4iLCJleHBlY3RlZF9zdGF0ZV90b2tlbiI6IjY1ZmU1ZGQ1YjA2N2FkN2FmYjRhMmRmMzI2OWVkM2VmY2EyNjQyZjgiLCJhZnRlcl9wYXlsb2FkX2hhc2giOiJzaGEyNTY6MzQ3NWU3NGQyNjU2ZTQzYjMyNTI2YWY3ZTkwZGRhYjdmZWYyOTJjZDM4Y2JiZjRmODM2NWM1N2Q1MGZmZDU1ZCIsIm5vbmNlX2hhc2giOiJzaGEyNTY6NjU2MWJjNWZmYTRlY2IyOGJjZDE4MzY4NzcwNWExZDg3ZDcwMmI0ZGVmODQ5YjdmNmU0YTI5MDgyMDc2YTAyNyIsInBvbGljeV9oYXNoIjoic2hhMjU2OmUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJhdWRpZW5jZV9oYXNoIjoic2hhMjU2OjNlZGFmMzUyNjE2NjM4MzU5NmJhZjM4MDZjYWNjZDA2MzYxMGMwMjM2ZWRjYzdkYzcxOTRiNDYwZjJlMTg4MDEiLCJub3RfYmVmb3JlIjoiMjAyNi0wOS0wOFQyMToyMDowM1oiLCJleHBpcmVzX2F0IjoiMjAyNi0wOS0wOFQyMToyNTowM1oiLCJtYXhfYXR0ZW1wdHMiOjF9.oKBlfJ2Dwiw1V-AL5FXA60zwcZu5HfGigtulDZa4NxgNIBhFwWImEUpgWqQ6VIiFPtTHy_YvnF7uwV5SqNTDBw",
+    "chain_receipt": "eyJ2Ijo0LCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6YWJiMmQ2ZjRhZDg3YjliZTVjMjQ2MDZmZjA0NmU5MTIwNmVhNWFkZjM3M2RiMWU2NDAyYjY5MTZhMmE2MGIzZiIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA5LTA4VDIxOjIwOjAzLjI0M1oiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDI2LTA5LTA4VDIxOjM1OjAzWiIsImJoIjoic2hhMjU2OmZjZjY4NWM4YmViMDEyN2Y3MTg4NThkZThlYTFiNTU2OWMzYzFjMDVkNzEzMTgxYzZmYjQ5ODlkNjgzY2Y4Y2QifQ.pbDfE4JrMJ8ZgVsCM_3f03NU7nWQnt_P-ZeEKGfZ3PtFquWuZngZUbLoUvxBGCsxG7_6nsfYUKYU0BJSUZppCg",
     "grant": {
       "v": "cr.exec.v2",
       "kid": "2026-07-k1",
-      "grant_id": "886a6a5a-ade6-4acd-8e9e-186371dc1d9b",
-      "receipt_hash": "sha256:7bc45c2e9837918c51efb3a0d8b4f212871fd794c52a9b5963e9df9b99a5f83d",
+      "grant_id": "39c130c5-1b90-470f-a696-2f260b4a8aff",
+      "receipt_hash": "sha256:2949f63bbe3b0cc0b166749fbf390f25529b1e9534fe583af15d08726f1f8ba0",
       "tenant_id": "default",
       "executor_id": "demo-deployment",
       "adapter_id": "git-ref-cas",
       "operation": "git.ref.update",
       "target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-      "expected_state_token": "6f2457c49c377db3029d03414a04466f83d85712",
+      "expected_state_token": "65fe5dd5b067ad7afb4a2df3269ed3efca2642f8",
       "after_payload_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
-      "nonce_hash": "sha256:6c7e0365a35ac293e382392401af592c3cdf1f4236ef0b8acbd5749b0ce4aa22",
+      "nonce_hash": "sha256:6561bc5ffa4ecb28bcd183687705a1d87d702b4def849b7f6e4a29082076a027",
       "policy_hash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "audience_hash": "sha256:3edaf3526166383596baf3806caccd063610c0236edcc7dc7194b460f2e18801",
-      "not_before": "2026-09-08T09:49:18Z",
-      "expires_at": "2026-09-08T09:54:18Z",
+      "not_before": "2026-09-08T21:20:03Z",
+      "expires_at": "2026-09-08T21:25:03Z",
       "max_attempts": 1
     },
     "governed_action": "git.ref.update",

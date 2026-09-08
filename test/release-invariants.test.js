@@ -28,6 +28,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -184,5 +185,135 @@ describe('the does_not_prove text describes THIS capture\'s target kind', () => 
     }).join('\n');
     assert.match(provider, /provider's copy of the contract/);
     assert.doesNotMatch(provider, /LOCAL bare-Git target/);
+  });
+});
+
+describe('the END_TO_END headline names what is measured', () => {
+  it('a NOT_APPLICABLE provider means no provider/deploy/merge words in the title or asserts', () => {
+    // The sibling of the does_not_prove fix, in the row a reader meets FIRST — before any limit,
+    // and often instead of them. It said "Authorization through to deploy" / "provider
+    // enforcement" for a git.ref.update on a local target with provider_witness NOT_APPLICABLE.
+    const rows = profileRows();
+    const e2e = rows.find((r) => r.id === 'END_TO_END');
+    const artifact = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'transcript.json'), 'utf8'));
+    const tst = artifact.target_state_transition || {};
+    if (tst.provider_witness !== 'NOT_APPLICABLE') return;
+    // The one allowed mention is the explicit denial, which is the opposite of a claim.
+    const text = `${e2e.title} ${String(e2e.asserts).replace(/no provider is involved and nothing was deployed\.?/i, '')}`;
+    for (const word of [/\bprovider\b/i, /\bdeploy(ed|ment)?\b/i, /\bmerge[sd]?\b/i]) {
+      assert.doesNotMatch(text, word,
+        `provider_witness is NOT_APPLICABLE and the headline still says ${word}: ${text}`);
+    }
+  });
+
+  it('the vector id names the claim, and follows the capture', () => {
+    const e2e = profileRows().find((r) => r.id === 'END_TO_END');
+    const artifact = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'transcript.json'), 'utf8'));
+    if ((artifact.target_state_transition || {}).target_kind !== 'git_bare_ref') return;
+    assert.equal(e2e.vector_ids[0], 'E2E-TRUSTED-EXECUTOR-CORRELATED');
+  });
+
+  it('the headline is GENERATED — a provider-shaped capture gets provider wording back', () => {
+    const { headlineFor } = require('../lib/recorded-contract-e2e.js');
+    const provider = headlineFor({ target_kind: 'provider_merge', provider_witness: 'PRESENT' });
+    assert.match(provider.title, /deploy/i);
+    assert.equal(provider.vector_id, 'E2E-CONTRACT-CORRELATED');
+    assert.equal(provider.sidecar_role, 'provider_observation');
+  });
+});
+
+describe('`result` cannot be mistaken for the verdict', () => {
+  const { spawnSync: sp } = require('node:child_process');
+  const json = (extra) => JSON.parse(sp(process.execPath,
+    [path.join(ROOT, 'bin', 'coderifts-conformance.js'), '--assurance', 'END_TO_END', '--json', ...extra],
+    { encoding: 'utf8' }).stdout).profiles[0];
+
+  it('a REFUSED capture does not report result: PASS', () => {
+    // MEASURED on the two-grant negative: `result: PASS` sat beside `status: PARTIAL`. `result`
+    // meant "the vectors ran" — a statement about the measurement — and an external reader parsing
+    // one field takes it for the answer.
+    const row = json(['--dir', path.join(ROOT, 'proof', 'negatives', 'two-grant')]);
+    assert.equal(row.claim_status, 'PARTIAL');
+    assert.equal(row.measurement_completed, 'PASS', 'the vectors DID run — that fact is not lost');
+    assert.notEqual(row.result, 'PASS', '`result` still reads PASS on a refused claim');
+    assert.equal(row.result, row.claim_status, '`result` must alias the claim, not the run');
+  });
+
+  it('and the positive still reports the claim, so this is not "always PARTIAL"', () => {
+    const row = json([]);
+    assert.equal(row.claim_status, 'COVERED');
+    assert.equal(row.result, 'COVERED');
+  });
+});
+
+describe('no stale comment claims the custom lane', () => {
+  it('recorded-contract-e2e.js does not say the closed profile is "the next phase"', () => {
+    // It uses profile TRUSTED_EXECUTOR_INTEGRITY_V1 and has since 1465 phase 4. A comment that
+    // still called it a custom aggregation is the same drift this file gates elsewhere.
+    const src = fs.readFileSync(path.join(ROOT, 'lib', 'recorded-contract-e2e.js'), 'utf8');
+    assert.ok(src.includes("profile: 'TRUSTED_EXECUTOR_INTEGRITY_V1'"), 'the profile is not used');
+    assert.doesNotMatch(src, /Moving to TRUSTED_EXECUTOR_INTEGRITY_V1 is the next phase/);
+    assert.doesNotMatch(src, /this is a CUSTOM aggregation and not the\n\s*\/\/ closed profile/);
+  });
+});
+
+describe('the points[] prose gate', () => {
+  it('the shipped capture passes it', () => {
+    const m = measureContractE2E();
+    assert.deepEqual((m.missing || []).filter((x) => x.startsWith('prose:')), []);
+    assert.ok((m.present || []).some((x) => x.startsWith('prose:')), 'the prose gate did not run');
+  });
+
+  it('it REFUSES a capture whose prose names a second grant', () => {
+    // The gate has to bite, or "the shipped capture passes it" is a sentence about nothing.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'prose-neg-'));
+    try {
+      const src = path.join(ROOT, 'fixtures', 'recorded', 'end-to-end');
+      for (const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src, f), path.join(dir, f));
+      const t = JSON.parse(fs.readFileSync(path.join(dir, 'transcript.json'), 'utf8'));
+      t.points.find((p) => p.n === 6).detail = 'binds jti 00000000-0000-4000-8000-000000000000';
+      fs.writeFileSync(path.join(dir, 'transcript.json'), JSON.stringify(t, null, 2));
+      const pin = JSON.parse(fs.readFileSync(path.join(dir, 'pin.json'), 'utf8'));
+      for (const a of pin.artifacts) {
+        const abs = path.join(dir, a.path);
+        if (!fs.existsSync(abs)) continue;
+        const b = fs.readFileSync(abs);
+        a.sha256 = require('node:crypto').createHash('sha256').update(b).digest('hex');
+        a.bytes = b.length;
+      }
+      fs.writeFileSync(path.join(dir, 'pin.json'), JSON.stringify(pin, null, 2));
+      const m = measureContractE2E({ dir });
+      assert.notEqual(m.coverage, 'COVERED');
+      assert.ok((m.missing || []).some((x) => /^prose: POINT 6 names grant/.test(x)), m.missing.join('\n'));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('and a capture that narrates a different mechanism', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'prose-db-'));
+    try {
+      const src = path.join(ROOT, 'fixtures', 'recorded', 'end-to-end');
+      for (const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src, f), path.join(dir, f));
+      const t = JSON.parse(fs.readFileSync(path.join(dir, 'transcript.json'), 'utf8'));
+      t.points.find((p) => p.n === 3).detail = 'host INSERT refused SQLSTATE 42501; articles unchanged';
+      fs.writeFileSync(path.join(dir, 'transcript.json'), JSON.stringify(t, null, 2));
+      const pin = JSON.parse(fs.readFileSync(path.join(dir, 'pin.json'), 'utf8'));
+      for (const a of pin.artifacts) {
+        const abs = path.join(dir, a.path);
+        if (!fs.existsSync(abs)) continue;
+        const b = fs.readFileSync(abs);
+        a.sha256 = require('node:crypto').createHash('sha256').update(b).digest('hex');
+        a.bytes = b.length;
+      }
+      fs.writeFileSync(path.join(dir, 'pin.json'), JSON.stringify(pin, null, 2));
+      const m = measureContractE2E({ dir });
+      assert.notEqual(m.coverage, 'COVERED');
+      assert.ok((m.missing || []).some((x) => /describes SQLSTATE/.test(x)), m.missing.join('\n'));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
