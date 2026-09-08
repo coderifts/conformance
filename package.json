@@ -1,6 +1,6 @@
 {
   "name": "@coderifts/conformance",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Offline CodeRifts adapter-acceptance + model-acceptance suite. No network, no API key.",
   "license": "MIT",
   "engines": {

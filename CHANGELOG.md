@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.8.6
+
+END_TO_END COVERED (7/7) on ONE grant end to end — the market-grade 7/7. One git grant flows through issuance, consume, the signed POINT 6 attestation, and the POINT 8 transition (the earlier two-grant fixture path is closed; the closed profile TRUSTED_EXECUTOR_INTEGRITY_V1 reads COVERED, and reads COMMIT_UNPROVEN on a two-grant capture). Ships VERIFY.md + a proof/ folder a stranger can replay: the one-grant fixture and two negatives (two-grant, tampered-attestation) that must be refused; a --dir flag so the CLI verifies the visible proof folder, not the embedded fixture. Honest boundary: trusted-executor-integrity, RECORDED, not externally witnessed, not PATH B.
+
+
 ## 0.8.5
 
 END_TO_END reads COVERED (7/7): the vendored fixture now carries a real bare-Git target-state transition. POINT 8 is TARGET_STATE_TRANSITION_PROVEN — a governed ref moved to the authorized commit under a signed grant, and a separate read-only process observed it afterwards (proof_scope TRUSTED_EXECUTOR, provider_witness NOT_APPLICABLE, externally_witnessed false). Vendoring the real capture also uncovered and fixed two defects the old PARTIAL fixture had masked: the four transition correlations are now a conjunct of the verdict (a named gap that did not move the grade), and the AUDITOR-1 mutation control is a byte-level flip (the char-level flip was a no-op when a signature's last base64url char decodes its low bits to nothing). No negative control weakened. This is trusted-executor-integrity, not a provider merge (PATH B) and not externally witnessed.
