@@ -1,12 +1,12 @@
 {
   "v": "cr.prove.artifact.v1",
-  "run_id": "prove-2e1bb784-df36-461f-a241-1ef86fe9fbaa",
-  "started_at": "2026-09-07T17:20:18.016Z",
-  "finished_at": "2026-09-07T17:20:23.199Z",
+  "run_id": "prove-347f362e-bb13-4066-b140-57b5e7686cf1",
+  "started_at": "2026-09-08T07:00:45.825Z",
+  "finished_at": "2026-09-08T07:00:50.228Z",
   "verdict": "PASS",
   "db_mode": "throwaway-docker",
   "provenance": {
-    "source_commit": "a6dcefff14bfc31d36b05b6d2a5d06357686442a",
+    "source_commit": "6fe4c51154b486815b2c46a5317caa935aa46617",
     "source_commit_reason": null,
     "working_tree_dirty": false,
     "working_tree_dirty_reason": null,
@@ -76,14 +76,14 @@
       "name": "authorize",
       "state": "PROVEN",
       "ok": true,
-      "detail": "server-issued 2026-07-k1 grant jti 12c57ef7-bb15-459a-b301-0c98764aa625 decision_id dec_857a7f7f-539f-4538-98ea-d71a22e6d507 GRANT_CURRENT at issuance (not DEMO-KEY); source=live"
+      "detail": "server-issued 2026-07-k1 grant jti b948b952-b7f7-4935-9aa8-c6474b7b2725 decision_id dec_57deaab5-55c0-47a0-8ce0-2252dd140850 GRANT_CURRENT at issuance (not DEMO-KEY); source=live"
     },
     {
       "n": 2,
       "name": "grant issuance",
       "state": "PROVEN",
       "ok": true,
-      "detail": "a grant was issued and consumed: jti 12c57ef7-bb15-459a-b301-0c98764aa625"
+      "detail": "a grant was issued and consumed: jti b948b952-b7f7-4935-9aa8-c6474b7b2725"
     },
     {
       "n": 3,
@@ -111,7 +111,7 @@
       "name": "attestation",
       "state": "PROVEN",
       "ok": true,
-      "detail": "signature verifies and binds jti 12c57ef7-bb15-459a-b301-0c98764aa625 (ATTEST_VALID); a forged signature over the same bytes is REFUSED (ATTEST_INVALID_SIGNATURE)"
+      "detail": "signature verifies and binds jti b948b952-b7f7-4935-9aa8-c6474b7b2725 (ATTEST_VALID); a forged signature over the same bytes is REFUSED (ATTEST_INVALID_SIGNATURE)"
     },
     {
       "n": 7,
@@ -125,7 +125,7 @@
       "name": "target_state_transition",
       "state": "TARGET_STATE_TRANSITION_PROVEN",
       "ok": true,
-      "detail": "the governed ref refs/heads/main moved 6eeb5802f71c → aca0b6e7a791 under a signed cr.exec.v2 grant, and a SEPARATE PROCESS that cannot write read the object database afterwards and found it there. Four correlations hold: the ref carries the authorized commit; the bytes at it hash to sha256:3475e74d2656…, which is what the grant bound AND what the preflight payload hashes to; the ref moved FROM the base the grant was issued against; and the authorized commit has exactly one parent, that base. The binding is SIGNED (sha256:ff844c925b0f…). TRUSTED-EXECUTOR SCOPE: the executor and the observer are one machine and one OS user, separated by the target's mode bits — NOT by two identities, and NOT by any third party. No provider witnessed this and no pull request was merged (that is PATH B). The merge_evidence slot stays absent for exactly that reason: there is no provider merge evidence, and this point does not claim there is."
+      "detail": "the governed ref refs/heads/main moved 915f64c162e3 → 64e0ffead5b7 under a signed cr.exec.v2 grant, and a SEPARATE PROCESS that cannot write read the object database afterwards and found it there. Four correlations hold: the ref carries the authorized commit; the bytes at it hash to sha256:3475e74d2656…, which is what the grant bound AND what the preflight payload hashes to; the ref moved FROM the base the grant was issued against; and the authorized commit has exactly one parent, that base. The binding is SIGNED (sha256:b44830673fd0…). TRUSTED-EXECUTOR SCOPE: the executor and the observer are one machine and one OS user, separated by the target's mode bits — NOT by two identities, and NOT by any third party. No provider witnessed this and no pull request was merged (that is PATH B). The merge_evidence slot stays absent for exactly that reason: there is no provider merge evidence, and this point does not claim there is."
     },
     {
       "n": 9,
@@ -148,9 +148,9 @@
     "reason": null,
     "detail": null,
     "identities": {
-      "issued_jti": "12c57ef7-bb15-459a-b301-0c98764aa625",
-      "consumed_jti": "12c57ef7-bb15-459a-b301-0c98764aa625",
-      "attestation_jti": "12c57ef7-bb15-459a-b301-0c98764aa625",
+      "issued_jti": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
+      "consumed_jti": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
+      "attestation_jti": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
       "issued_scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "correlation_scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d"
     }
@@ -159,11 +159,11 @@
     "ok": true,
     "v": "cr.exec.correlation.v1",
     "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
-    "contract_commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
+    "contract_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
     "contract_path": "demo/contracts/openapi.yaml",
-    "readback_commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
-    "correlation_hash": "sha256:ff844c925b0fcd1b781a0925737bb520c78ca0c8005d2c7787dcbc45b945a6eb",
-    "signature": "4XcbmYdIQeIxru8tLhOAu6KeVadhKrBlRuAMVbJc4NJGlpaGizB3_GK3Xtmii47JGaFfqdjcjHm_DPPwmNszAQ"
+    "readback_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
+    "correlation_hash": "sha256:b44830673fd05e39284851a0235e15f9280ae0a5dbf388d374ea11977656ede4",
+    "signature": "LYtgSF-re2kpLUG95qXcgYXJhr6XJTcCUbLWdgULmQQvwRy-abb1PWsfgkNNyCeaTdZtzVZP8-OsXG0hygzaCg"
   },
   "target_state_transition": {
     "state": "PROVEN_BY_TRUSTED_EXECUTOR",
@@ -172,33 +172,34 @@
     "externally_witnessed": false,
     "target_kind": "git_bare_ref",
     "expected": {
-      "base": "6eeb5802f71c1830cf200c9e461df8a526dc8bab",
-      "contract_commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
+      "base": "915f64c162e337f602dcc42a0561a1d17c9877cc",
+      "contract_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
       "contract_path": "demo/contracts/openapi.yaml",
       "contract_blob_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "after_payload_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "canonical_target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-      "repo_id": "git-root:6eeb5802f71c1830cf200c9e461df8a526dc8bab",
+      "repo_id": "git-root:915f64c162e337f602dcc42a0561a1d17c9877cc",
       "ref": "refs/heads/main",
       "parents": [
-        "6eeb5802f71c1830cf200c9e461df8a526dc8bab"
-      ]
+        "915f64c162e337f602dcc42a0561a1d17c9877cc"
+      ],
+      "grant_id": "git-b47cf8158fb34c77896ce713"
     },
     "observation": {
       "v": "cr.git.observation.v1",
       "target_ref": "refs/heads/main",
-      "repo_path": "/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-Ew48yZ/repo.git",
-      "repo_lineage_id": "git-root:6eeb5802f71c1830cf200c9e461df8a526dc8bab",
-      "before_commit": "6eeb5802f71c1830cf200c9e461df8a526dc8bab",
+      "repo_path": "/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-nwC9yC/repo.git",
+      "repo_lineage_id": "git-root:915f64c162e337f602dcc42a0561a1d17c9877cc",
+      "before_commit": "915f64c162e337f602dcc42a0561a1d17c9877cc",
       "before_source": "reflog",
-      "observed_commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
-      "commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
+      "observed_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
+      "commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
       "contract_path": "demo/contracts/openapi.yaml",
       "contract_blob_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "contract_bytes_len": 535,
       "observation_source": "git-object-database",
       "observer_mode": "read_only",
-      "observed_at": "2026-09-07T17:20:23.059Z",
+      "observed_at": "2026-09-08T07:00:50.073Z",
       "does_not_prove": [
         "that the executor told the truth — the observer and the executor run on the same machine, and this raises the claim from \"somebody typed the right commit\" to \"a process that cannot write read the target afterwards and found it moved\"",
         "that any provider merged anything — there is no external witness here (proof_scope: TRUSTED_EXECUTOR, provider_witness: ABSENT)",
@@ -211,88 +212,89 @@
       {
         "id": "canonical_target_uri",
         "ok": true,
-        "detail": "the observation labels target git://atomic-v2-reference/repo.git/refs/heads/main and the grant names git://atomic-v2-reference/repo.git/refs/heads/main"
+        "detail": "canonical_target_uri: re-checked and it holds"
       },
       {
         "id": "repo_identity",
         "ok": true,
-        "detail": "the observation is of lineage git-root:6eeb5802f71c1830cf200c9e461df8a526dc8bab, not git-root:6eeb5802f71c1830cf200c9e461df8a526dc8bab"
+        "detail": "repo_identity: re-checked and it holds"
       },
       {
         "id": "ref",
         "ok": true,
-        "detail": "the observation read refs/heads/main, and the grant governs refs/heads/main"
+        "detail": "ref: re-checked and it holds"
       },
       {
         "id": "after_state_token",
         "ok": true,
-        "detail": "the ref carries aca0b6e7a791 and the grant authorized aca0b6e7a791"
+        "detail": "after_state_token: re-checked and it holds"
       },
       {
         "id": "state_transition",
         "ok": true,
-        "detail": "the ref moved from 6eeb5802f71c, and the grant was issued against 6eeb5802f71c"
+        "detail": "state_transition: re-checked and it holds"
       },
       {
         "id": "contract_path",
         "ok": true,
-        "detail": "the observation read demo/contracts/openapi.yaml, and the grant governs demo/contracts/openapi.yaml"
+        "detail": "contract_path: re-checked and it holds"
       },
       {
         "id": "blob_digest",
         "ok": true,
-        "detail": "the bytes at the observed commit are not the bytes the grant bound"
+        "detail": "blob_digest: re-checked and it holds"
       },
       {
         "id": "after_payload",
         "ok": true,
-        "detail": "the bytes at the observed commit are not the preflight after_payload"
+        "detail": "after_payload: re-checked and it holds"
       },
       {
         "id": "single_parent",
         "ok": true,
-        "detail": "the authorized commit has parents [6eeb5802f71c], and a single parent 6eeb5802f71c was required"
+        "detail": "single_parent: re-checked and it holds"
       },
       {
         "id": "observer_mode",
         "ok": true,
-        "detail": "the observation declares observer_mode read_only"
+        "detail": "observer_mode: re-checked and it holds"
       },
       {
         "id": "observation_source",
         "ok": true,
-        "detail": "the observation declares source git-object-database"
+        "detail": "observation_source: re-checked and it holds"
       },
       {
         "id": "executor_attested",
         "ok": true,
-        "detail": "no executor attestation accompanies this transition, so nothing signed the change"
+        "detail": "a cr.exec.attest.v1 token signed by DEMO-EXECUTOR-KEY-DO-NOT-USE commits grant git-b47cf815 and result sha256:c55ddc24407b…, and it verifies here"
       }
     ],
     "failures": [],
     "grant": {
       "v": "cr.exec.v2",
       "kid": "DEMO-KEY-DO-NOT-USE",
-      "grant_id": "git-c75dc0bb1255ad721444fa28",
-      "receipt_hash": "sha256:19018c3aa16731d110b991d92a608b625d106fbbbd8d0bb2e9364974b6c6407f",
+      "grant_id": "git-b47cf8158fb34c77896ce713",
+      "receipt_hash": "sha256:3311c97594b02a4660aea071a68464e5ea9a523aec6c9f3a84781f8e4130f16a",
       "tenant_id": "demo-tenant",
       "executor_id": "demo-atomic-executor",
       "adapter_id": "git-ref-cas",
       "operation": "git.ref.update",
       "target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
-      "expected_state_token": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
+      "expected_state_token": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
       "after_payload_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
-      "nonce_hash": "sha256:90131985537c29ca600b3c8f74a49167eda2b6e747960000ab743ad8334c0ff1",
+      "nonce_hash": "sha256:9de4fc464950365fe69e2584096869a53f2505dc7aff40cf7f721b61848172a7",
       "policy_hash": "sha256:73551c6f16a591c21519b039401032af1199478c7685557eede17938f217e843",
       "audience_hash": "sha256:be8b1e6d29fbce614a7f4809ff5d4c689f7a0642661ac2060cb6d092bf26cfdd",
-      "not_before": "2026-09-07T17:20:21.268Z",
-      "expires_at": "2026-09-07T17:25:22.268Z",
+      "not_before": "2026-09-08T07:00:48.293Z",
+      "expires_at": "2026-09-08T07:05:49.293Z",
       "max_attempts": 1,
-      "signature": "5J9tKxhxzkGlwo6rSdqfmw9tiPIyNQj1vRPkeBQhOlS5QvPR_V2cb-tUzBECWiEuODHFTghnmsXYxmF_RugfAg"
+      "signature": "dYE3i2YUGP4m_g8Zkchjh4nqu-oMtcW4C_q_rmmq-SNHUB_JSk6btF6EQNA83BPA8vUfj4uoDwOWOIpnyrbTCg"
     },
+    "attestation": "cr.exec.attest.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJ2IjoiY3IuZXhlYy5hdHRlc3QudjEiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwiZ3JhbnRfanRpIjoiZ2l0LWI0N2NmODE1OGZiMzRjNzc4OTZjZTcxMyIsInJlY2VpcHRfZGlnZXN0Ijoic2hhMjU2OjMzMTFjOTc1OTRiMDJhNDY2MGFlYTA3MWE2ODQ2NGU1ZWE5YTUyM2FlYzZjOWYzYTg0NzgxZjhlNDEzMGYxNmEiLCJzY29wZV9oYXNoIjoic2hhMjU2OjM0NzVlNzRkMjY1NmU0M2IzMjUyNmFmN2U5MGRkYWI3ZmVmMjkyY2QzOGNiYmY0ZjgzNjVjNTdkNTBmZmQ1NWQiLCJjb21taXR0ZWRfYXQiOiIyMDI2LTA5LTA4VDA3OjAwOjQ5LjI5M1oiLCJzdGF0ZV9ub25jZSI6Il81blNNM3RINkFWVnFZX2RQTWJWQ0d1ZkFPckdCSTNXME5lYUZUSHFtajAiLCJyZXN1bHRfZGlnZXN0Ijoic2hhMjU2OmM1NWRkYzI0NDA3YjAwMDM5YzJkY2UzZTc3OTIwNWViZjQwMGY3Mjg0YWU3ZWE4NjcyNzdjMDI4N2RiMGMxNjIifQ|rNeeW_Cpi-Tc0fC1SBAknBdiWiqrPVi0u_SZ2VoQ7UqTPCmT4AUCS7ahRZpLgRABNB-w4bsopYrVjlbNrAOHCw",
     "state_challenge": {
-      "observed_state": "6eeb5802f71c1830cf200c9e461df8a526dc8bab",
-      "nonce_hash": "sha256:90131985537c29ca600b3c8f74a49167eda2b6e747960000ab743ad8334c0ff1"
+      "observed_state": "915f64c162e337f602dcc42a0561a1d17c9877cc",
+      "nonce_hash": "sha256:9de4fc464950365fe69e2584096869a53f2505dc7aff40cf7f721b61848172a7"
     },
     "nonce_consumed": true,
     "roles": [
@@ -301,7 +303,7 @@
         "may": "challenge and authorize",
         "attempted": "git update-ref refs/heads/main <contract> <base>",
         "outcome": "DENIED",
-        "detail": "fatal: update_ref failed for ref 'refs/heads/main': cannot lock ref 'refs/heads/main': Unable to create '/private/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-Ew48yZ/repo.git/./refs/heads/main.lock': Permission denied"
+        "detail": "fatal: update_ref failed for ref 'refs/heads/main': cannot lock ref 'refs/heads/main': Unable to create '/private/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-nwC9yC/repo.git/./refs/heads/main.lock': Permission denied"
       },
       {
         "role": "observer",
@@ -327,55 +329,55 @@
   },
   "evidence_root": {
     "v": "cr.evidence.root.v1",
-    "run_id": "prove-2e1bb784-df36-461f-a241-1ef86fe9fbaa",
+    "run_id": "prove-347f362e-bb13-4066-b140-57b5e7686cf1",
     "executor_kid": "DEMO-EXECUTOR-KEY-DO-NOT-USE",
     "producer": {
       "name": "@coderifts/prove",
-      "version": "0.1.7",
-      "commit": "a6dcefff14bfc31d36b05b6d2a5d06357686442a"
+      "version": "0.1.8",
+      "commit": "6fe4c51154b486815b2c46a5317caa935aa46617"
     },
     "operation": "publish",
     "target_uri": "db://demo-deployment/articles",
-    "contract_commit": "aca0b6e7a791fda09ed4bccd8dc4ded3fb3d008e",
+    "contract_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
     "artifact_digests": {
-      "chain_receipt": "sha256:19018c3aa16731d110b991d92a608b625d106fbbbd8d0bb2e9364974b6c6407f",
-      "execution_grant": "sha256:dd261e79d591181b9046efd15c5ab6c8f9c6c1e0def258375a00f6815caa9ad8",
-      "transcript_token": "sha256:d8572ee392d995d3684f08b33f47f1011cdf03d6e02b983f57347f3b2a8ade85",
-      "correlation": "sha256:49f14faa96e0f4665a63fd6514cd0bf93a9926cf3d9991ed46d0ce1086673dd9",
-      "atomic_attestation": "sha256:e4755657f42333c913b93c3db0dbf5560911793b0a4b3bfa30d73520dd78be81",
-      "provider_readback": "sha256:8134ca90b78ba8366a54ab9091b764499fce5b6d481c9036d2f1d5b299e333f6"
+      "chain_receipt": "sha256:3311c97594b02a4660aea071a68464e5ea9a523aec6c9f3a84781f8e4130f16a",
+      "execution_grant": "sha256:4534f10c430284b22eb47ef0cb401a081c61fc5865f1698e2e8bf054a997c2b3",
+      "transcript_token": "sha256:8bb7f82d1012e0c44df7c161dd110bbdc3d9ee02a8c473de8aa8c1c89aeb81b8",
+      "correlation": "sha256:0006ab197b85bf1ef098d14d8b2944b9d84794b3f0b2aef7153df492ae7d4674",
+      "atomic_attestation": "sha256:8e4496556f381efcdf25c05ee183d0f11f2eb8c971889339ba5386f239158ee4",
+      "provider_readback": "sha256:2ed2454b2bd961f33875eb0bd9ec81927d45b5dec12aa8eb441250a35b126478"
     },
-    "grant_id": "12c57ef7-bb15-459a-b301-0c98764aa625",
-    "receipt_hash": "sha256:19018c3aa16731d110b991d92a608b625d106fbbbd8d0bb2e9364974b6c6407f",
+    "grant_id": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
+    "receipt_hash": "sha256:3311c97594b02a4660aea071a68464e5ea9a523aec6c9f3a84781f8e4130f16a",
     "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
     "policy_hash": null,
     "state_token_hash": "sha256:814642e491b61ed1a0666ec6dec5b382871e246ffe545403fb052f2a9a725c88",
-    "signature": "okxBxi2j9LsLOd6wuruCIYE375Z3SPUbx_3_Qoe5RopteDjrPSIP6evvd8DvQ79Bkx4p8_l5qxwCnD1Inju5Bg"
+    "signature": "_JaFdiF7HG7CkmAdE9SicWsPKUzlJT3bggkX00LgbgQa7s3CXv4Zrj6ECfb5P99HwcRmbpDfeOsOP7sTLMQmAA"
   },
-  "transcript_token": "cr.prove.transcript.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJkZXBsb3ltZW50X2lkIjoiZGVtby1kZXBsb3ltZW50IiwiZXhlY3V0b3Jfa2lkIjoiREVNTy1FWEVDVVRPUi1LRVktRE8tTk9ULVVTRSIsIm1lYXN1cmVkX2F0IjoiMjAyNi0wOS0wN1QxNzoyMDoyMC44MDVaIiwic2VjdGlvbnMiOlt7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImV4ZWN1dG9yX3JvbGUiOiJjcl9leGVjdXRvciIsImV4ZWN1dG9yX3NxbHN0YXRlIjoiNDI1MDEiLCJob3N0X3JvbGUiOiJjcl9ob3N0IiwiaG9zdF9zcWxzdGF0ZSI6IjQyNTAxIiwiaG9zdF90aXRsZV9hZnRlciI6MCwiaG9zdF90aXRsZV9iZWZvcmUiOjAsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoiZGVueSIsIm5hbWUiOiJERU5ZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7InZlcmRpY3QiOiJQQVNTIiwidmVyaWZ5IjoiUE9TVFVSRV9QQVNTIn0sImlkIjoicG9zdHVyZSIsIm5hbWUiOiJQT1NUVVJFIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImZpcnN0IjoyMDEsInNlY29uZCI6NDA5LCJzdGF0dXMiOiJHUkFOVF9DT05TVU1FRCJ9LCJpZCI6InJlcGxheSIsIm5hbWUiOiJSRVBMQVkiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MCwiY29uZmxpY3QiOjE5LCJncmV3IjoxLCJvayI6MX0sImlkIjoiY29uY3VycmVuY3kiLCJuYW1lIjoiQ09OQ1VSUkVOQ1kiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MSwiZXhwZWN0ZWRfc3RhdGVfdG9rZW4iOiJzaGEyNTY6ZWNjMzYxNTQ1ZjBlNDNhZDA0ZWJmOWYxYWJjMzllZTFjMzExYjU1YTRkNjJlYmI3YjgzZTc0YmE5MTE0MzhhZiIsImh0dHAiOjQwOSwianRpX2NvbnN1bWVkIjowLCJzdGFsZV9zdGF0ZV90b2tlbiI6dHJ1ZSwic3RhdHVzIjoiU1RBVEVfRFJJRlQiLCJ1bmNoYW5nZWQiOnRydWV9LCJpZCI6ImNhc19zdGFsZSIsIm5hbWUiOiJDQVMtU1RBTEUiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjAsImJlZm9yZV9jb3VudCI6MCwiZXJyb3IiOiJzaW11bGF0ZWQgY3Jhc2gtYmVmb3JlLXNlYWwiLCJsZWRnZXJfYWZ0ZXIiOjAsImxlZGdlcl9iZWZvcmUiOjAsInNraXBfc2VhbCI6dHJ1ZSwic3RhdHVzIjoiY29uc3VtZWRfdW5zaWduZWRfcm9sbGVkX2JhY2siLCJ0aHJldyI6dHJ1ZSwidW5jaGFuZ2VkIjp0cnVlfSwiaWQiOiJub19jb25zdW1lX29ubHkiLCJuYW1lIjoiTk8gQ09OU1VNRS1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImxlZGdlcl9hZnRlciI6MiwibGVkZ2VyX2JlZm9yZSI6MiwibXV0YXRpb25fb25seSI6dHJ1ZSwic3Fsc3RhdGUiOiI0MjUwMSIsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoibm9fbXV0YXRpb25fb25seSIsIm5hbWUiOiJOTyBNVVRBVElPTi1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImh0dHAiOjIwMSwianRpIjoiMTJjNTdlZjctYmIxNS00NTlhLWIzMDEtMGM5ODc2NGFhNjI1Iiwic2VhbGVkIjp0cnVlLCJ3aXRoX2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkIEFORCBib3VuZCB0byBncmFudCAxMmM1N2VmNy1iYjE1LTQ1OWEtYjMwMS0wYzk4NzY0YWE2MjUiLCJ3aXRob3V0X2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkOyBncmFudC1iaW5kaW5nIE5PVCBjaGVja2VkIn0sImlkIjoiYXV0aG9yaXplZCIsIm5hbWUiOiJBVVRIT1JJWkVEIFdSSVRFICsgVkVSSUZZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2dyYW50IjoiRkFJTCIsImFmdGVyX3Jldm9rZSI6IlBBU1MiLCJkcmlmdF9uYW1lcyI6WyJob3N0X3JvbGUgZ2FpbmVkIElOU0VSVCBvbiBhcnRpY2xlcyJdfSwiaWQiOiJkcmlmdCIsIm5hbWUiOiJEUklGVCBCQVNFTElORSIsInZlcmRpY3QiOiJQQVNTIn0seyJldmlkZW5jZSI6eyJjb3VudHMiOnsiQ09ORklSTUVEIjoxLCJJTkRFVEVSTUlOQVRFIjowLCJSRUpFQ1RFRCI6MCwiUkVMRUFTRUQiOjB9LCJncmFudHMiOlt7ImFkYXB0ZXIiOiJwb3N0Z3JlcyIsImV2aWRlbmNlIjp7ImF0dGVzdF9zdGF0dXMiOiJBVFRFU1RfVkFMSUQiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwicmVhc29uIjoiY29uc3VtZWQsIHNlYWxlZCwgYW5kIGEgQ1JZUFRPR1JBUEhJQ0FMTFkgVkVSSUZJRUQgYXR0ZXN0YXRpb24gYm91bmQgdG8gdGhpcyBncmFudCBjYXJyaWVzIHRoaXMgcm93J3MgZXhhY3QgcHJlaW1hZ2UiLCJzdGF0dXMiOiJzZWFsZWQifSwianRpIjoiMTJjNTdlZjctYmIxNS00NTlhLWIzMDEtMGM5ODc2NGFhNjI1Iiwib3V0Y29tZSI6IkNPTkZJUk1FRCJ9XSwibmVlZHNfYXR0ZW50aW9uIjowLCJvdXRjb21lIjoiQ09ORklSTUVEIn0sImlkIjoicmVjb3ZlcnkiLCJraW5kIjoicmVjb3ZlcnkiLCJuYW1lIjoiUkVDT1ZFUlkiLCJ2ZXJkaWN0IjoiQ09ORklSTUVEIn1dLCJ2IjoiY3IucHJvdmUudHJhbnNjcmlwdC52MSIsInZlcmRpY3QiOiJQQVNTIn0|nzRNdYO5AT7tBwk1ZNvkV6GXcgZfYNwIioxvvblpAe_E8mxRJHrvYORM0KbizFrnYq48YDFZgRfwjTvoN62BDw",
-  "transcript_preimage_hash": "sha256:8a916ca6d46f07363194ea876468b9d59a55cb8b7d0436c17d6b3ecab58d15ea",
+  "transcript_token": "cr.prove.transcript.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJkZXBsb3ltZW50X2lkIjoiZGVtby1kZXBsb3ltZW50IiwiZXhlY3V0b3Jfa2lkIjoiREVNTy1FWEVDVVRPUi1LRVktRE8tTk9ULVVTRSIsIm1lYXN1cmVkX2F0IjoiMjAyNi0wOS0wOFQwNzowMDo0OC4wMzBaIiwic2VjdGlvbnMiOlt7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImV4ZWN1dG9yX3JvbGUiOiJjcl9leGVjdXRvciIsImV4ZWN1dG9yX3NxbHN0YXRlIjoiNDI1MDEiLCJob3N0X3JvbGUiOiJjcl9ob3N0IiwiaG9zdF9zcWxzdGF0ZSI6IjQyNTAxIiwiaG9zdF90aXRsZV9hZnRlciI6MCwiaG9zdF90aXRsZV9iZWZvcmUiOjAsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoiZGVueSIsIm5hbWUiOiJERU5ZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7InZlcmRpY3QiOiJQQVNTIiwidmVyaWZ5IjoiUE9TVFVSRV9QQVNTIn0sImlkIjoicG9zdHVyZSIsIm5hbWUiOiJQT1NUVVJFIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImZpcnN0IjoyMDEsInNlY29uZCI6NDA5LCJzdGF0dXMiOiJHUkFOVF9DT05TVU1FRCJ9LCJpZCI6InJlcGxheSIsIm5hbWUiOiJSRVBMQVkiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MCwiY29uZmxpY3QiOjE5LCJncmV3IjoxLCJvayI6MX0sImlkIjoiY29uY3VycmVuY3kiLCJuYW1lIjoiQ09OQ1VSUkVOQ1kiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MSwiZXhwZWN0ZWRfc3RhdGVfdG9rZW4iOiJzaGEyNTY6NjZhMWQ0NTZkNzJlYmJjYzk0OTBiMWQ3NmQ2OTE2ZjVlODU3NGIyNGJjYWFhNmU1OTkwMGZiN2Q3NDM4OWNjOSIsImh0dHAiOjQwOSwianRpX2NvbnN1bWVkIjowLCJzdGFsZV9zdGF0ZV90b2tlbiI6dHJ1ZSwic3RhdHVzIjoiU1RBVEVfRFJJRlQiLCJ1bmNoYW5nZWQiOnRydWV9LCJpZCI6ImNhc19zdGFsZSIsIm5hbWUiOiJDQVMtU1RBTEUiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjAsImJlZm9yZV9jb3VudCI6MCwiZXJyb3IiOiJzaW11bGF0ZWQgY3Jhc2gtYmVmb3JlLXNlYWwiLCJsZWRnZXJfYWZ0ZXIiOjAsImxlZGdlcl9iZWZvcmUiOjAsInNraXBfc2VhbCI6dHJ1ZSwic3RhdHVzIjoiY29uc3VtZWRfdW5zaWduZWRfcm9sbGVkX2JhY2siLCJ0aHJldyI6dHJ1ZSwidW5jaGFuZ2VkIjp0cnVlfSwiaWQiOiJub19jb25zdW1lX29ubHkiLCJuYW1lIjoiTk8gQ09OU1VNRS1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImxlZGdlcl9hZnRlciI6MiwibGVkZ2VyX2JlZm9yZSI6MiwibXV0YXRpb25fb25seSI6dHJ1ZSwic3Fsc3RhdGUiOiI0MjUwMSIsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoibm9fbXV0YXRpb25fb25seSIsIm5hbWUiOiJOTyBNVVRBVElPTi1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImh0dHAiOjIwMSwianRpIjoiYjk0OGI5NTItYjdmNy00OTM1LTlhYTgtYzY0NzRiN2IyNzI1Iiwic2VhbGVkIjp0cnVlLCJ3aXRoX2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkIEFORCBib3VuZCB0byBncmFudCBiOTQ4Yjk1Mi1iN2Y3LTQ5MzUtOWFhOC1jNjQ3NGI3YjI3MjUiLCJ3aXRob3V0X2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkOyBncmFudC1iaW5kaW5nIE5PVCBjaGVja2VkIn0sImlkIjoiYXV0aG9yaXplZCIsIm5hbWUiOiJBVVRIT1JJWkVEIFdSSVRFICsgVkVSSUZZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2dyYW50IjoiRkFJTCIsImFmdGVyX3Jldm9rZSI6IlBBU1MiLCJkcmlmdF9uYW1lcyI6WyJob3N0X3JvbGUgZ2FpbmVkIElOU0VSVCBvbiBhcnRpY2xlcyJdfSwiaWQiOiJkcmlmdCIsIm5hbWUiOiJEUklGVCBCQVNFTElORSIsInZlcmRpY3QiOiJQQVNTIn0seyJldmlkZW5jZSI6eyJjb3VudHMiOnsiQ09ORklSTUVEIjoxLCJJTkRFVEVSTUlOQVRFIjowLCJSRUpFQ1RFRCI6MCwiUkVMRUFTRUQiOjB9LCJncmFudHMiOlt7ImFkYXB0ZXIiOiJwb3N0Z3JlcyIsImV2aWRlbmNlIjp7ImF0dGVzdF9zdGF0dXMiOiJBVFRFU1RfVkFMSUQiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwicmVhc29uIjoiY29uc3VtZWQsIHNlYWxlZCwgYW5kIGEgQ1JZUFRPR1JBUEhJQ0FMTFkgVkVSSUZJRUQgYXR0ZXN0YXRpb24gYm91bmQgdG8gdGhpcyBncmFudCBjYXJyaWVzIHRoaXMgcm93J3MgZXhhY3QgcHJlaW1hZ2UiLCJzdGF0dXMiOiJzZWFsZWQifSwianRpIjoiYjk0OGI5NTItYjdmNy00OTM1LTlhYTgtYzY0NzRiN2IyNzI1Iiwib3V0Y29tZSI6IkNPTkZJUk1FRCJ9XSwibmVlZHNfYXR0ZW50aW9uIjowLCJvdXRjb21lIjoiQ09ORklSTUVEIn0sImlkIjoicmVjb3ZlcnkiLCJraW5kIjoicmVjb3ZlcnkiLCJuYW1lIjoiUkVDT1ZFUlkiLCJ2ZXJkaWN0IjoiQ09ORklSTUVEIn1dLCJ2IjoiY3IucHJvdmUudHJhbnNjcmlwdC52MSIsInZlcmRpY3QiOiJQQVNTIn0|ofdtZdopOmoW-ZaYd5MkggKQ_f7HcDgj8aiNQgbVsqjGC-Z9m43tA1N8YTjbYiuOndMU9fwQACYmwnb7PtJ_DQ",
+  "transcript_preimage_hash": "sha256:0244d1d92a64ecde8d37650e24bf721109aba9826da96db655128c4ea23793b7",
   "transcript_verifies": true,
   "issuance": {
     "source": "live",
-    "captured_at": "2026-09-07T17:20:20.948Z",
-    "decision_id": "dec_857a7f7f-539f-4538-98ea-d71a22e6d507",
+    "captured_at": "2026-09-08T07:00:48.169Z",
+    "decision_id": "dec_57deaab5-55c0-47a0-8ce0-2252dd140850",
     "verdict_fingerprint": "sha256:e37a46ff0c4e8a0cb0d65e91fffcad14de21ccbae6f855d4960b9a02a60eec49",
     "kid": "2026-07-k1",
-    "jti": "12c57ef7-bb15-459a-b301-0c98764aa625",
+    "jti": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
     "verify_status": "GRANT_CURRENT",
-    "execution_grant": "eyJ2IjoiY3IuZXhlYy52MiIsImtpZCI6IjIwMjYtMDctazEiLCJncmFudF9pZCI6IjEyYzU3ZWY3LWJiMTUtNDU5YS1iMzAxLTBjOTg3NjRhYTYyNSIsInJlY2VpcHRfaGFzaCI6InNoYTI1NjoxOTAxOGMzYWExNjczMWQxMTBiOTkxZDkyYTYwOGI2MjVkMTA2ZmJiYmQ4ZDBiYjJlOTM2NDk3NGI2YzY0MDdmIiwidGVuYW50X2lkIjoiZGVmYXVsdCIsImV4ZWN1dG9yX2lkIjoiZGVtby1kZXBsb3ltZW50IiwiYWRhcHRlcl9pZCI6InBvc3RncmVzLmF0b21pYyIsIm9wZXJhdGlvbiI6InB1Ymxpc2giLCJ0YXJnZXRfdXJpIjoiZGI6Ly9kZW1vLWRlcGxveW1lbnQvYXJ0aWNsZXMiLCJleHBlY3RlZF9zdGF0ZV90b2tlbiI6InNoYTI1Njo4MTQ2NDJlNDkxYjYxZWQxYTA2NjZlYzZkZWM1YjM4Mjg3MWUyNDZmZmU1NDU0MDNmYjA1MmYyYTlhNzI1Yzg4IiwiYWZ0ZXJfcGF5bG9hZF9oYXNoIjoic2hhMjU2OjM0NzVlNzRkMjY1NmU0M2IzMjUyNmFmN2U5MGRkYWI3ZmVmMjkyY2QzOGNiYmY0ZjgzNjVjNTdkNTBmZmQ1NWQiLCJub25jZV9oYXNoIjoic2hhMjU2OmYwZjk1OWU2YmZhMGQzOTYwOTI1YWYwNWZhYmJmYzY5MjAzODgyMTY5ZjlmOGZjZWIwMDBjNTFmZTljMzVkODMiLCJwb2xpY3lfaGFzaCI6InNoYTI1NjplM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiYXVkaWVuY2VfaGFzaCI6InNoYTI1NjozZWRhZjM1MjYxNjYzODM1OTZiYWYzODA2Y2FjY2QwNjM2MTBjMDIzNmVkY2M3ZGM3MTk0YjQ2MGYyZTE4ODAxIiwibm90X2JlZm9yZSI6IjIwMjYtMDktMDdUMTc6MjA6MjFaIiwiZXhwaXJlc19hdCI6IjIwMjYtMDktMDdUMTc6MjU6MjFaIiwibWF4X2F0dGVtcHRzIjoxfQ.waj3NTKm9vls4B__XGc0JZ5zIIEEbCOPpeIacfWxgrPoTx7gclK4XIquLAwrb0RbJQPulh9lMz56bEVgsGnICA",
-    "chain_receipt": "eyJ2Ijo0LCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6ZTM3YTQ2ZmYwYzRlOGEwY2IwZDY1ZTkxZmZmY2FkMTRkZTIxY2NiYWU2Zjg1NWQ0OTYwYjlhMDJhNjBlZWM0OSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA5LTA3VDE3OjIwOjIxLjgyNVoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDI2LTA5LTA3VDIxOjIwOjIxWiIsImJoIjoic2hhMjU2OmI5MGFmYzExZDYzNWUwNmI5Y2I5MDlhMWFjNzU2MDQ2ZWU2MTgzYWNiMDhhNjNmMzcyNjRiZDQzMjhhOWE5OWEifQ.DQACOf5bckyPv0WkT9FaTsTr0tEHFbWHWdRgJvosmfw7ZgugNvQ21zDe5T5zOa6ssHVisZoTWxTaApRvwuZmDg",
+    "execution_grant": "eyJ2IjoiY3IuZXhlYy52MiIsImtpZCI6IjIwMjYtMDctazEiLCJncmFudF9pZCI6ImI5NDhiOTUyLWI3ZjctNDkzNS05YWE4LWM2NDc0YjdiMjcyNSIsInJlY2VpcHRfaGFzaCI6InNoYTI1NjozMzExYzk3NTk0YjAyYTQ2NjBhZWEwNzFhNjg0NjRlNWVhOWE1MjNhZWM2YzlmM2E4NDc4MWY4ZTQxMzBmMTZhIiwidGVuYW50X2lkIjoiZGVmYXVsdCIsImV4ZWN1dG9yX2lkIjoiZGVtby1kZXBsb3ltZW50IiwiYWRhcHRlcl9pZCI6InBvc3RncmVzLmF0b21pYyIsIm9wZXJhdGlvbiI6InB1Ymxpc2giLCJ0YXJnZXRfdXJpIjoiZGI6Ly9kZW1vLWRlcGxveW1lbnQvYXJ0aWNsZXMiLCJleHBlY3RlZF9zdGF0ZV90b2tlbiI6InNoYTI1Njo4MTQ2NDJlNDkxYjYxZWQxYTA2NjZlYzZkZWM1YjM4Mjg3MWUyNDZmZmU1NDU0MDNmYjA1MmYyYTlhNzI1Yzg4IiwiYWZ0ZXJfcGF5bG9hZF9oYXNoIjoic2hhMjU2OjM0NzVlNzRkMjY1NmU0M2IzMjUyNmFmN2U5MGRkYWI3ZmVmMjkyY2QzOGNiYmY0ZjgzNjVjNTdkNTBmZmQ1NWQiLCJub25jZV9oYXNoIjoic2hhMjU2OjRmM2ZhMzFhMTc2NjM2NzE5ZTk1NzE4NTQ2YjRjYjE0NDQzNjNkNDE3ZjE2MzZkMjIwMmU0MzBkY2YyOTlmNzciLCJwb2xpY3lfaGFzaCI6InNoYTI1NjplM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiYXVkaWVuY2VfaGFzaCI6InNoYTI1NjozZWRhZjM1MjYxNjYzODM1OTZiYWYzODA2Y2FjY2QwNjM2MTBjMDIzNmVkY2M3ZGM3MTk0YjQ2MGYyZTE4ODAxIiwibm90X2JlZm9yZSI6IjIwMjYtMDktMDhUMDc6MDA6NDhaIiwiZXhwaXJlc19hdCI6IjIwMjYtMDktMDhUMDc6MDU6NDhaIiwibWF4X2F0dGVtcHRzIjoxfQ.az_9K3bQctn50GaqDsAdakRhc5NSDSdGrbvIZR72OBo22hIYQ_pAdi9o4MQL1SugJGwAsV5rcDpLQnyQtIBnDA",
+    "chain_receipt": "eyJ2Ijo0LCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6ZTM3YTQ2ZmYwYzRlOGEwY2IwZDY1ZTkxZmZmY2FkMTRkZTIxY2NiYWU2Zjg1NWQ0OTYwYjlhMDJhNjBlZWM0OSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA5LTA4VDA3OjAwOjQ4Ljk5M1oiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDI2LTA5LTA4VDExOjAwOjQ4WiIsImJoIjoic2hhMjU2OjAwMGU1ZTY2MTMyYjQxNGEwZmE4ZDRhN2RjZjY1MmRmNTk2M2Q2MDMwZWU0YTNkYmFlZDZiYzQyYjBkMTZhZDEifQ.GG6xQhud-nES65ujUESLS2m6x6QypavWFhjIcmg7yRJ4Jj9xdcuQZkey-Bld6OgSl357MfB6td9fOq-59HgfDw",
     "grant": {
       "v": "cr.exec.v2",
       "kid": "2026-07-k1",
-      "grant_id": "12c57ef7-bb15-459a-b301-0c98764aa625",
-      "not_before": "2026-09-07T17:20:21Z",
-      "expires_at": "2026-09-07T17:25:21Z",
+      "grant_id": "b948b952-b7f7-4935-9aa8-c6474b7b2725",
+      "not_before": "2026-09-08T07:00:48Z",
+      "expires_at": "2026-09-08T07:05:48Z",
       "operation": "publish",
       "target_uri": "db://demo-deployment/articles",
-      "receipt_hash": "sha256:19018c3aa16731d110b991d92a608b625d106fbbbd8d0bb2e9364974b6c6407f",
+      "receipt_hash": "sha256:3311c97594b02a4660aea071a68464e5ea9a523aec6c9f3a84781f8e4130f16a",
       "expected_state_token": "sha256:814642e491b61ed1a0666ec6dec5b382871e246ffe545403fb052f2a9a725c88",
-      "nonce_hash": "sha256:f0f959e6bfa0d3960925af05fabbfc69203882169f9f8fceb000c51fe9c35d83",
+      "nonce_hash": "sha256:4f3fa31a176636719e95718546b4cb1444363d417f1636d2202e430dcf299f77",
       "after_payload_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
       "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d"
     },
