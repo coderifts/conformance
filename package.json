@@ -19,7 +19,9 @@
     "CONTRACT.md",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "VERIFY.md",
+    "proof"
   ],
   "scripts": {
     "test": "node bin/coderifts-conformance.js --subject reference && node bin/coderifts-conformance.js --subject sdk && node bin/coderifts-conformance.js --subject agent-guard && node bin/coderifts-conformance.js --subject model-acceptance && node bin/coderifts-conformance.js --subject data-plane && node --test test/*.test.js",

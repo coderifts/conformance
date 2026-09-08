@@ -1,0 +1,226 @@
+{
+  "v": "cr.prove.artifact.v1",
+  "run_id": "prove-b3652700-f0ad-463f-8aec-27909927bc92",
+  "started_at": "2026-09-08T07:00:50.766Z",
+  "finished_at": "2026-09-08T07:00:54.924Z",
+  "verdict": "FAIL",
+  "db_mode": "throwaway-docker",
+  "provenance": {
+    "source_commit": "6fe4c51154b486815b2c46a5317caa935aa46617",
+    "source_commit_reason": null,
+    "working_tree_dirty": false,
+    "working_tree_dirty_reason": null,
+    "node": "v24.12.0",
+    "platform": "darwin/x64"
+  },
+  "versions": {
+    "transcript": "cr.prove.transcript.v1",
+    "artifact": "cr.prove.artifact.v1"
+  },
+  "panels": [
+    {
+      "id": "deny",
+      "name": "DENY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "posture",
+      "name": "POSTURE",
+      "verdict": "PASS"
+    },
+    {
+      "id": "replay",
+      "name": "REPLAY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "concurrency",
+      "name": "CONCURRENCY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "cas_stale",
+      "name": "CAS-STALE",
+      "verdict": "PASS"
+    },
+    {
+      "id": "no_consume_only",
+      "name": "NO CONSUME-ONLY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "no_mutation_only",
+      "name": "NO MUTATION-ONLY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "authorized",
+      "name": "AUTHORIZED WRITE + VERIFY",
+      "verdict": "PASS"
+    },
+    {
+      "id": "drift",
+      "name": "DRIFT BASELINE",
+      "verdict": "PASS"
+    },
+    {
+      "id": "recovery",
+      "name": "RECOVERY",
+      "verdict": "CONFIRMED",
+      "kind": "recovery"
+    }
+  ],
+  "points": [
+    {
+      "n": 1,
+      "name": "authorize",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "server-issued 2026-07-k1 grant jti 349d330a-d3ab-4a79-a70d-0094878d6316 decision_id dec_1c8bf5db-f3a5-4e2f-becc-258707f570bf GRANT_CURRENT at issuance (not DEMO-KEY); source=live"
+    },
+    {
+      "n": 2,
+      "name": "grant issuance",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "a grant was issued and consumed: jti 349d330a-d3ab-4a79-a70d-0094878d6316"
+    },
+    {
+      "n": 3,
+      "name": "executor credential-boundary",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "host INSERT refused SQLSTATE 42501; articles count unchanged (0 → 0)"
+    },
+    {
+      "n": 4,
+      "name": "nonce consume (one-use)",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "the same grant cannot be consumed twice — the ledger PK is the mechanism"
+    },
+    {
+      "n": 5,
+      "name": "CAS under concurrency",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "two racing writers, exactly one mutation"
+    },
+    {
+      "n": 6,
+      "name": "attestation",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "signature verifies and binds jti 349d330a-d3ab-4a79-a70d-0094878d6316 (ATTEST_VALID); a forged signature over the same bytes is REFUSED (ATTEST_INVALID_SIGNATURE)"
+    },
+    {
+      "n": 7,
+      "name": "gate",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "cr.gate.preimage.v1 sealed in the consuming transaction; the ledger's signature IS the attestation's, and each link was checked separately"
+    },
+    {
+      "n": 8,
+      "name": "merge",
+      "state": "MODELLED",
+      "ok": false,
+      "detail": "the readback grades PROVIDER_READBACK but is NOT correlated to the governed contract (readback_commit_mismatch: the readback observes 448b3a54fb95 but the governed contract belongs to ffbdbcc9eb2e -- two objects, which is the collage this is meant to detect.) — structure without commit-equality is the collage this point exists to refuse"
+    },
+    {
+      "n": 9,
+      "name": "deploy",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "the executor seal binds deployment demo-deployment and verifies (cr.atomic.execution.attestation.v1); a forged signature over the same bytes is REFUSED. A PUBLIC verifier for this envelope now exists — receipt-verifier verify-atomic-attestation.js — so the bundle slot grades it rather than refusing it for want of one"
+    },
+    {
+      "n": 10,
+      "name": "offline_reproducibility",
+      "state": "PROVEN",
+      "ok": true,
+      "detail": "signature re-verified (PROVE_VALID) with 21 network entry points trapped and the trap proved live first (net.connect:blocked, fetch:blocked); nothing in the verify path reached one. RESIDUAL: the trap is at the JavaScript boundary — a native addon or a pre-opened socket would evade it. This path is node:crypto over in-memory bytes plus one local keyring read, so it reaches neither"
+    }
+  ],
+  "continuity": {
+    "continuous": true,
+    "code": null,
+    "reason": null,
+    "detail": null,
+    "identities": {
+      "issued_jti": "349d330a-d3ab-4a79-a70d-0094878d6316",
+      "consumed_jti": "349d330a-d3ab-4a79-a70d-0094878d6316",
+      "attestation_jti": "349d330a-d3ab-4a79-a70d-0094878d6316",
+      "issued_scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
+      "correlation_scope_hash": null
+    }
+  },
+  "evidence_root": {
+    "v": "cr.evidence.root.v1",
+    "run_id": "prove-b3652700-f0ad-463f-8aec-27909927bc92",
+    "executor_kid": "DEMO-EXECUTOR-KEY-DO-NOT-USE",
+    "producer": {
+      "name": "@coderifts/prove",
+      "version": "0.1.8",
+      "commit": "6fe4c51154b486815b2c46a5317caa935aa46617"
+    },
+    "operation": "publish",
+    "target_uri": "db://demo-deployment/articles",
+    "contract_commit": null,
+    "artifact_digests": {
+      "chain_receipt": "sha256:9b41eb6ef0a8840d2e05e63a3ae53ae45e3a4d806f0b10d2ec97505fda5069f8",
+      "execution_grant": "sha256:61ec86a1333acbe35c1d51e89f16065c19d96d79341b354783724b62430343d7",
+      "transcript_token": "sha256:31687d26259c69698b494da5977e61b7cf45376ea51e578f930b317c6c6902db",
+      "correlation": null,
+      "atomic_attestation": "sha256:533f7162d1777dd61b2ca1d67dfab19ba7e9dfc6cf0b3fd0c83edb72c32200d9",
+      "provider_readback": "sha256:05cfe8ca9f0efb8154cd22622debb13f433e515cc98190190ae829cd9ef57962"
+    },
+    "grant_id": "349d330a-d3ab-4a79-a70d-0094878d6316",
+    "receipt_hash": "sha256:9b41eb6ef0a8840d2e05e63a3ae53ae45e3a4d806f0b10d2ec97505fda5069f8",
+    "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
+    "policy_hash": null,
+    "state_token_hash": "sha256:814642e491b61ed1a0666ec6dec5b382871e246ffe545403fb052f2a9a725c88",
+    "signature": "KVRFrXGoaXMdAXgZJ5Vuyo-yqoH1qkCfGnT1O1_vs9BYIehKBaQ-tEtBgJ1EPS434R7xrqT7hZDTHtwLqlFjDw"
+  },
+  "transcript_token": "cr.prove.transcript.v1|DEMO-EXECUTOR-KEY-DO-NOT-USE|eyJkZXBsb3ltZW50X2lkIjoiZGVtby1kZXBsb3ltZW50IiwiZXhlY3V0b3Jfa2lkIjoiREVNTy1FWEVDVVRPUi1LRVktRE8tTk9ULVVTRSIsIm1lYXN1cmVkX2F0IjoiMjAyNi0wOS0wOFQwNzowMDo1My41ODRaIiwic2VjdGlvbnMiOlt7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImV4ZWN1dG9yX3JvbGUiOiJjcl9leGVjdXRvciIsImV4ZWN1dG9yX3NxbHN0YXRlIjoiNDI1MDEiLCJob3N0X3JvbGUiOiJjcl9ob3N0IiwiaG9zdF9zcWxzdGF0ZSI6IjQyNTAxIiwiaG9zdF90aXRsZV9hZnRlciI6MCwiaG9zdF90aXRsZV9iZWZvcmUiOjAsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoiZGVueSIsIm5hbWUiOiJERU5ZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7InZlcmRpY3QiOiJQQVNTIiwidmVyaWZ5IjoiUE9TVFVSRV9QQVNTIn0sImlkIjoicG9zdHVyZSIsIm5hbWUiOiJQT1NUVVJFIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImZpcnN0IjoyMDEsInNlY29uZCI6NDA5LCJzdGF0dXMiOiJHUkFOVF9DT05TVU1FRCJ9LCJpZCI6InJlcGxheSIsIm5hbWUiOiJSRVBMQVkiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MCwiY29uZmxpY3QiOjE5LCJncmV3IjoxLCJvayI6MX0sImlkIjoiY29uY3VycmVuY3kiLCJuYW1lIjoiQ09OQ1VSUkVOQ1kiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjEsImJlZm9yZV9jb3VudCI6MSwiZXhwZWN0ZWRfc3RhdGVfdG9rZW4iOiJzaGEyNTY6MzlhMGFkOWFhZTcyNDQxZGRiNzUzY2U0N2I5YmFlZTFmM2ZhYjdiOTQ1OGU3MDRmYTQxOTdmZjJmZTE4NDRhYSIsImh0dHAiOjQwOSwianRpX2NvbnN1bWVkIjowLCJzdGFsZV9zdGF0ZV90b2tlbiI6dHJ1ZSwic3RhdHVzIjoiU1RBVEVfRFJJRlQiLCJ1bmNoYW5nZWQiOnRydWV9LCJpZCI6ImNhc19zdGFsZSIsIm5hbWUiOiJDQVMtU1RBTEUiLCJ2ZXJkaWN0IjoiUEFTUyJ9LHsiZXZpZGVuY2UiOnsiYWZ0ZXJfY291bnQiOjAsImJlZm9yZV9jb3VudCI6MCwiZXJyb3IiOiJzaW11bGF0ZWQgY3Jhc2gtYmVmb3JlLXNlYWwiLCJsZWRnZXJfYWZ0ZXIiOjAsImxlZGdlcl9iZWZvcmUiOjAsInNraXBfc2VhbCI6dHJ1ZSwic3RhdHVzIjoiY29uc3VtZWRfdW5zaWduZWRfcm9sbGVkX2JhY2siLCJ0aHJldyI6dHJ1ZSwidW5jaGFuZ2VkIjp0cnVlfSwiaWQiOiJub19jb25zdW1lX29ubHkiLCJuYW1lIjoiTk8gQ09OU1VNRS1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjowLCJiZWZvcmVfY291bnQiOjAsImxlZGdlcl9hZnRlciI6MiwibGVkZ2VyX2JlZm9yZSI6MiwibXV0YXRpb25fb25seSI6dHJ1ZSwic3Fsc3RhdGUiOiI0MjUwMSIsInVuY2hhbmdlZCI6dHJ1ZX0sImlkIjoibm9fbXV0YXRpb25fb25seSIsIm5hbWUiOiJOTyBNVVRBVElPTi1PTkxZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2NvdW50IjoxLCJiZWZvcmVfY291bnQiOjAsImh0dHAiOjIwMSwianRpIjoiMzQ5ZDMzMGEtZDNhYi00YTc5LWE3MGQtMDA5NDg3OGQ2MzE2Iiwic2VhbGVkIjp0cnVlLCJ3aXRoX2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkIEFORCBib3VuZCB0byBncmFudCAzNDlkMzMwYS1kM2FiLTRhNzktYTcwZC0wMDk0ODc4ZDYzMTYiLCJ3aXRob3V0X2dyYW50Ijoic2lnbmF0dXJlIHZhbGlkOyBncmFudC1iaW5kaW5nIE5PVCBjaGVja2VkIn0sImlkIjoiYXV0aG9yaXplZCIsIm5hbWUiOiJBVVRIT1JJWkVEIFdSSVRFICsgVkVSSUZZIiwidmVyZGljdCI6IlBBU1MifSx7ImV2aWRlbmNlIjp7ImFmdGVyX2dyYW50IjoiRkFJTCIsImFmdGVyX3Jldm9rZSI6IlBBU1MiLCJkcmlmdF9uYW1lcyI6WyJob3N0X3JvbGUgZ2FpbmVkIElOU0VSVCBvbiBhcnRpY2xlcyJdfSwiaWQiOiJkcmlmdCIsIm5hbWUiOiJEUklGVCBCQVNFTElORSIsInZlcmRpY3QiOiJQQVNTIn0seyJldmlkZW5jZSI6eyJjb3VudHMiOnsiQ09ORklSTUVEIjoxLCJJTkRFVEVSTUlOQVRFIjowLCJSRUpFQ1RFRCI6MCwiUkVMRUFTRUQiOjB9LCJncmFudHMiOlt7ImFkYXB0ZXIiOiJwb3N0Z3JlcyIsImV2aWRlbmNlIjp7ImF0dGVzdF9zdGF0dXMiOiJBVFRFU1RfVkFMSUQiLCJleGVjdXRvcl9raWQiOiJERU1PLUVYRUNVVE9SLUtFWS1ETy1OT1QtVVNFIiwicmVhc29uIjoiY29uc3VtZWQsIHNlYWxlZCwgYW5kIGEgQ1JZUFRPR1JBUEhJQ0FMTFkgVkVSSUZJRUQgYXR0ZXN0YXRpb24gYm91bmQgdG8gdGhpcyBncmFudCBjYXJyaWVzIHRoaXMgcm93J3MgZXhhY3QgcHJlaW1hZ2UiLCJzdGF0dXMiOiJzZWFsZWQifSwianRpIjoiMzQ5ZDMzMGEtZDNhYi00YTc5LWE3MGQtMDA5NDg3OGQ2MzE2Iiwib3V0Y29tZSI6IkNPTkZJUk1FRCJ9XSwibmVlZHNfYXR0ZW50aW9uIjowLCJvdXRjb21lIjoiQ09ORklSTUVEIn0sImlkIjoicmVjb3ZlcnkiLCJraW5kIjoicmVjb3ZlcnkiLCJuYW1lIjoiUkVDT1ZFUlkiLCJ2ZXJkaWN0IjoiQ09ORklSTUVEIn1dLCJ2IjoiY3IucHJvdmUudHJhbnNjcmlwdC52MSIsInZlcmRpY3QiOiJQQVNTIn0|BaRSeYTg_7WOpzKPKTbTge-JLa18sysiXdatIQ1qtUeJC6vkyFEEd3_M6J4E7l95IJRA4srCQAjmb0ZFphstDA",
+  "transcript_preimage_hash": "sha256:7da5f132fd86384e90ce51fafc7031320ef8f1622e3040aa8d8f39917909dd27",
+  "transcript_verifies": true,
+  "issuance": {
+    "source": "live",
+    "captured_at": "2026-09-08T07:00:53.723Z",
+    "decision_id": "dec_1c8bf5db-f3a5-4e2f-becc-258707f570bf",
+    "verdict_fingerprint": "sha256:e37a46ff0c4e8a0cb0d65e91fffcad14de21ccbae6f855d4960b9a02a60eec49",
+    "kid": "2026-07-k1",
+    "jti": "349d330a-d3ab-4a79-a70d-0094878d6316",
+    "verify_status": "GRANT_CURRENT",
+    "execution_grant": "eyJ2IjoiY3IuZXhlYy52MiIsImtpZCI6IjIwMjYtMDctazEiLCJncmFudF9pZCI6IjM0OWQzMzBhLWQzYWItNGE3OS1hNzBkLTAwOTQ4NzhkNjMxNiIsInJlY2VpcHRfaGFzaCI6InNoYTI1Njo5YjQxZWI2ZWYwYTg4NDBkMmUwNWU2M2EzYWU1M2FlNDVlM2E0ZDgwNmYwYjEwZDJlYzk3NTA1ZmRhNTA2OWY4IiwidGVuYW50X2lkIjoiZGVmYXVsdCIsImV4ZWN1dG9yX2lkIjoiZGVtby1kZXBsb3ltZW50IiwiYWRhcHRlcl9pZCI6InBvc3RncmVzLmF0b21pYyIsIm9wZXJhdGlvbiI6InB1Ymxpc2giLCJ0YXJnZXRfdXJpIjoiZGI6Ly9kZW1vLWRlcGxveW1lbnQvYXJ0aWNsZXMiLCJleHBlY3RlZF9zdGF0ZV90b2tlbiI6InNoYTI1Njo4MTQ2NDJlNDkxYjYxZWQxYTA2NjZlYzZkZWM1YjM4Mjg3MWUyNDZmZmU1NDU0MDNmYjA1MmYyYTlhNzI1Yzg4IiwiYWZ0ZXJfcGF5bG9hZF9oYXNoIjoic2hhMjU2OjM0NzVlNzRkMjY1NmU0M2IzMjUyNmFmN2U5MGRkYWI3ZmVmMjkyY2QzOGNiYmY0ZjgzNjVjNTdkNTBmZmQ1NWQiLCJub25jZV9oYXNoIjoic2hhMjU2OmM5NWNlMmNlMTJmNTI2YWVmMTI3YTQ1OTc3NzY1N2IwNTc2NTY0NDNlOWZlZGRlNDllOWE1MDAwZjYzZWY0NGMiLCJwb2xpY3lfaGFzaCI6InNoYTI1NjplM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiYXVkaWVuY2VfaGFzaCI6InNoYTI1NjozZWRhZjM1MjYxNjYzODM1OTZiYWYzODA2Y2FjY2QwNjM2MTBjMDIzNmVkY2M3ZGM3MTk0YjQ2MGYyZTE4ODAxIiwibm90X2JlZm9yZSI6IjIwMjYtMDktMDhUMDc6MDA6NTRaIiwiZXhwaXJlc19hdCI6IjIwMjYtMDktMDhUMDc6MDU6NTRaIiwibWF4X2F0dGVtcHRzIjoxfQ.r2eWH0hQBA7YpvbE7xOEC25nQ15bHNOmc3OlgvVrabyEssx8ffikN0K2K1euWFY683-QUoan1DajoD0CTfnADw",
+    "chain_receipt": "eyJ2Ijo0LCJraWQiOiIyMDI2LTA3LWsxIiwiZnAiOiJzaGEyNTY6ZTM3YTQ2ZmYwYzRlOGEwY2IwZDY1ZTkxZmZmY2FkMTRkZTIxY2NiYWU2Zjg1NWQ0OTYwYjlhMDJhNjBlZWM0OSIsInByZXYiOiJudWxsIiwiY2FsbGVyIjoiYnVuZGxlIiwidHMiOiIyMDI2LTA5LTA4VDA3OjAwOjU0LjM4NVoiLCJyZWciOiIiLCJpciI6IiIsImV4cGlyZXNfYXQiOiIyMDI2LTA5LTA4VDExOjAwOjU0WiIsImJoIjoic2hhMjU2OmYyOWViNjE5YmQ2ZTQ3NWE5ZmVmNjAyMzhlZGUzNTFhZDJhMGI2NGVlOTZhMTA4M2IxN2NkMTQwNjNjMGZhMTAifQ.GFQ1EoVfVVbI9QqC9az7xgUax5tZvcc3Bhq4R5cVSOMIh0ZVqklaBGPIe4ZdFRF9GMHiwPAIPByL4bkPl1qeBg",
+    "grant": {
+      "v": "cr.exec.v2",
+      "kid": "2026-07-k1",
+      "grant_id": "349d330a-d3ab-4a79-a70d-0094878d6316",
+      "not_before": "2026-09-08T07:00:54Z",
+      "expires_at": "2026-09-08T07:05:54Z",
+      "operation": "publish",
+      "target_uri": "db://demo-deployment/articles",
+      "receipt_hash": "sha256:9b41eb6ef0a8840d2e05e63a3ae53ae45e3a4d806f0b10d2ec97505fda5069f8",
+      "expected_state_token": "sha256:814642e491b61ed1a0666ec6dec5b382871e246ffe545403fb052f2a9a725c88",
+      "nonce_hash": "sha256:c95ce2ce12f526aef127a459777657b057656443e9fedde49e9a5000f63ef44c",
+      "after_payload_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
+      "scope_hash": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d"
+    },
+    "does_not_prove": [
+      "that a later authorize call would ALLOW the same change — this issuance is a point-in-time server verdict",
+      "that the grant remains executable after exp — offline verify uses now=iat",
+      "that this grant authorizes a mutation on the local demo executor — it is a CodeRifts server grant, not a DEMO-KEY data-plane grant"
+    ]
+  },
+  "ceiling": {
+    "shows": "the chain this deployment minted is internally consistent and independently checkable offline",
+    "does_not_show": [
+      "that the world changed — a verified bundle is a statement about artifacts, not about effects",
+      "that no other path wrote to the target",
+      "that an ABSENT slot is unnecessary; absence is scope, not a waiver"
+    ]
+  }
+}

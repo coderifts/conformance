@@ -1,0 +1,12 @@
+{
+  "_comment": "DEMO EXECUTOR REGISTRY — generated locally by demo/gen-keys.js. Customer-held key; CodeRifts never receives it. Shape is the (b)-ready registry document from docs/cr-exec-attest-v1.md (same shape as .well-known/coderifts-keys.json).",
+  "keys": [
+    {
+      "kid": "DEMO-EXECUTOR-KEY-DO-NOT-USE",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAcwr/5KGNBarNwD/C4rytrFRCCOWIf/wx8QIL6sJDcc=\n-----END PUBLIC KEY-----\n",
+      "status": "active",
+      "valid_from": "2026-09-08T07:00:45Z",
+      "retired_at": null
+    }
+  ]
+}

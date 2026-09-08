@@ -1,0 +1,23 @@
+{
+  "v": "cr.git.observation.v1",
+  "target_ref": "refs/heads/main",
+  "repo_path": "/var/folders/2k/kjvfbph51m5027jc6bhvnl1w0000gn/T/cr-git-target-nwC9yC/repo.git",
+  "repo_lineage_id": "git-root:915f64c162e337f602dcc42a0561a1d17c9877cc",
+  "before_commit": "915f64c162e337f602dcc42a0561a1d17c9877cc",
+  "before_source": "reflog",
+  "observed_commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
+  "commit": "64e0ffead5b7ff7fbe6ce863cd88916364920827",
+  "contract_path": "demo/contracts/openapi.yaml",
+  "contract_blob_digest": "sha256:3475e74d2656e43b32526af7e90ddab7fef292cd38cbbf4f8365c57d50ffd55d",
+  "contract_bytes_len": 535,
+  "observation_source": "git-object-database",
+  "observer_mode": "read_only",
+  "observed_at": "2026-09-08T07:00:50.073Z",
+  "does_not_prove": [
+    "that the executor told the truth — the observer and the executor run on the same machine, and this raises the claim from \"somebody typed the right commit\" to \"a process that cannot write read the target afterwards and found it moved\"",
+    "that any provider merged anything — there is no external witness here (proof_scope: TRUSTED_EXECUTOR, provider_witness: ABSENT)",
+    "that the ref still points here now; this is the state at observed_at"
+  ],
+  "canonical_target_uri": "git://atomic-v2-reference/repo.git/refs/heads/main",
+  "observer_process": "coderifts-git-observer"
+}
