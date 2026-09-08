@@ -188,8 +188,23 @@ describe('the does_not_prove text describes THIS capture\'s target kind', () => 
   });
 });
 
+/**
+ * The domain words, and why two of them are NOT word-bounded.
+ *
+ * MEASURED while writing the fire-test: `/\bprovider\b/` does NOT match `provider_observation`,
+ * because `_` is a word character and the boundary falls inside the identifier. The shipped pin
+ * carried exactly that string, so the invariant would have reported all four surfaces clean while
+ * looking straight at the one that was not — a check that reads a surface and cannot see the value
+ * on it is worse than one that does not read it, because it is counted as coverage.
+ *
+ * `provider` and `deploy` are therefore SUBSTRINGS: no legitimate word in a title, an assertion, a
+ * vector id or a role contains them innocently. `merge` keeps a LEFT boundary so `emerged` and
+ * `submerged` — real English that could appear in prose — do not fire.
+ */
+const DOMAIN_WORDS = [/provider/i, /deploy/i, /\bmerge/i];
+
 describe('the END_TO_END headline names what is measured', () => {
-  it('a NOT_APPLICABLE provider means no provider/deploy/merge words in the title or asserts', () => {
+  it('a NOT_APPLICABLE provider means no domain word on ANY of the four surfaces', () => {
     // The sibling of the does_not_prove fix, in the row a reader meets FIRST — before any limit,
     // and often instead of them. It said "Authorization through to deploy" / "provider
     // enforcement" for a git.ref.update on a local target with provider_witness NOT_APPLICABLE.
@@ -199,11 +214,63 @@ describe('the END_TO_END headline names what is measured', () => {
       path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'transcript.json'), 'utf8'));
     const tst = artifact.target_state_transition || {};
     if (tst.provider_witness !== 'NOT_APPLICABLE') return;
-    // The one allowed mention is the explicit denial, which is the opposite of a claim.
-    const text = `${e2e.title} ${String(e2e.asserts).replace(/no provider is involved and nothing was deployed\.?/i, '')}`;
-    for (const word of [/\bprovider\b/i, /\bdeploy(ed|ment)?\b/i, /\bmerge[sd]?\b/i]) {
-      assert.doesNotMatch(text, word,
-        `provider_witness is NOT_APPLICABLE and the headline still says ${word}: ${text}`);
+    // ── ALL FOUR SURFACES, AND NO EXEMPTION ────────────────────────────────────────────
+    //
+    // MEASURED: three passes cleaned the title, the assertion and the vector id, and `pin.json`
+    // still called the readback `provider_observation`. Each pass fixed the surface that had been
+    // noticed. Listing them here is what stops the fourth one from being noticed next time.
+    //
+    // The assertion used to carry "no provider is involved and nothing was deployed" — the right
+    // meaning, and it needed an EXEMPTION in this check, shaped exactly like the sentence it
+    // excused. The scope sentence says the same thing without the words, so the check is absolute:
+    // any occurrence, anywhere, fails.
+    const pin = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'pin.json'), 'utf8'));
+    const surfaces = {
+      title: e2e.title,
+      asserts: e2e.asserts,
+      vector_ids: JSON.stringify(e2e.vector_ids),
+      'pin sidecar roles': (pin.artifacts || []).map((a) => a.role).join(' '),
+    };
+    for (const [name, text] of Object.entries(surfaces)) {
+      for (const word of DOMAIN_WORDS) {
+        assert.doesNotMatch(String(text), word,
+          `provider_witness is NOT_APPLICABLE and the ${name} still says ${word}: ${text}`);
+      }
+    }
+  });
+
+  it('the invariant FIRES on each surface — a check that has never bitten is a sentence', () => {
+    // Each surface is sabotaged in turn against the same predicate the test above runs. Without
+    // this, "all four are clean" could be true of a check that reads none of them.
+    const violates = (text) => DOMAIN_WORDS.some((w) => w.test(String(text)));
+    for (const [surface, poisoned] of [
+      ['title', 'Authorization through to deploy'],
+      ['asserts', '…atomic commit and provider enforcement, in sequence.'],
+      ['vector_ids', '["E2E-PROVIDER-MERGE-CORRELATED"]'],
+      ['pin sidecar roles', 'bundle keyring provider_observation negative'],
+    ]) {
+      assert.equal(violates(poisoned), true, `the invariant does not fire on a poisoned ${surface}`);
+    }
+    // …and it does NOT fire on the wording actually shipped, so it is not "everything fails".
+    const e2e = profileRows().find((r) => r.id === 'END_TO_END');
+    assert.equal(violates(`${e2e.title} ${e2e.asserts}`), false, e2e.asserts);
+  });
+
+  it('the MEASURE refuses a capture whose sidecar role names a party not in the run', () => {
+    // The invariant above reads the shipped pin. This proves the profile itself refuses a drifted
+    // one, so the role is a graded fact and not only a documented one.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'role-neg-'));
+    try {
+      const src = path.join(ROOT, 'fixtures', 'recorded', 'end-to-end');
+      for (const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src, f), path.join(dir, f));
+      const pin = JSON.parse(fs.readFileSync(path.join(dir, 'pin.json'), 'utf8'));
+      pin.artifacts.find((a) => a.path === 'readback.json').role = 'provider_observation';
+      fs.writeFileSync(path.join(dir, 'pin.json'), JSON.stringify(pin, null, 2));
+      const m = measureContractE2E({ dir });
+      assert.ok((m.missing || []).some((x) => x.startsWith('sidecar role:')), m.missing.join('\n'));
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
     }
   });
 
