@@ -201,7 +201,31 @@ describe('the does_not_prove text describes THIS capture\'s target kind', () => 
  * vector id or a role contains them innocently. `merge` keeps a LEFT boundary so `emerged` and
  * `submerged` — real English that could appear in prose — do not fire.
  */
-const DOMAIN_WORDS = [/provider/i, /deploy/i, /\bmerge/i];
+const DOMAIN_WORDS = [/provider/i, /deploy/i, /\bmerge/i, /contract[- ]publish/i, /E2E-CONTRACT/];
+
+/**
+ * Sentence split and negation, kept next to the words they qualify.
+ *
+ * Whitespace is normalised FIRST. Wrapped prose has bitten three earlier gates in this repo: a
+ * markdown row and a source comment both wrap mid-phrase, and a regex written against the rendered
+ * sentence silently matches nothing against the wrapped one — passing, while reading a surface it
+ * cannot see. That failure mode is the reason this file exists, so it is not repeated here.
+ */
+function splitSentences(text) {
+  return String(text)
+    // CODE SPANS ARE NOT PROSE. `provider_witness` is a field name; a reader meets it as an
+    // identifier they will grep for, not as an assertion that a provider was involved. Scanning
+    // it as prose produced the one false positive this rule ever raised — on the README row,
+    // where the very next token is NOT_APPLICABLE.
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/\s+/g, ' ')
+    // Split on sentence enders only. ':' was in this class for one run and cut
+    // "`provider_witness: NOT_APPLICABLE`" in half, separating a field name from its own value —
+    // the fragment then read as a bare claim because the denial had been left in the other half.
+    .split(/(?<=[.;])\s+/)
+    .filter(Boolean);
+}
+const NEGATION = /\b(no|not|nothing|never|without|absent|NOT_APPLICABLE|neither|nor)\b/i;
 
 describe('the END_TO_END headline names what is measured', () => {
   it('a NOT_APPLICABLE provider means no domain word on ANY of the four surfaces', () => {
@@ -226,18 +250,128 @@ describe('the END_TO_END headline names what is measured', () => {
     // any occurrence, anywhere, fails.
     const pin = JSON.parse(fs.readFileSync(
       path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'pin.json'), 'utf8'));
-    const surfaces = {
+    //
+    // ── WHY THE LIST GREW FROM FOUR TO EIGHT, AND WHAT THAT COST ────────────────────────
+    //
+    // MEASURED: with the four surfaces above all clean, `points[9].name` was still the single
+    // word "deploy" and both vendored pins still said "contract-publish E2E". The check reported
+    // four clean surfaces and it was telling the truth — about four surfaces. A reader does not
+    // meet four surfaces; they meet a point name, a table row and an id they paste into a report.
+    //
+    // So the surfaces are enumerated from the artifact rather than named one at a time, and two
+    // words were added that the old list never carried at all: `contract-publish` (the shipped
+    // pin's own subject line) and `E2E-CONTRACT` (the negative vector id, which was a literal at
+    // its call site while the positive beside it had already been made to move with the capture).
+    //
+    // ── ONE SURFACE IS QUARANTINED, AND THE QUARANTINE IS A DIGEST ──────────────────────
+    //
+    // `points[9].name` is "deploy" in the SHIPPED bytes and `executor_seal` in the producer that
+    // emits them (capability-demo demo/e2e-chain.js). It cannot be fixed here: the pin's
+    // subject.digest covers transcript.json byte for byte — MEASURED, editing the label alone
+    // moved 5d63954d6763 to 3f4909310955 and assertPins refused the fixture. Re-cutting is the
+    // only honest route and the generator refuses a dirty tree, so it is Peter's step, after the
+    // producer change lands.
+    //
+    // The allowance is therefore keyed to THE EXACT STALE BYTES, not to the word and not to the
+    // surface. Re-cut the fixture and the digest moves, this block stops applying, and the
+    // absolute rule below judges the new label with no edit to this test. An exemption written as
+    // a phrase would have outlived the capture; one written as a digest cannot.
+    const STALE_CAPTURE = {
+      digest: 'sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7',
+      surfaces: { 'points[9].name': 'deploy' },
+      fixed_in_producer: 'capability-demo demo/e2e-chain.js — point(9, \'executor_seal\', …)',
+    };
+    const stale = (pin.subject || {}).digest === STALE_CAPTURE.digest ? STALE_CAPTURE.surfaces : {};
+
+    const artifactSurfaces = Object.fromEntries(
+      (artifact.points || [])
+        .map((pt) => [`points[${pt.n}].name`, pt.name])
+        // Quarantined ONLY while the value is still the exact one recorded. A different stale
+        // label on the same surface is a new fact and gets judged.
+        .filter(([name, value]) => stale[name] !== value));
+    const identifiers = {
       title: e2e.title,
       asserts: e2e.asserts,
       vector_ids: JSON.stringify(e2e.vector_ids),
       'pin sidecar roles': (pin.artifacts || []).map((a) => a.role).join(' '),
+      'pin subject': pin.subject && pin.subject.name,
+      ...artifactSurfaces,
     };
-    for (const [name, text] of Object.entries(surfaces)) {
+    for (const [name, text] of Object.entries(identifiers)) {
       for (const word of DOMAIN_WORDS) {
         assert.doesNotMatch(String(text), word,
           `provider_witness is NOT_APPLICABLE and the ${name} still says ${word}: ${text}`);
       }
     }
+  });
+
+  /**
+   * ── THE PROSE SURFACES, AND WHY THEY GET A DIFFERENT RULE ─────────────────────────────
+   *
+   * The rule above is ABSOLUTE, and it must stay absolute, because every surface it reads is a
+   * NAME: a title, an id, a role, a point name, a pin subject. Nothing is denied in a name.
+   *
+   * `points[].detail`, the pin's note, the README row and the CLI summary are different. Their
+   * honest content INCLUDES the denials — "No provider witnessed this and no pull request was
+   * merged (that is PATH B)" is the sentence a reader most needs, and an absolute rule would
+   * delete exactly the sentences that keep the capture from being oversold.
+   *
+   * The distinction is not an exemption list. An exemption names a phrase and therefore ages into
+   * a hole shaped like that phrase — which is what the earlier "no provider is involved" carve-out
+   * was. This rule is structural: in prose, a domain word is admissible ONLY inside a sentence
+   * that also negates. A future edit that drops the negation and keeps the word fails; a future
+   * edit that adds a bare claim fails. Neither needs this test to be updated.
+   *
+   * MEASURED before it was written, over the shipped artifact: seven occurrences across the four
+   * prose surfaces, six already inside denials and one — the pin note's "contract-publish" — a
+   * genuine bare claim. That one is the finding; the six are why the rule is not absolute.
+   */
+  it('in PROSE a domain word may appear only inside a sentence that denies it', () => {
+    const artifact = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'transcript.json'), 'utf8'));
+    const tst = artifact.target_state_transition || {};
+    if (tst.provider_witness !== 'NOT_APPLICABLE') return;
+    const pin = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'fixtures', 'recorded', 'end-to-end', 'pin.json'), 'utf8'));
+    const readme = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8');
+    const cli = spawnSync(process.execPath,
+      [path.join(ROOT, 'bin', 'coderifts-conformance.js'), '--assurance', 'END_TO_END'],
+      { encoding: 'utf8' });
+
+    const prose = {
+      ...Object.fromEntries((artifact.points || [])
+        .filter((pt) => pt.detail).map((pt) => [`points[${pt.n}].detail`, pt.detail])),
+      'pin note': pin.note || '',
+      'README END_TO_END row': readme.split('\n').filter((l) => l.includes('`END_TO_END`')).join(' '),
+      'CLI summary': `${cli.stdout || ''}${cli.stderr || ''}`,
+    };
+    let checked = 0;
+    for (const [name, text] of Object.entries(prose)) {
+      for (const sentence of splitSentences(text)) {
+        for (const word of DOMAIN_WORDS) {
+          if (!word.test(sentence)) continue;
+          checked += 1;
+          assert.match(sentence, NEGATION,
+            `provider_witness is NOT_APPLICABLE and ${name} states ${word} without denying it: `
+            + sentence.trim());
+        }
+      }
+    }
+    // A rule that found nothing to judge is not a passing rule. The count is not pinned — prose
+    // moves — but zero means the surfaces were read as empty and nobody would have known.
+    assert.ok(checked > 0, 'no domain word was found on ANY prose surface — the surfaces are '
+      + 'probably being read as empty; a rule with nothing to judge proves nothing');
+  });
+
+  it('the PROSE rule FIRES: the same word without the denial is refused', () => {
+    // The pin note's actual defect, reduced. Both halves matter: the denial passes, the bare
+    // claim fails. A rule that only ever sees denials could be `return true` and look identical.
+    const denial = 'No provider witnessed this and no pull request was merged (that is PATH B).';
+    const bare = 'ONE contract-publish run, producer-emitted, with POINT 8 filled from Git.';
+    const fires = (text) => splitSentences(text)
+      .some((s) => DOMAIN_WORDS.some((w) => w.test(s)) && !NEGATION.test(s));
+    assert.equal(fires(denial), false, 'a denial must be admissible or the honest sentences die');
+    assert.equal(fires(bare), true, 'a bare domain claim must be refused');
   });
 
   it('the invariant FIRES on each surface — a check that has never bitten is a sentence', () => {
@@ -382,5 +516,41 @@ describe('the points[] prose gate', () => {
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+/**
+ * The quarantine above is a promissory note. This is the part that collects on it.
+ *
+ * A stale surface that is merely allowed becomes a stale surface that is forgotten. So the state
+ * is asserted from BOTH sides: the capture still carries the old label (if it does not, the
+ * quarantine is dead weight and must be deleted), and the producer beside it already carries the
+ * new one (if it does not, nothing is actually pending and the allowance is a cover story).
+ */
+describe('the stale-capture quarantine is honest about what it is deferring', () => {
+  const FIXTURE = path.join(ROOT, 'fixtures', 'recorded', 'end-to-end');
+  const PRODUCER = path.join(ROOT, '..', 'capability-demo', 'demo', 'e2e-chain.js');
+
+  it('the quarantined surface is still stale in the shipped bytes — or the block is dead', () => {
+    const pin = JSON.parse(fs.readFileSync(path.join(FIXTURE, 'pin.json'), 'utf8'));
+    const art = JSON.parse(fs.readFileSync(path.join(FIXTURE, 'transcript.json'), 'utf8'));
+    const DIGEST = 'sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7';
+    if ((pin.subject || {}).digest !== DIGEST) return; // re-cut; the quarantine no longer applies
+    const p9 = (art.points || []).find((pt) => pt.n === 9);
+    assert.equal(p9 && p9.name, 'deploy',
+      'the capture at the quarantined digest no longer carries the stale label — delete the '
+      + 'STALE_CAPTURE block in this file rather than leaving an allowance for nothing');
+  });
+
+  it('the producer is already fixed, so the deferral is a re-cut and not a to-do', (t) => {
+    if (!fs.existsSync(PRODUCER)) {
+      t.skip('capability-demo is not checked out beside this repo — the shipped-bytes half above '
+        + 'ran; what cannot run here is the comparison against the producer');
+      return;
+    }
+    const src = fs.readFileSync(PRODUCER, 'utf8').replace(/\s+/g, ' ');
+    assert.match(src, /point\(9, [^)]*'executor_seal'/,
+      'the fixture is quarantined on the promise that the producer already emits executor_seal, '
+      + 'and it does not — the quarantine is then hiding an unfixed defect, not a pending re-cut');
   });
 });

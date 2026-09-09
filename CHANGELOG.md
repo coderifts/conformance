@@ -9,7 +9,7 @@ The embedded 7/7 fixture is regenerated from prove 0.1.10, so the fixture's prod
 
 ## 0.8.7
 
-The --dir flag now reads the given directory (it was ignored, always verifying the embedded fixture); a nonexistent or incomplete directory is refused, an unknown argument is a usage error, and the output prints evidence_dir and source (embedded|external). The END_TO_END title, asserts, vector id and sidecar are generated from target_kind + provider_witness — no provider/deploy words when provider_witness is NOT_APPLICABLE. does_not_prove is generated from the same fields. The embedded transcript points[] are generated from the git E2E (no leftover DB prose; every grant id equals the issuance grant). Test isolation: fixture-mutating tests use their own temp copy. The vendored core is re-pinned to receipt-verifier v1.0.0. The negative result field is vector_result / coverage_status.
+The --dir flag now reads the given directory (it was ignored, always verifying the embedded fixture); a nonexistent or incomplete directory is refused, an unknown argument is a usage error, and the output prints evidence_dir and source (embedded|external). The END_TO_END title, asserts, vector id and sidecar are generated from target_kind + provider_witness — no provider/deploy words when provider_witness is NOT_APPLICABLE. does_not_prove is generated from the same fields. The embedded transcript points[] are generated from the git E2E (no leftover DB prose; every grant id equals the issuance grant). Test isolation: fixture-mutating tests use their own temp copy. The vendored core is re-pinned to receipt-verifier v1.0.0. The negative result field is `measurement_completed` (did the vectors run) plus `claim_status` (is the claim proven); `result` and `status` remain as DEPRECATED aliases of `claim_status` for one release. Names measured against the emitted JSON, not against the sentence that was easier to write.
 
 
 ## 0.8.6
@@ -65,7 +65,7 @@ continuity block's own `issued_jti` was not load-bearing, so it could disagree w
 in silence.
 
 HONEST BOUNDARY (unchanged): this strengthens the 7/7 — the measure now authenticates rather than
-only pinning — and does not change what END_TO_END claims. It is still the contract-publish E2E,
+only pinning — and does not change what END_TO_END claims. It is still the target-state-transition E2E,
 witness-attested and not provider-signed, and '7/7' does NOT mean CodeRifts merged a PR.
 
 
@@ -79,7 +79,7 @@ working_tree_dirty false), with a negative pole (same producer, different readba
 the authorization-continuity an auditor requires: the SAME grant end to end, not two grants placed
 in one transcript. measureContractE2E re-verifies the grant-identity from the vendored bytes and
 returns COVERED / RECORDED. HONEST BOUNDARY (unchanged, in the profile's last does_not_prove line):
-this is the contract-publish E2E — witness-attested, not provider-signed; the v2 ATOMIC grant is
+this is the target-state-transition E2E — witness-attested, not provider-signed; the v2 ATOMIC grant is
 non-replayable (the nonce preimage exists nowhere); '7/7' does NOT mean CodeRifts merged a PR (that
 is PATH B).
 

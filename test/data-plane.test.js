@@ -247,3 +247,67 @@ describe('the live-Postgres rows', () => {
     }
   });
 });
+
+/**
+ * THREE ENVIRONMENTS, AND THE SUITE MUST TELL THEM APART.
+ *
+ * The two describes above test two of them — absent checkout, and no database — and each is
+ * correct on its own. What neither covers is that they must not COLLAPSE. An auditor running the
+ * suite on a laptop with capability-demo beside it but no Postgres gets the same green as one
+ * running it on a bare CI box, and the green means something different in each case:
+ *
+ *   E1  capability-demo ABSENT                 nothing can run; the chain is not attempted
+ *   E2  present, NO PostgreSQL                 the chain half is reachable; the database half is not
+ *   E3  PostgreSQL AVAILABLE                   both halves run and rows may go COVERED
+ *
+ * E3 is the one that cannot be conjured, so it is reported as NOT_RUN rather than skipped in
+ * silence — unproved is not disproved, and a suite that says nothing about its strongest
+ * environment reads as if it had covered it.
+ *
+ * MEASURED while writing this, and it is why the assertion below is about DISTINCT NAMED reasons
+ * rather than one expected string: with the demo checked out but diverged from its pin, E2 reports
+ * `capability_demo_commit_mismatch`, not `capability_demo_absent`. Two different facts, two
+ * different names, and a test that had pinned one string would have failed on a healthy tree while
+ * the collapse it was meant to catch went unnoticed.
+ */
+describe('the three environments are distinguishable, and the third says NOT_RUN', () => {
+  const DEMO_SRC = path.join(__dirname, '..', '..', 'capability-demo', 'demo', 'src');
+
+  it('E1 (absent) and E2 (present, no database) do not report the same thing', async (t) => {
+    if (!fs.existsSync(DEMO_SRC)) {
+      t.skip('capability-demo is not beside this repo, so E2 cannot be produced here — E1 is '
+        + 'covered by the describe above; this comparison is NOT_RUN, not passed');
+      return;
+    }
+    const e1 = await runDataPlane({ demoSrc: path.join(__dirname, 'no-such-capability-demo'), connectionString: null });
+    const e2 = await runDataPlane({ demoSrc: DEMO_SRC, connectionString: null });
+
+    assert.equal(e1.demo.reason, 'capability_demo_absent');
+    assert.ok(e2.demo.reason !== 'capability_demo_absent' || e2.demo.present === true,
+      'a PRESENT checkout is being reported as absent — the two environments have collapsed into '
+      + `one verdict: ${e2.demo.reason}`);
+    assert.ok(e2.demo.reason, 'E2 reports no reason at all — an unnamed state is a silent skip');
+
+    // AND NEITHER GOES GREEN. Distinguishable is not enough on its own: two different names both
+    // attached to a COVERED row would be a prettier version of the same lie.
+    for (const out of [e1, e2]) {
+      for (const r of out.rows) assert.notEqual(r.status, ROW.COVERED);
+      assert.ok(out.postgres.skip, 'the database was not available and the skip was not named');
+    }
+  });
+
+  it('E3 (PostgreSQL available) is NOT_RUN here, and says so rather than passing', (t) => {
+    if (!process.env.CODERIFTS_DATAPLANE_PG) {
+      t.skip('CODERIFTS_DATAPLANE_PG is unset: the database environment was NOT RUN. E1 and E2 '
+        + 'ran above. Unproved is not disproved — no row in this suite claims the database half.');
+      return;
+    }
+    // When it IS set, the environment is real and the claim is checkable: something must have
+    // been attempted. A configured database that nothing tried is the silent skip in its most
+    // convincing form, because the operator believes they enabled it.
+    return runDataPlane({ connectionString: process.env.CODERIFTS_DATAPLANE_PG }).then((out) => {
+      assert.equal(out.postgres.attempted, true,
+        'CODERIFTS_DATAPLANE_PG is set and the database was never attempted');
+    });
+  });
+});

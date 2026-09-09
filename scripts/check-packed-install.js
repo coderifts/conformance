@@ -231,7 +231,9 @@ try {
   fs.writeFileSync(tPath, pristine);
   const t3 = JSON.parse(pristine.toString('utf8'));
   const flipped = flipLast(t3.issuance.execution_grant);
-  const decodesSame = Buffer.from(t3.issuance.execution_grant.split('.').pop(), 'base64url')
+  const sigSegment = t3.issuance.execution_grant.split('.').pop();
+  const lastChar = sigSegment.slice(-1);
+  const decodesSame = Buffer.from(sigSegment, 'base64url')
     .equals(Buffer.from(flipped.split('.').pop(), 'base64url'));
   t3.issuance.execution_grant = flipped;
   fs.writeFileSync(tPath, JSON.stringify(t3, null, 2));
@@ -240,24 +242,85 @@ try {
   const noop = measureInstalled(proj);
   // If a future capture's signature ends in a character whose flip DOES reach a real byte, this
   // pole is not a no-op any more and cannot prove what it claims. Say so rather than passing.
+  // ── THIS POLE IS NOT_RUN WHEN IT CANNOT ISOLATE THE ROOT ──────────────────────────────────
+  //
+  // Its whole purpose is to show the EVIDENCE ROOT refusing an edit the signature path cannot see:
+  // a different token STRING whose decoded signature bytes are identical. That only happens when
+  // the signature's final base64url character is one of 'A'..'P' — 16 of 64 — because the last
+  // character carries four bits that decode to nothing.
+  //
+  // MEASURED on this capture: the flip reaches a real signature byte, so the refusal below could
+  // be the signature's doing and the root's contribution is unproven. The gate printed OK anyway,
+  // with a NOTE underneath explaining that the thing it just passed was not what it claimed.
+  //
+  // A control that cannot isolate what it is for is NOT_RUN, never PASS. The run still has to be
+  // REFUSED — a mutation that graded COVERED would be a failure whatever caught it — but the
+  // ROOT-SPECIFIC claim is withheld, and the summary line stops asserting it.
   const noopRootNamed = (noop.missing || []).some((m) => m.includes('evidence_root'));
-  const noopOk = decodesSame
-    ? noop.coverage === 'PARTIAL' && noop.green === false && noopRootNamed
-    : noop.coverage === 'PARTIAL' && noop.green === false;
-  process.stdout.write(`  ${noopOk ? 'OK  ' : 'FAIL'} NO-OP flip (decodes ${decodesSame ? 'identically' : 'DIFFERENTLY on this capture'}): `
-    + `${noop.coverage} / green=${noop.green}${decodesSame ? ' — refused by the root, not the signature' : ''}\n`);
+  const noopRefused = noop.coverage === 'PARTIAL' && noop.green === false;
+  const noopIsolatesRoot = decodesSame && noopRefused && noopRootNamed;
+  const noopOk = decodesSame ? noopIsolatesRoot : noopRefused;
+  if (decodesSame) {
+    process.stdout.write(`  ${noopOk ? 'OK  ' : 'FAIL'} NO-OP flip (decodes identically): `
+      + `${noop.coverage} / green=${noop.green} — refused by the root, not the signature\n`);
+  } else {
+    process.stdout.write(`  ${noopRefused ? 'NOT RUN' : 'FAIL'} root-isolating control: this capture's `
+      + `signature ends in '${lastChar}', so the character flip reaches a real signature byte and `
+      + 'this pole cannot isolate the evidence root.\n');
+    process.stdout.write(`         The mutation is still REFUSED (${noop.coverage} / green=`
+      + `${noop.green}) — but by something, not provably by the root. NOT RUN, not passed.\n`);
+  }
   if (!noopOk) for (const m of noop.missing || []) process.stdout.write(`         - ${m}\n`);
-  if (!decodesSame) {
-    process.stdout.write('         ^ NOTE: on this capture the character flip reaches a real '
-      + 'signature byte, so this pole no longer isolates the root. It still must refuse.\n');
+
+  // ── POLE 4: THE DOCUMENTED COMMANDS, RUN AS DOCUMENTED, AGAINST THE INSTALL ───────────────
+  //
+  // MEASURED: this gate ran three poles of its OWN devising and never once ran what VERIFY.md
+  // tells a stranger to type. An auditor reported the negatives missing from the tarball; they are
+  // not (12 entries in the published 0.8.8, and 0/3/3 on the install — checked before writing
+  // this). But NOTHING HERE WOULD HAVE CAUGHT IT if they had been. A `files` edit, an .npmignore
+  // line, a renamed directory — each one silently breaks the published reproduction command while
+  // every check in this file keeps passing, because none of them reads VERIFY.md.
+  //
+  // So: every path VERIFY.md names must exist in the INSTALL, and the three commands it documents
+  // must exit 0 / 3 / 3 there.
+  fs.writeFileSync(tPath, pristine);
+  repin(dir);
+  const verifyMd = fs.readFileSync(path.join(installed, 'VERIFY.md'), 'utf8');
+
+  // The paths a reader is told to point at. Read out of the document, never listed here — a list
+  // kept in two places drifts in one of them, and the one that drifts is not the one under test.
+  const namedPaths = [...new Set([...verifyMd.matchAll(/<path-to>\/(\S+)/g)].map((m) => m[1]
+    .replace(/[.,`)]+$/, '')))];
+  const missingPaths = namedPaths.filter((rel) => !fs.existsSync(path.join(installed, rel)));
+  const pathsOk = namedPaths.length >= 2 && missingPaths.length === 0;
+  process.stdout.write(`  ${pathsOk ? 'OK  ' : 'FAIL'} every path VERIFY.md names exists in the install `
+    + `(${namedPaths.length} checked)${missingPaths.length ? ` — ABSENT: ${missingPaths.join(', ')}` : ''}\n`);
+
+  const CLI = path.join(installed, 'bin', 'coderifts-conformance.js');
+  const documented = [
+    ['npx @coderifts/conformance --assurance END_TO_END', [], 0],
+    ['… --dir <path-to>/proof/negatives/two-grant',
+      ['--dir', path.join(installed, 'proof', 'negatives', 'two-grant')], 3],
+    ['… --dir <path-to>/proof/negatives/tampered-attestation',
+      ['--dir', path.join(installed, 'proof', 'negatives', 'tampered-attestation')], 3],
+  ];
+  let documentedOk = true;
+  for (const [label, extra, want] of documented) {
+    const r = run(process.execPath, [CLI, '--assurance', 'END_TO_END', ...extra], { cwd: proj });
+    const ok = r.status === want;
+    if (!ok) documentedOk = false;
+    process.stdout.write(`  ${ok ? 'OK  ' : 'FAIL'} ${label} → exit ${r.status} (expected ${want})\n`);
+    if (!ok) process.stdout.write(`         ${(r.stdout + r.stderr).trim().split('\n').slice(-2).join(' | ')}\n`);
   }
 
-  if (!cleanOk || !mutatedOk || !noopOk) {
+  if (!cleanOk || !mutatedOk || !noopOk || !pathsOk || !documentedOk) {
     process.stdout.write('\nTHE PUBLISHED MEASURE DOES NOT AUTHENTICATE. Do not release.\n');
     process.exit(1);
   }
-  process.stdout.write('\nthe published measure authenticates: clean COVERED, mutated PARTIAL by '
-    + 'signature, no-op flip PARTIAL by the evidence root.\n');
+  process.stdout.write('\nthe published measure authenticates, and the documented commands run on '
+    + 'the install: clean COVERED, mutated PARTIAL by '
+    + `signature, and the root-isolating control ${decodesSame ? 'PARTIAL by the evidence root'
+      : 'NOT RUN (this capture cannot isolate it)'}.\n`);
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }

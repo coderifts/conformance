@@ -11,7 +11,7 @@
     "generator": "scripts/make-conformance-fixture.js (bin/prove-all.js, both poles)"
   },
   "subject": {
-    "name": "capability-demo contract-publish E2E (single run, bare-Git target-state transition)",
+    "name": "capability-demo target-state-transition E2E (one grant, bare-Git ref update)",
     "version": "0.1.10",
     "digest": "sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7"
   },
@@ -54,17 +54,17 @@
     "working_tree_dirty": false,
     "observed_at": "2026-09-09T18:32:21.881Z"
   },
-  "note": "ONE contract-publish run, producer-emitted, with POINT 8 filled from a BARE-GIT TARGET-STATE TRANSITION rather than from a supplied provider readback. The run built a throwaway bare repository, authorized one ref update under a signed cr.exec.v2 grant (operation git.ref.update, binding the contract blob digest and the end state), performed it as a compare-and-swap, and then had a SEPARATE PROCESS that cannot write read the object database back. `readback.json` is that observer's exact stdout, and the evidence root binds those bytes. WHAT THIS IS WORTH, EXACTLY: proof_scope TRUSTED_EXECUTOR, provider_witness NOT_APPLICABLE, externally_witnessed false. The executor and the observer are one machine and one OS user, separated by the target's mode bits — not by two identities and not by a third party. NO PULL REQUEST WAS MERGED AND NO PROVIDER WITNESSED ANYTHING; that is PATH B and this is not it. TWO POLES, both run by scripts/make-conformance-fixture.js from ONE tree at ONE commit: the negative is the same producer with the git target off and a readback naming a different real commit in this repository, and it refused — POINT 8 MODELLED, no correlation emitted. conformance mints nothing; this script mints nothing except the negative pole's INPUT.",
+  "note": "ONE target-state-transition run, producer-emitted, with POINT 8 filled from a BARE-GIT TARGET-STATE TRANSITION rather than from a readback supplied by a third party; NO provider is involved in this capture. The run built a throwaway bare repository, authorized one ref update under a signed cr.exec.v2 grant (operation git.ref.update, binding the contract blob digest and the end state), performed it as a compare-and-swap, and then had a SEPARATE PROCESS that cannot write read the object database back. `readback.json` is that observer's exact stdout, and the evidence root binds those bytes. WHAT THIS IS WORTH, EXACTLY: proof_scope TRUSTED_EXECUTOR, provider_witness NOT_APPLICABLE, externally_witnessed false. The executor and the observer are one machine and one OS user, separated by the target's mode bits \u2014 not by two identities and not by a third party. NO PULL REQUEST WAS MERGED AND NO PROVIDER WITNESSED ANYTHING; that is PATH B and this is not it. TWO POLES, both run by scripts/make-conformance-fixture.js from ONE tree at ONE commit: the negative is the same producer with the git target off and a readback naming a different real commit in this repository, and it refused \u2014 POINT 8 MODELLED, no correlation emitted. conformance mints nothing; this script mints nothing except the negative pole's INPUT.",
   "poles": {
     "positive": {
       "artifact": "transcript.json",
       "run_id": "prove-58bfc7c8-4176-4b64-9934-0dbfefe119f7",
-      "shows": "the governed ref refs/heads/main moved e78fb25b8474 → 5a3586f60243; the bytes at the observed commit hash to what the grant bound AND to what the preflight payload hashes to; the authorized commit has a single parent, that base; and the signed correlation binds the scope the server authorized to the commit the observer read."
+      "shows": "the governed ref refs/heads/main moved e78fb25b8474 \u2192 5a3586f60243; the bytes at the observed commit hash to what the grant bound AND to what the preflight payload hashes to; the authorized commit has a single parent, that base; and the signed correlation binds the scope the server authorized to the commit the observer read."
     },
     "negative": {
       "artifact": "negative-transcript.json",
       "run_id": "prove-dd02f651-e196-4f4c-9aba-e084dec46f60",
-      "shows": "the SAME producer at the SAME commit, given a readback naming 448b3a54fb95 instead of the governed contract's commit: it refused. POINT 8 MODELLED, no correlation emitted, exit 1. This pole is producer-emitted, not a spliced file. IT CONTROLS THE CORRELATION CHECK, not the transition grading — the seventeen negatives for that live in demo/test/target-state-transition.test.js, where a real target is built per case."
+      "shows": "the SAME producer at the SAME commit, given a readback naming 448b3a54fb95 instead of the governed contract's commit: it refused. POINT 8 MODELLED, no correlation emitted, exit 1. This pole is producer-emitted, not a spliced file. IT CONTROLS THE CORRELATION CHECK, not the transition grading \u2014 the seventeen negatives for that live in demo/test/target-state-transition.test.js, where a real target is built per case."
     }
   }
 }

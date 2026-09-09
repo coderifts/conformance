@@ -68,8 +68,12 @@ python -m coderifts.verify <path-to>/fixtures/recorded/end-to-end \
 ```
 exit **0**
 
-`coderifts-sdk` depends only on `requests` and carries **no Ed25519**. This command therefore
-proves that a second implementation, in another language, computes the same digests from the same
+This command reads **no signature**: it re-derives digests and compares them. The base
+`pip install coderifts-sdk` is requests-only, and the `[verify]` extra
+(`pip install 'coderifts-sdk[verify]'`) adds full local Ed25519 (`coderifts.verify_receipt`) — so the limit below belongs to THIS COMMAND,
+not to the package. The earlier wording said the package "carries no Ed25519", which the `[verify]`
+extra made false while the command's own limit never changed. What this proves is that a second
+implementation, in another language, computes the same digests from the same
 bytes — the capture's hash recipes are reproducible, and it is not Node-only. **It verifies no
 signature.** A capture whose every signature was forged would pass this and fail command 1.
 
