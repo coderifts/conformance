@@ -228,7 +228,7 @@ function splitSentences(text) {
 const NEGATION = /\b(no|not|nothing|never|without|absent|NOT_APPLICABLE|neither|nor)\b/i;
 
 describe('the END_TO_END headline names what is measured', () => {
-  it('a NOT_APPLICABLE provider means no domain word on ANY of the four surfaces', () => {
+  it('a NOT_APPLICABLE provider means no domain word on ANY identifier surface', () => {
     // The sibling of the does_not_prove fix, in the row a reader meets FIRST — before any limit,
     // and often instead of them. It said "Authorization through to deploy" / "provider
     // enforcement" for a git.ref.update on a local target with provider_witness NOT_APPLICABLE.
@@ -263,32 +263,19 @@ describe('the END_TO_END headline names what is measured', () => {
     // pin's own subject line) and `E2E-CONTRACT` (the negative vector id, which was a literal at
     // its call site while the positive beside it had already been made to move with the capture).
     //
-    // ── ONE SURFACE IS QUARANTINED, AND THE QUARANTINE IS A DIGEST ──────────────────────
+    // ── THE QUARANTINE IS GONE ──────────────────────────────────────────────────────────
     //
-    // `points[9].name` is "deploy" in the SHIPPED bytes and `executor_seal` in the producer that
-    // emits them (capability-demo demo/e2e-chain.js). It cannot be fixed here: the pin's
-    // subject.digest covers transcript.json byte for byte — MEASURED, editing the label alone
-    // moved 5d63954d6763 to 3f4909310955 and assertPins refused the fixture. Re-cutting is the
-    // only honest route and the generator refuses a dirty tree, so it is Peter's step, after the
-    // producer change lands.
+    // `points[9].name` was allowed to stay "deploy" while the shipped capture carried the exact
+    // bytes that had it, keyed to `sha256:5d63954d6763…` so the allowance could not outlive them.
+    // It has not. MEASURED on the re-cut fixture: the pin's subject digest is now
+    // `sha256:ae001d20ae7c…`, and points[9].name is `executor_seal` — the producer's value, the
+    // way a generated artifact is supposed to acquire one.
     //
-    // The allowance is therefore keyed to THE EXACT STALE BYTES, not to the word and not to the
-    // surface. Re-cut the fixture and the digest moves, this block stops applying, and the
-    // absolute rule below judges the new label with no edit to this test. An exemption written as
-    // a phrase would have outlived the capture; one written as a digest cannot.
-    const STALE_CAPTURE = {
-      digest: 'sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7',
-      surfaces: { 'points[9].name': 'deploy' },
-      fixed_in_producer: 'capability-demo demo/e2e-chain.js — point(9, \'executor_seal\', …)',
-    };
-    const stale = (pin.subject || {}).digest === STALE_CAPTURE.digest ? STALE_CAPTURE.surfaces : {};
-
+    // So the block is deleted rather than kept-and-satisfied. An allowance whose condition can no
+    // longer be met is dead weight that still reads as a live exception to the next person.
     const artifactSurfaces = Object.fromEntries(
-      (artifact.points || [])
-        .map((pt) => [`points[${pt.n}].name`, pt.name])
-        // Quarantined ONLY while the value is still the exact one recorded. A different stale
-        // label on the same surface is a new fact and gets judged.
-        .filter(([name, value]) => stale[name] !== value));
+      (artifact.points || []).map((pt) => [`points[${pt.n}].name`, pt.name]));
+
     const identifiers = {
       title: e2e.title,
       asserts: e2e.asserts,
@@ -519,38 +506,3 @@ describe('the points[] prose gate', () => {
   });
 });
 
-/**
- * The quarantine above is a promissory note. This is the part that collects on it.
- *
- * A stale surface that is merely allowed becomes a stale surface that is forgotten. So the state
- * is asserted from BOTH sides: the capture still carries the old label (if it does not, the
- * quarantine is dead weight and must be deleted), and the producer beside it already carries the
- * new one (if it does not, nothing is actually pending and the allowance is a cover story).
- */
-describe('the stale-capture quarantine is honest about what it is deferring', () => {
-  const FIXTURE = path.join(ROOT, 'fixtures', 'recorded', 'end-to-end');
-  const PRODUCER = path.join(ROOT, '..', 'capability-demo', 'demo', 'e2e-chain.js');
-
-  it('the quarantined surface is still stale in the shipped bytes — or the block is dead', () => {
-    const pin = JSON.parse(fs.readFileSync(path.join(FIXTURE, 'pin.json'), 'utf8'));
-    const art = JSON.parse(fs.readFileSync(path.join(FIXTURE, 'transcript.json'), 'utf8'));
-    const DIGEST = 'sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7';
-    if ((pin.subject || {}).digest !== DIGEST) return; // re-cut; the quarantine no longer applies
-    const p9 = (art.points || []).find((pt) => pt.n === 9);
-    assert.equal(p9 && p9.name, 'deploy',
-      'the capture at the quarantined digest no longer carries the stale label — delete the '
-      + 'STALE_CAPTURE block in this file rather than leaving an allowance for nothing');
-  });
-
-  it('the producer is already fixed, so the deferral is a re-cut and not a to-do', (t) => {
-    if (!fs.existsSync(PRODUCER)) {
-      t.skip('capability-demo is not checked out beside this repo — the shipped-bytes half above '
-        + 'ran; what cannot run here is the comparison against the producer');
-      return;
-    }
-    const src = fs.readFileSync(PRODUCER, 'utf8').replace(/\s+/g, ' ');
-    assert.match(src, /point\(9, [^)]*'executor_seal'/,
-      'the fixture is quarantined on the promise that the producer already emits executor_seal, '
-      + 'and it does not — the quarantine is then hiding an unfixed defect, not a pending re-cut');
-  });
-});

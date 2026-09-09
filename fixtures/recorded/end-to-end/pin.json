@@ -7,63 +7,63 @@
     "name": "@coderifts/prove",
     "repo": "https://github.com/coderifts/capability-demo",
     "version": "0.1.10",
-    "digest": "git:682cc950a777513cbeda1f5fa08e32475499b471",
+    "digest": "git:a7b7e25d3996fa73f6a089a359186dc8a7c1c350",
     "generator": "scripts/make-conformance-fixture.js (bin/prove-all.js, both poles)"
   },
   "subject": {
     "name": "capability-demo target-state-transition E2E (one grant, bare-Git ref update)",
     "version": "0.1.10",
-    "digest": "sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7"
+    "digest": "sha256:ae001d20ae7cabfe5a7e6f46ae7c442409c04ad653bb98209b00c713d34feee6"
   },
   "artifacts": [
     {
       "path": "transcript.json",
       "role": "bundle",
-      "sha256": "5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7",
-      "bytes": 24998
+      "sha256": "ae001d20ae7cabfe5a7e6f46ae7c442409c04ad653bb98209b00c713d34feee6",
+      "bytes": 25005
     },
     {
       "path": "executor-keys.json",
       "role": "keyring",
-      "sha256": "6e6831f02df1f25ed31a6add508d3a925235ce795d876c5fdbadada554996cd9",
+      "sha256": "d4416e6fab6893b8cfe628d9815ca599fc5a1858df9791dce29baa3f06a9bf13",
       "bytes": 568
     },
     {
       "path": "readback.json",
       "role": "target_state_observation",
-      "sha256": "392610cead2b2f39b52fe6861b0b5484c1f13a9b7f15a0cb34737896bb9a9420",
+      "sha256": "4ea7f9b12b43506f82baf9639c10bdd88d14efe9fd3e9150a5394cb2889cd953",
       "bytes": 1432
     },
     {
       "path": "negative-transcript.json",
       "role": "negative",
-      "sha256": "bb8d3877bc95a703d62657951339021f8833badffa1dbd50a925b3f2cea208e8",
+      "sha256": "6e0225639ace3756634724c63a70df7ba45aaa4f5812f9657773a2e610774d8a",
       "bytes": 14017
     },
     {
       "path": "negative-readback.json",
       "role": "negative_observation",
-      "sha256": "62735fa6a55b66e795c2d2e2cd7f0e848db7248c6dafc441ef4b15b85c1ade14",
+      "sha256": "7e12f0766826b716fe4c00324234a6e5d1ff7b1e49aabc41957de2d5923dec71",
       "bytes": 228
     }
   ],
-  "inputs_sha256": "sha256:5d63954d6763ff113804b93db295df4d01b6dc8dbc0d37a7f0788d2ff2a98cb7",
+  "inputs_sha256": "sha256:ae001d20ae7cabfe5a7e6f46ae7c442409c04ad653bb98209b00c713d34feee6",
   "provenance_from_artifact": {
-    "run_id": "prove-58bfc7c8-4176-4b64-9934-0dbfefe119f7",
-    "source_commit": "682cc950a777513cbeda1f5fa08e32475499b471",
+    "run_id": "prove-9671e069-d261-4116-b33c-a1d0f390823a",
+    "source_commit": "a7b7e25d3996fa73f6a089a359186dc8a7c1c350",
     "working_tree_dirty": false,
-    "observed_at": "2026-09-09T18:32:21.881Z"
+    "observed_at": "2026-09-09T20:59:12.377Z"
   },
   "note": "ONE target-state-transition run, producer-emitted, with POINT 8 filled from a BARE-GIT TARGET-STATE TRANSITION rather than from a readback supplied by a third party; NO provider is involved in this capture. The run built a throwaway bare repository, authorized one ref update under a signed cr.exec.v2 grant (operation git.ref.update, binding the contract blob digest and the end state), performed it as a compare-and-swap, and then had a SEPARATE PROCESS that cannot write read the object database back. `readback.json` is that observer's exact stdout, and the evidence root binds those bytes. WHAT THIS IS WORTH, EXACTLY: proof_scope TRUSTED_EXECUTOR, provider_witness NOT_APPLICABLE, externally_witnessed false. The executor and the observer are one machine and one OS user, separated by the target's mode bits \u2014 not by two identities and not by a third party. NO PULL REQUEST WAS MERGED AND NO PROVIDER WITNESSED ANYTHING; that is PATH B and this is not it. TWO POLES, both run by scripts/make-conformance-fixture.js from ONE tree at ONE commit: the negative is the same producer with the git target off and a readback naming a different real commit in this repository, and it refused \u2014 POINT 8 MODELLED, no correlation emitted. conformance mints nothing; this script mints nothing except the negative pole's INPUT.",
   "poles": {
     "positive": {
       "artifact": "transcript.json",
-      "run_id": "prove-58bfc7c8-4176-4b64-9934-0dbfefe119f7",
-      "shows": "the governed ref refs/heads/main moved e78fb25b8474 \u2192 5a3586f60243; the bytes at the observed commit hash to what the grant bound AND to what the preflight payload hashes to; the authorized commit has a single parent, that base; and the signed correlation binds the scope the server authorized to the commit the observer read."
+      "run_id": "prove-9671e069-d261-4116-b33c-a1d0f390823a",
+      "shows": "the governed ref refs/heads/main moved 867ea8ffcef8 \u2192 b6622902a1c9; the bytes at the observed commit hash to what the grant bound AND to what the preflight payload hashes to; the authorized commit has a single parent, that base; and the signed correlation binds the scope the server authorized to the commit the observer read."
     },
     "negative": {
       "artifact": "negative-transcript.json",
-      "run_id": "prove-dd02f651-e196-4f4c-9aba-e084dec46f60",
+      "run_id": "prove-ec5b3c8c-0e12-4306-bad8-669139f84bc3",
       "shows": "the SAME producer at the SAME commit, given a readback naming 448b3a54fb95 instead of the governed contract's commit: it refused. POINT 8 MODELLED, no correlation emitted, exit 1. This pole is producer-emitted, not a spliced file. IT CONTROLS THE CORRELATION CHECK, not the transition grading \u2014 the seventeen negatives for that live in demo/test/target-state-transition.test.js, where a real target is built per case."
     }
   }
