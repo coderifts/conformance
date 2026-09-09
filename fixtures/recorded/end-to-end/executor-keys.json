@@ -3,9 +3,9 @@
   "keys": [
     {
       "kid": "DEMO-EXECUTOR-KEY-DO-NOT-USE",
-      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAwNNB4q+AW0LhlNWQLjKj/OWftPSFXlQ9wpTOLhsZQpM=\n-----END PUBLIC KEY-----\n",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAZ5bKWuN1MF75LOPPtPXphxV1hF+Umgt7tAQvs6dsjEI=\n-----END PUBLIC KEY-----\n",
       "status": "active",
-      "valid_from": "2026-09-06T08:46:26Z",
+      "valid_from": "2026-09-09T18:32:16Z",
       "retired_at": null
     }
   ]
