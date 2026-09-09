@@ -8,18 +8,23 @@
 # when it is present beside this one. Absent, it says so and checks the pin only — an honest
 # skip, never a silent pass.
 #
-# verified-execution-binding.js + verify.js are vendored from the WORKING TREE: the core now
-# VERIFIES the decision receipt instead of believing a caller's `verified: true` flag, and a
-# caller-asserted receipt can no longer reach AUTHORIZED_AND_COMMITTED.
-# verify-grant.js is vendored from the WORKING TREE (the two RESERVED INERT v2 fields —
-# call_hash, executor_image_digest — are admitted and read by nothing; measured zero behaviour
-# change on every shipped capture, positive and negative).
-# verify-attest.js is vendored from the WORKING TREE (1465 — the E2E profile now re-verifies
-# the executor's attestation from its bytes instead of re-reporting the producer's grade).
-# verified-execution-binding.js is vendored from the WORKING TREE (1465 — closed assurance
-# profiles). Re-pin to a commit once receipt-verifier commits it; the parity test compares the
-# bytes against the sibling checkout, so a working-tree vendor is checked, not merely asserted.
-# source_commit: 7887719fa6e2bd1f70907f119e1c2a9b7c6a84ff (evidence-root.js and verify-evidence.js re-vendored for 1432)
+
+# ── THE RECEIPT-VERIFIER CORE IS PINNED TO A RELEASED TAG ───────────────────────────────────
+#
+# The shared verification core here comes from receipt-verifier **v1.0.0**, peeled commit
+# 51a8224439959a5b46c0b09e9a2cd67117f05d56.
+#
+# It was pinned to a WORKING TREE and to per-file commits. Both are honest about where the bytes
+# came from and neither is a provenance a stranger can resolve: a working tree is not fetchable,
+# so "the vendored bytes match upstream" reduced to "they match whatever is on this machine right
+# now". A released tag is a name anyone can check out — that is the difference between a pin and
+# a note.
+#
+# The hash lines below are UNCHANGED by the re-pin. Where a file already matched the tag this is
+# prose only; where it did not, it was re-copied from the tag and that is recorded below.
+#
+# source_commit: 51a8224439959a5b46c0b09e9a2cd67117f05d56 (receipt-verifier v1.0.0)
+#
 
 721fcac58b960b5e2aa1af91edb6cfc87ebe828a6da73879967ef79a1ca474e8  arity.js
 348d3f851cd79bf63298b51da422d11be980820576ab0bf0a2990b9f007d6249  verify.js
