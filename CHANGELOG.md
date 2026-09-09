@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.8.7
+
+The --dir flag now reads the given directory (it was ignored, always verifying the embedded fixture); a nonexistent or incomplete directory is refused, an unknown argument is a usage error, and the output prints evidence_dir and source (embedded|external). The END_TO_END title, asserts, vector id and sidecar are generated from target_kind + provider_witness — no provider/deploy words when provider_witness is NOT_APPLICABLE. does_not_prove is generated from the same fields. The embedded transcript points[] are generated from the git E2E (no leftover DB prose; every grant id equals the issuance grant). Test isolation: fixture-mutating tests use their own temp copy. The vendored core is re-pinned to receipt-verifier v1.0.0. The negative result field is vector_result / coverage_status.
+
+
 ## 0.8.6
 
 END_TO_END COVERED (7/7) on ONE grant end to end — the market-grade 7/7. One git grant flows through issuance, consume, the signed POINT 6 attestation, and the POINT 8 transition (the earlier two-grant fixture path is closed; the closed profile TRUSTED_EXECUTOR_INTEGRITY_V1 reads COVERED, and reads COMMIT_UNPROVEN on a two-grant capture). Ships VERIFY.md + a proof/ folder a stranger can replay: the one-grant fixture and two negatives (two-grant, tampered-attestation) that must be refused; a --dir flag so the CLI verifies the visible proof folder, not the embedded fixture. Honest boundary: trusted-executor-integrity, RECORDED, not externally witnessed, not PATH B.
