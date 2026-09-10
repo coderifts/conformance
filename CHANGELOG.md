@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.8.10
+
+The embedded 7/7 fixture is regenerated from the exact prove-v0.1.11 tag (producer 0.1.11 at f3b47bf, matching @coderifts/prove@0.1.11's npm gitHead), so the fixture's producer version and bytes name the same release. The previous fixture named producer 0.1.10 but was cut from an untagged commit (a7b7e25) after the 0.1.10 tag.
+
 ## 0.8.9
 
 The vendored core is re-pinned to the signed receipt-verifier v1.0.1 (byte-identical to v1.0.0; the provenance names the signed tag and the signer). The embedded 7/7 fixture is regenerated from prove 0.1.10 with points[9].name executor_seal; the stale-capture quarantine is deleted and the absolute invariant judges the label directly. RECEIPT_FORMAT.md section 14 states the four-authority model (the receipt is a mandatory precondition, not a fifth authority). The packed proof-path check runs the three documented VERIFY.md commands against the installed tarball (0/3/3); the packed third pole is NOT_RUN when the mutation reaches a signature byte. The negative result field is measurement_completed / claim_status. data-plane separates three environments with named reasons.
