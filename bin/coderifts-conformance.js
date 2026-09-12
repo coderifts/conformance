@@ -21,22 +21,40 @@
 
 const { loadCaseFile, filterByProfile } = require('../lib/load-cases');
 const { scoreSubject } = require('../lib/score');
-const { referenceSubject } = require('../subjects/reference');
-const { branchOnDecisionSubject } = require('../subjects/branch-on-decision');
-const { sdkReadDecisionSubject } = require('../subjects/sdk-read-decision');
-const { agentGuardDecideSubject } = require('../subjects/agent-guard-decide');
 const { runAndPrint } = require('../lib/model-acceptance');
+// data-plane stays a top-level require: it pulls only node: builtins, so it costs nothing to
+// load, and ROW is needed by printDataPlane below. The four lazy entries are the ones that
+// reach for an external package.
 const { runDataPlane, ROW } = require('../subjects/data-plane');
 const {
   COVERAGE, PROFILE_IDS, DEFAULT_EVIDENCE,
   buildProfileReport, renderProfileTable, renderProfileJson,
 } = require('../lib/assurance-profiles');
 
+/**
+ * 1567 — SUBJECTS MAPS TO A LOADER, NOT TO A LOADED FUNCTION.
+ *
+ * These four used to be top-level requires. `subjects/sdk-read-decision.js` requires
+ * `@coderifts/sdk` and `subjects/agent-guard-decide.js` requires `@coderifts/agent-guard`, so
+ * loading the table loaded both packages — whichever subject the caller had asked for.
+ *
+ * MEASURED on the published 0.8.10, from the extracted tarball with no node_modules beside it:
+ *   node bin/coderifts-conformance.js --subject reference
+ *   -> Error: Cannot find module '@coderifts/sdk'
+ *        Require stack: .../subjects/sdk-read-decision.js
+ *
+ * `reference` is documented in README.md as `Deps: none`. It could not run without the
+ * dependencies of two subjects it does not use. Every subject failed the same way, including
+ * the `--assurance END_TO_END` command VERIFY.md hands to a stranger.
+ *
+ * Resolving at selection keeps a dependency-free subject dependency-free. A missing dependency
+ * now surfaces when you ask for the subject that needs it, naming that subject.
+ */
 const SUBJECTS = {
-  reference: referenceSubject,
-  'branch-on-decision': branchOnDecisionSubject,
-  sdk: sdkReadDecisionSubject,
-  'agent-guard': agentGuardDecideSubject,
+  reference: () => require('../subjects/reference').referenceSubject,
+  'branch-on-decision': () => require('../subjects/branch-on-decision').branchOnDecisionSubject,
+  sdk: () => require('../subjects/sdk-read-decision').sdkReadDecisionSubject,
+  'agent-guard': () => require('../subjects/agent-guard-decide').agentGuardDecideSubject,
   'model-acceptance': Symbol.for('coderifts.conformance.model-acceptance'),
   // Not a `(case) => outcome` function: it EXECUTES the capability-demo atomic chain. Dispatched
   // separately below, like model-acceptance, because cases.v1.json is vendored byte-identical from
@@ -231,7 +249,10 @@ async function main() {
     cases = cases.filter((c) => c.kind === 'decide');
   }
 
-  const scored = scoreSubject(cases, subject);
+  // Resolve HERE, not at table construction. model-acceptance and data-plane have already
+  // exited above, so `subject` is one of the four loaders and calling it loads exactly the one
+  // package this run needs.
+  const scored = scoreSubject(cases, subject());
   for (const r of scored.results) {
     const mark = r.ok ? 'PASS' : 'FAIL';
     const extra = r.ok && r.excused
