@@ -95,12 +95,54 @@ describe('COVERED is by execution, NOT_RUN stays named', () => {
     }
   });
 
-  it('AM-RECONCILE-FORGED-ATTEST is NOT_RUN named when pg is not resolvable — never silent COVERED', {
-    skip: PG,
-  }, () => {
+  // ── TWO REASONS A VECTOR DOES NOT RUN, EACH ASSERTED ON ITS OWN BRANCH ───────────────
+  //
+  // This was one test asserting /pg/i. MEASURED after the capability-demo npm dependency was
+  // dropped and the lockfile regenerated: resolution falls to the sibling checkout, and where
+  // there is none — every CI runner — the reason is `capability_demo_absent`, not a pg reason.
+  // The test failed on an input that was behaving correctly.
+  //
+  // The fix is NOT a looser pattern. A vector can fail to run for two different reasons, and a
+  // single regex covering both would accept either answer in either context — which is how a
+  // check stops being able to tell them apart. Each context gets its own branch, and each branch
+  // says what a correct reason looks like THERE. The shared invariant — never a silent COVERED —
+  // is asserted on both.
+
+  const notRunRow = () => {
     const r = report.results.find((x) => x.id === 'AM-RECONCILE-FORGED-ATTEST');
+    assert.ok(r, 'AM-RECONCILE-FORGED-ATTEST is missing from the report');
     assert.equal(r.coverage, COVERAGE.NOT_RUN);
-    assert.match(r.why_not_run || '', /pg/i);
+    assert.equal(report.covered.includes('AM-RECONCILE-FORGED-ATTEST'), false,
+      'a vector that did not run must never appear in covered[]');
+    // A reason that is absent, empty or a shrug is the failure this whole describe block exists
+    // to prevent — on either branch.
+    assert.ok(r.why_not_run && r.why_not_run.trim().length > 10,
+      `NOT_RUN without a named reason: ${JSON.stringify(r.why_not_run)}`);
+    return r;
+  };
+
+  it('(a) chain resolved, pg absent: NOT_RUN names pg — never silent COVERED', {
+    skip: PG || !DEMO.present,
+  }, () => {
+    // The original assertion, unchanged in strictness: when the chain COULD run and only the
+    // database is missing, the reason must say so.
+    assert.match(notRunRow().why_not_run, /pg/i);
+  });
+
+  it('(b) chain not resolved: NOT_RUN names the capability-demo state and the pinned commit', {
+    skip: DEMO.present,
+  }, () => {
+    const why = notRunRow().why_not_run;
+    // An ALLOW-LIST of the resolver's two named states, not a pattern. A third state invented
+    // later fails here rather than passing because it happens to contain a matching substring.
+    const state = String(why).split(':')[0].trim();
+    assert.ok(
+      ['capability_demo_absent', 'capability_demo_commit_mismatch'].includes(state),
+      `unnamed capability-demo state: ${JSON.stringify(state)}`,
+    );
+    // And it must name WHICH checkout was expected. "absent" alone does not tell a reader
+    // whether they are missing a checkout or holding the wrong one.
+    assert.match(why, new RegExp(CAPABILITY_DEMO.commit));
   });
 
   it('a vector with no executable check stays NOT_RUN, named — never silently COVERED', () => {
@@ -163,7 +205,14 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
     const pkg = require('../package.json');
     const pin = pkg.coderifts.capability_demo;
     assert.equal(pin.git, 'https://github.com/coderifts/capability-demo.git');
-    assert.equal(pin.commit, '188479a15ecb2f4ef57f437d0cec67d94e3598fd');
+    // The pin is a LITERAL on purpose. Deriving it from the sibling's current HEAD would make
+    // this assertion agree with whatever is checked out, which is the one thing a pin must not
+    // do. Moving it is therefore a deliberate edit that shows up in review — as here: the pin
+    // moved to the commit that carries @coderifts/prove 0.1.12, because that is the prove this
+    // release is measured against. The previous value (188479a…) predates it, and after the
+    // lockfile regeneration removed the npm copy, resolution fell to a sibling the old pin no
+    // longer named.
+    assert.equal(pin.commit, '75a09d8b74f1161d40415fb98c2537f116d9ffdc');
     assert.equal(pin.sibling, '../capability-demo');
     assert.equal(pin.src, 'demo/src');
     // 1626 — THE GIT optionalDependency IS GONE, AND THAT IS THE ASSERTION NOW.
@@ -189,12 +238,19 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
     assert.equal(DEMO_SRC, path.resolve(__dirname, '..', pin.sibling, pin.src));
   });
 
+  // THE README AND THE PIN MOVE TOGETHER, AND THIS TEST IS WHAT MAKES THAT TRUE.
+  //
+  // MEASURED when the pin moved: this test kept passing, because the README and the literals
+  // below both still named the old commit — while package.json named the new one. A reader
+  // following the README would have checked out a commit the resolver then reported as
+  // capability_demo_commit_mismatch. A green test beside a wrong instruction is the shape worth
+  // naming: it was not asserting agreement with the pin, only agreement with itself.
   it('README documents the sibling checkout at that commit', () => {
     const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
     assert.match(readme, /capability-demo/);
-    assert.match(readme, /188479a15ecb2f4ef57f437d0cec67d94e3598fd/);
+    assert.match(readme, /75a09d8b74f1161d40415fb98c2537f116d9ffdc/);
     assert.match(readme, /git clone https:\/\/github\.com\/coderifts\/capability-demo\.git/);
-    assert.match(readme, /git checkout 188479a15ecb2f4ef57f437d0cec67d94e3598fd/);
+    assert.match(readme, /git checkout 75a09d8b74f1161d40415fb98c2537f116d9ffdc/);
     assert.match(readme, /capability_demo_absent/);
     assert.match(readme, /never silently COVERED/);
   });

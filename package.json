@@ -40,7 +40,7 @@
     "capability_demo": {
       "package": "capability-demo",
       "git": "https://github.com/coderifts/capability-demo.git",
-      "commit": "188479a15ecb2f4ef57f437d0cec67d94e3598fd",
+      "commit": "75a09d8b74f1161d40415fb98c2537f116d9ffdc",
       "src": "demo/src",
       "sibling": "../capability-demo"
     }

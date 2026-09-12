@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.8.11
+
+Subject modules are resolved when a subject is selected rather than when the table is built, so the shipped runtime no longer loads packages the requested subject does not use: an extracted tarball with nothing installed beside it runs `--subject reference` and the VERIFY.md `--assurance END_TO_END` command, and a subject that genuinely needs a package still fails — at the point of asking, naming the subject module. The capability-demo git dependency is dropped; the `coderifts.capability_demo` descriptor stays, so the sibling checkout still resolves and an absent one is still named with its commit. Every output mode now carries `measured_by` with this package's version, separate from `claim_version`, which remains the envelope schema. A capture that fails the correlation check names the term that failed and the first gap behind it, so the refusal reads as one line instead of pointing at a list. Dependencies are re-pinned to @coderifts/agent-guard 17.3.3 and @coderifts/sdk 3.14.2, and the lockfile is regenerated. A four-reader decision matrix pins ten response shapes across the SDK reader, the guard reader, the guard merge gate and the Python reader as one table, with the two deliberate divergences recorded rather than smoothed; the workflow installs the published Python wheel so that fourth reader is measured rather than skipped. 346 tests, 342 pass, 0 fail, 4 skipped.
+
 ## 0.8.10
 
 The embedded 7/7 fixture is regenerated from the exact prove-v0.1.11 tag (producer 0.1.11 at f3b47bf, matching @coderifts/prove@0.1.11's npm gitHead), so the fixture's producer version and bytes name the same release. The previous fixture named producer 0.1.10 but was cut from an untagged commit (a7b7e25) after the 0.1.10 tag.

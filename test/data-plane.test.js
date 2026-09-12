@@ -286,7 +286,13 @@ describe('the three environments are distinguishable, and the third says NOT_RUN
     assert.ok(e2.demo.reason !== 'capability_demo_absent' || e2.demo.present === true,
       'a PRESENT checkout is being reported as absent — the two environments have collapsed into '
       + `one verdict: ${e2.demo.reason}`);
-    assert.ok(e2.demo.reason, 'E2 reports no reason at all — an unnamed state is a silent skip');
+    // MEASURED after the capability_demo pin moved to the commit this release is built against:
+    // E2 resolves cleanly — present:true, reason:null. A correctly resolved checkout HAS no
+    // reason, so requiring one could only ever be satisfied while the pin was drifted; the
+    // assertion was pinning the broken state. The edge is unchanged: a checkout that is NOT
+    // present must still say why, and an unnamed absence still fails here.
+    assert.ok(e2.demo.present || e2.demo.reason,
+      'E2 is neither present nor explained — an unnamed state is a silent skip');
 
     // AND NEITHER GOES GREEN. Distinguishable is not enough on its own: two different names both
     // attached to a COVERED row would be a prettier version of the same lie.

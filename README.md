@@ -296,11 +296,11 @@ Executed regressions (fail-closed): git missing `expected_old_sha` (`4742476`), 
 
 ### capability-demo (declared, commit-pinned — required for the three executed regressions)
 
-Those three regressions load the **shipped adapters** from [capability-demo](https://github.com/coderifts/capability-demo) (`git-atomic.js`, `http-atomic.js`, `reconcile.js`). capability-demo is a **demo repo** (`private: true` in its package.json) — it is **not** on npm. The pin lives in this package's `package.json` (`coderifts.capability_demo` and `optionalDependencies`).
+Those three regressions load the **shipped adapters** from [capability-demo](https://github.com/coderifts/capability-demo) (`git-atomic.js`, `http-atomic.js`, `reconcile.js`). capability-demo is a **demo repo** (`private: true` in its package.json) — it is **not** on npm. The pin lives in this package's `package.json`, under `coderifts.capability_demo`. It is **not** an npm dependency: installing this package does not fetch it.
 
 **Pinned commit** (the checkout COVERED expectations were measured against):
 
-`188479a15ecb2f4ef57f437d0cec67d94e3598fd`
+`75a09d8b74f1161d40415fb98c2537f116d9ffdc`
 
 **Sibling checkout** (path the runner looks for by default):
 
@@ -314,9 +314,9 @@ Those three regressions load the **shipped adapters** from [capability-demo](htt
 cd <parent>
 git clone https://github.com/coderifts/capability-demo.git
 cd capability-demo
-git checkout 188479a15ecb2f4ef57f437d0cec67d94e3598fd
+git checkout 75a09d8b74f1161d40415fb98c2537f116d9ffdc
 ```
 
-Adapters are loaded from `../capability-demo/demo/src` relative to this repo. Override with `CODERIFTS_CAPABILITY_DEMO` (repo root or `demo/src`). `npm install` may also place the same commit under `node_modules/capability-demo` via the optional git dependency.
+Adapters are loaded from `../capability-demo/demo/src` relative to this repo. Override with `CODERIFTS_CAPABILITY_DEMO` (repo root or `demo/src`).
 
 **When the checkout is absent** (or at a different commit): the three regressions are **NOT_RUN** / `capability_demo_absent` (or `capability_demo_commit_mismatch`), named, with the expected path and commit. They are **never silently COVERED**. The rest of this suite still runs. An external user who follows the clone+checkout above can reproduce the COVERED run.
