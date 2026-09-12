@@ -30,7 +30,17 @@ jobs:
       # PUBLISHED wheel is the point: the matrix compares readers as they ship, not as they sit
       # in a working tree. Without this step test/reader-matrix-1585.test.js fails loudly rather
       # than skipping — an unmeasured reader is how the 1565 split survived for a whole round.
-      - run: pip install coderifts
+      #
+      # THE DISTRIBUTION IS `coderifts-sdk`; THE IMPORT IS `coderifts`. MEASURED on PyPI:
+      # `coderifts` is HTTP 404 and `pip install coderifts` resolves to no matching distribution,
+      # so the first CI run after this workflow landed would have failed here — loudly, which is
+      # the test's intent, but for the workflow's mistake rather than a reader's.
+      #
+      # PINNED, not floating. The matrix asserts a table of exact verdicts, so the reader it
+      # measures has to be a named release; a floating install would let the table drift under
+      # it and report a Python change as a matrix failure. 1.0.1 is also on the index and is not
+      # this reader — the pin closes that too.
+      - run: pip install coderifts-sdk==3.8.1
       - run: npm ci
       - run: npm test
 
