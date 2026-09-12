@@ -166,9 +166,24 @@ describe('capability-demo is a declared, commit-pinned dependency', () => {
     assert.equal(pin.commit, '188479a15ecb2f4ef57f437d0cec67d94e3598fd');
     assert.equal(pin.sibling, '../capability-demo');
     assert.equal(pin.src, 'demo/src');
-    assert.equal(
-      pkg.optionalDependencies['capability-demo'],
-      `git+https://github.com/coderifts/capability-demo.git#${pin.commit}`,
+    // 1626 — THE GIT optionalDependency IS GONE, AND THAT IS THE ASSERTION NOW.
+    //
+    // This line used to require it. MEASURED before removing it: with the dependency installed
+    // the chain really did run (DP-1 read `13 top-level fields, operation=publish`, not a
+    // skip), and the row distribution was still 4 NOT_ADMISSIBLE + 4 SKIPPED — byte for byte
+    // what it is without it. The suite declares every one of those rows inadmissible on its own
+    // doctrine ("one repository agreeing with itself"), so the dependency bought a real
+    // observation that cannot count, at the cost of every consumer install reaching github.com,
+    // a stale @coderifts/prove@0.1.1 shadowing the published 0.1.11 bin, and a raw commit SHA
+    // sitting outside the frozen-release-set machinery.
+    //
+    // The DESCRIPTOR below stays: lib/attack-matrix-runner.js reads it to resolve the sibling
+    // checkout and to name the commit in `capability_demo_absent`. A developer with the sibling
+    // still runs the chain; a consumer gets a named absence. Only the npm-install-time git fetch
+    // is gone.
+    assert.ok(
+      !pkg.optionalDependencies || !pkg.optionalDependencies['capability-demo'],
+      'capability-demo must not be an npm dependency — it is resolved from the sibling checkout',
     );
     assert.equal(CAPABILITY_DEMO.commit, pin.commit);
     assert.equal(DEMO_SRC, path.resolve(__dirname, '..', pin.sibling, pin.src));

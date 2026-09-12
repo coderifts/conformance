@@ -36,9 +36,6 @@
     "@coderifts/agent-guard": "17.3.3",
     "@coderifts/sdk": "3.14.2"
   },
-  "optionalDependencies": {
-    "capability-demo": "git+https://github.com/coderifts/capability-demo.git#188479a15ecb2f4ef57f437d0cec67d94e3598fd"
-  },
   "coderifts": {
     "capability_demo": {
       "package": "capability-demo",

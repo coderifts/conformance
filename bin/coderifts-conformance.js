@@ -22,6 +22,18 @@
 const { loadCaseFile, filterByProfile } = require('../lib/load-cases');
 const { scoreSubject } = require('../lib/score');
 const { runAndPrint } = require('../lib/model-acceptance');
+
+/**
+ * 1560 — WHICH MEASURE PRODUCED THIS ANSWER.
+ *
+ * A captured report said what it found and never said what found it. `claim_version`
+ * (cr.conformance.v1) is the SCHEMA of the envelope, not the version of the tool, so two runs of
+ * two different releases produced reports a reader could not tell apart. A verdict that cannot
+ * name its own measure is not reproducible: you cannot re-run it without guessing the version.
+ *
+ * This is additive and verdict-neutral — no grade, no coverage, no exit code depends on it.
+ */
+const SELF = `@coderifts/conformance@${require('../package.json').version}`;
 // data-plane stays a top-level require: it pulls only node: builtins, so it costs nothing to
 // load, and ROW is needed by printDataPlane below. The four lazy entries are the ones that
 // reach for an external package.
@@ -181,8 +193,8 @@ async function main() {
   if (profilesReport) {
     const rows = buildProfileReport({ evidence, dir });
     process.stdout.write(json
-      ? `${JSON.stringify(renderProfileJson(rows), null, 2)}\n`
-      : `${renderProfileTable(rows)}\n`);
+      ? `${JSON.stringify({ measured_by: SELF, ...renderProfileJson(rows) }, null, 2)}\n`
+      : `${renderProfileTable(rows)}\nmeasured_by: ${SELF}\n`);
     process.exit(0);
   }
 
@@ -197,7 +209,7 @@ async function main() {
       process.stderr.write(`unknown assurance profile ${assurance}; known: ${PROFILE_IDS.join(', ')}\n`);
       process.exit(2);
     }
-    if (json) process.stdout.write(`${JSON.stringify(renderProfileJson([row]), null, 2)}\n`);
+    if (json) process.stdout.write(`${JSON.stringify({ measured_by: SELF, ...renderProfileJson([row]) }, null, 2)}\n`);
     // WHICH BYTES PRODUCED THIS ANSWER — always, pass or fail. A verdict whose subject a reader
     // has to infer from whether they remembered a flag is how `--dir /nonexistent` read as COVERED
     // for a whole release: the output was true of a capture nobody had asked about.
@@ -205,6 +217,7 @@ async function main() {
       const stream = row.coverage === COVERAGE.COVERED ? process.stdout : process.stderr;
       stream.write(`evidence_dir: ${row.evidence_dir}\n`);
       stream.write(`source: ${row.source}\n`);
+      stream.write(`measured_by: ${SELF}\n`);
     }
     const coverage = row.coverage || row.status;
     if (coverage === COVERAGE.COVERED) {
@@ -263,7 +276,7 @@ async function main() {
     );
   }
   process.stdout.write(
-    `\n${subjectName} profile=${profile}: ${scored.passed} passed, ${scored.failed} failed (n=${cases.length})\n`
+    `\n${subjectName} profile=${profile}: ${scored.passed} passed, ${scored.failed} failed (n=${cases.length})\nmeasured_by: ${SELF}\n`
     + `${scored.summary}\n`,
   );
   process.exit(scored.failed === 0 ? 0 : 1);
