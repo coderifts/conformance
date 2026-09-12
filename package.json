@@ -1,6 +1,6 @@
 {
   "name": "@coderifts/conformance",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "description": "Offline CodeRifts adapter-acceptance + model-acceptance suite. No network, no API key.",
   "license": "MIT",
   "engines": {
@@ -33,8 +33,8 @@
     "release:packed": "node scripts/check-packed-install.js"
   },
   "dependencies": {
-    "@coderifts/agent-guard": "14.0.0",
-    "@coderifts/sdk": "3.10.0"
+    "@coderifts/agent-guard": "17.3.3",
+    "@coderifts/sdk": "3.14.2"
   },
   "optionalDependencies": {
     "capability-demo": "git+https://github.com/coderifts/capability-demo.git#188479a15ecb2f4ef57f437d0cec67d94e3598fd"

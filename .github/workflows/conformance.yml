@@ -23,6 +23,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      # The 1585 reader matrix drives the Python reader through a subprocess. Installing the
+      # PUBLISHED wheel is the point: the matrix compares readers as they ship, not as they sit
+      # in a working tree. Without this step test/reader-matrix-1585.test.js fails loudly rather
+      # than skipping — an unmeasured reader is how the 1565 split survived for a whole round.
+      - run: pip install coderifts
       - run: npm ci
       - run: npm test
 
