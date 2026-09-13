@@ -44,6 +44,14 @@ node bin/coderifts-conformance.js --subject data-plane
 - `enforcement_consistent` — subset for guards that fail-closed on decision↔action inconsistency  
 - `all` — every case  
 
+## Reproduce the evidence, not only replay it
+
+`test/` and `scripts/` ship with the package. From an install you can run the suite
+(`node --test test/*.test.js`) and re-mint the tamper-negative
+(`node scripts/mint-tampered-attestation-negative.js --out /tmp/mine`), then measure your own
+copy. Rows that need something absent — a sibling checkout, a database, the published Python
+reader — are SKIPPED with the reason printed, never passed quietly. See VERIFY.md §4.
+
 ## Write your own subject
 
 See [CONTRACT.md](./CONTRACT.md). A subject is:

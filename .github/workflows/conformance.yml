@@ -42,7 +42,13 @@ jobs:
       # this reader — the pin closes that too.
       - run: pip install coderifts-sdk==3.8.1
       - run: npm ci
+      # test/ now ships in the tarball, so the reader matrix also runs where the Python wheel is
+      # not installed and is not a dependency. There it degrades to a visible skip. HERE it must
+      # not: this flag turns an unreachable reader back into a failure, so CI cannot go green on a
+      # column it never measured.
       - run: npm test
+        env:
+          CODERIFTS_REQUIRE_PYTHON_READER: '1'
 
   packed-install:
     # Packs the tarball, installs it into a scratch project, and drives the measure through the

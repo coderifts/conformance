@@ -41,7 +41,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 
 const { readDecision: sdkRead } = require('@coderifts/sdk');
 const guard = require('@coderifts/agent-guard');
@@ -83,10 +83,30 @@ const EXPECTED = {
 
 const fmt = (r) => String(r.executionAction) + (r.reason ? '/' + r.reason : '');
 
+/**
+ * Is the published Python reader importable here?
+ *
+ * The matrix runs in two places now that test/ ships in the tarball: CI, where the workflow
+ * installs coderifts-sdk, and a stranger's checkout of the package, where it is not a dependency
+ * and nothing said it would be. A hard failure there reports a missing wheel as a reader
+ * disagreement, which is not what this file measures.
+ *
+ * A SKIP THAT CAN HAPPEN IN CI WOULD BE WORSE THAN THE FAILURE. So the skip is available only
+ * when nobody demanded the reader: CODERIFTS_REQUIRE_PYTHON_READER=1 — which the workflow sets —
+ * turns an unreachable reader back into a loud failure. An unmeasured reader is how the 1565
+ * split survived a whole round; this keeps that bite exactly where it was.
+ */
+function pythonReaderAvailable() {
+  const r = spawnSync('python3', ['-c', 'import coderifts.decision'], { stdio: 'ignore' });
+  return r.status === 0;
+}
+const PY_REQUIRED = process.env.CODERIFTS_REQUIRE_PYTHON_READER === '1';
+const PY_OK = pythonReaderAvailable();
+const PY_WHY = 'the published Python reader (pip install coderifts-sdk) is not importable here, and '
+  + 'it is not a dependency of this package — set CODERIFTS_REQUIRE_PYTHON_READER=1 to make this a '
+  + 'failure instead (CI does)';
+
 function readAllPython() {
-  // One subprocess for all ten vectors, not ten. Deliberately NOT wrapped in a try that turns a
-  // missing interpreter into a skip: a reader that cannot be reached is an unmeasured reader, and
-  // this matrix exists precisely because an unmeasured reader is how the 1565 split survived.
   const src = `
 import json, sys
 from coderifts.decision import read_decision
@@ -102,7 +122,8 @@ print(json.dumps(out))
   return JSON.parse(stdout);
 }
 
-test('1585 — ten vectors, four readers, table pinned', () => {
+test('1585 — ten vectors, four readers, table pinned', (t) => {
+  if (!PY_OK && !PY_REQUIRED) { t.skip(PY_WHY); return; }
   const python = readAllPython();
   const actual = {};
   for (const v of VECTORS) {

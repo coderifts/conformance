@@ -21,6 +21,9 @@
     "LICENSE",
     "CHANGELOG.md",
     "VERIFY.md",
+    "docs/",
+    "test/",
+    "scripts/",
     "proof"
   ],
   "scripts": {

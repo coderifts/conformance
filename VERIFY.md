@@ -121,6 +121,25 @@ signature flipped and the pin recomputed, as an editor of vendored bytes would.
 
 ---
 
+## 4 · Re-mint the refusal yourself
+
+The package ships `test/` and `scripts/`, so the negatives are not only replayable — they are
+reproducible. This mints a fresh tamper-negative from the CURRENT positive, flipping one decoded
+byte of the executor attestation's signature, and refuses to return if the flip changed nothing:
+
+```
+node scripts/mint-tampered-attestation-negative.js --out /tmp/mine
+npx @coderifts/conformance --assurance END_TO_END --dir /tmp/mine
+```
+
+Expected: `decoded_signature_byte_difference = 1` from the minter, then `PARTIAL` from the
+measure, naming `ATTEST_INVALID_SIGNATURE: signature_mismatch`. The shipped negative is one
+instance of that; this is the procedure that produced it.
+
+The suite itself also runs from the installed package — `node --test test/*.test.js`. Rows that
+need something this machine does not have (a sibling checkout, a live database, the published
+Python reader) report as SKIPPED with the reason named. A skip is not a pass and is not silent.
+
 ## Where the bytes are
 
 | | |
