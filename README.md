@@ -105,7 +105,7 @@ So a run is reported as seven profiles, in chain order, on **two axes that are n
 
 | Profile | Coverage | Evidence | What a COVERED verdict would mean |
 |---------|----------|----------|-----------------------------------|
-| `DECISION_LOGIC` | **COVERED** | **LIVE** — 15 vectors run now (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. |
+| `DECISION_LOGIC` | **COVERED** | **LIVE** — 15 vectors run now (positive + negative pair) | A consumer branches on `execution_action`, never on `decision` or `safe_for_agent`, and a verdict function is stable for a given input. These 15 are not the 16 `--subject reference` (normative) cases: five of those sixteen (`AA-DOCS-ONLY-SKIP` … `AA-AUTHORIZE-NEEDS-OPERATION`) score `GUARDED_TOOL_TABLE`; `DECISION_LOGIC` also counts ADV-1/7/8 and the model-acceptance pair, which are not in that sixteen. |
 | `RECEIPT_CRYPTO` | **COVERED** | **RECORDED** — receipt-verifier committed signed token bytes (not minted here) | A grant or attestation verifies offline against its keyring, and expired / misbound / mis-signed / malformed / unknown-kid / retired-key tokens are refused with a named status. |
 | `GUARDED_TOOL_TABLE` | **COVERED** | **LIVE** — 6 vectors run now (positive + negative pair) | The right tool is selected for a given change, and each description carries the scoping facts a reader depends on. |
 | `CREDENTIAL_BOUNDARY` | **COVERED** | **RECORDED** — DENY `42501` + unchanged-state read-back; POINT 3 is that denial, not catalog posture | A host holding a provider credential cannot reach the target except through the guarded path. |
@@ -177,10 +177,7 @@ missing — the gap is named, never filled in.
   naming `CodeRifts / contract-gate`. PR#4 reason is **failing**; PR#5 is
   **expected** (BEHIND, not a gate-refusal). HISTORICAL, local gh, `oidc_attested:false`.
   The 405 bodies do not identify the actor or the PR; the pin binds path → payload.
-- **`END_TO_END` — PARTIAL / RECORDED.** The two earlier gaps stay closed: authorization is continuous (one challenge-first `cr.exec.v2` ATOMIC grant through authorize, consume, attestation and correlation) and every token authenticates against its issuer's key. The gap that reopened the grade is a different class — CROSS-RUN COLLAGE. The measure checks each token individually, so it cannot see that a set of individually-authentic tokens came from two runs; swapping in the negative pole's own signed tokens was accepted in all three positions. This is stated rather than graded around: `cross_run_collage` is a conjunct of the verdict, not a footnote. COVERED returns when an artifact carries a signed evidence root, and the measure verifies that rather than being told.
-  prove-transcript is a Postgres executor whose POINT 8 merge is MODELLED. The provider bundle
-  is GitHub PRs with different commits and a different `run_id`. A collage of separate artifacts
-  is layer-coverage, not end-to-end. Not COVERED.
+- **`END_TO_END` — COVERED / RECORDED.** Measured this package: `--assurance END_TO_END` prints `END_TO_END: COVERED / RECORDED — 2 vector(s)` and exits **0**. A signed `cr.evidence.root.v1` is the mechanism that closed the `cross_run_collage` gap this section named until 0.8.5 — the measure verifies the root rather than being told. TRUSTED-EXECUTOR INTEGRITY, not a provider merge (see the table row above). A collage of separately authentic tokens from two runs is still refused by the root's digest.
 
 ### Empty profiles never render green
 
@@ -196,7 +193,7 @@ node bin/coderifts-conformance.js --evidence live --profiles   # NOT_RUN for rec
 node bin/coderifts-conformance.js --assurance RECEIPT_CRYPTO   # exit 0 in recorded mode (COVERED / RECORDED)
 node bin/coderifts-conformance.js --assurance ATOMIC_COMMIT    # exit 0 in recorded mode (COVERED / RECORDED)
 node bin/coderifts-conformance.js --assurance PROVIDER_ENFORCED # exit 0 in recorded mode (COVERED / RECORDED)
-node bin/coderifts-conformance.js --assurance END_TO_END        # exit 3 — PARTIAL (cross_run_collage)
+node bin/coderifts-conformance.js --assurance END_TO_END        # exit 0 — COVERED / RECORDED — 2 vector(s)
 ```
 
 `--assurance <ID>` exits **0** only when that profile is COVERED (LIVE or RECORDED), **3** when it
